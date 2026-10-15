@@ -20,6 +20,19 @@ input,select{font:inherit;padding:6px 8px;border:1px solid var(--line);border-ra
 .row{display:flex;gap:8px}.row>*{flex:1}
 button{font:inherit;padding:8px 12px;border-radius:6px;border:1px solid var(--line);background:#fff;cursor:pointer}
 button:hover{border-color:#999}
+/* botões animados: sobem no mouse, afundam no clique, onda ao clicar, brilho passando nos principais */
+button{position:relative;overflow:hidden;transition:transform .15s ease,box-shadow .2s ease,background-color .2s ease,border-color .2s ease,filter .2s ease}
+button:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 5px 14px rgba(0,0,0,.16)}
+button:not(:disabled):active{transform:translateY(0) scale(.96);box-shadow:0 1px 4px rgba(0,0,0,.18);transition-duration:.06s}
+button.pri:not(:disabled):hover,button[style*="background:#"]:not(:disabled):hover{filter:brightness(1.08)}
+button.pri::after,button[style*="background:#"]::after{content:'';position:absolute;top:0;left:-75%;width:50%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.45),transparent);transform:skewX(-20deg);pointer-events:none}
+button.pri:not(:disabled):hover::after,button[style*="background:#"]:not(:disabled):hover::after{animation:pcfBrilho .7s ease}
+@keyframes pcfBrilho{to{left:130%}}
+.pcfOnda{position:absolute;border-radius:50%;background:rgba(255,255,255,.55);transform:scale(0);animation:pcfOnda .55s ease-out forwards;pointer-events:none;mix-blend-mode:overlay}
+button:not(.pri):not([style*="background:#"]) .pcfOnda{background:rgba(110,80,200,.25);mix-blend-mode:normal}
+@keyframes pcfOnda{to{transform:scale(2.6);opacity:0}}
+.chip button:hover,#menuPeca button:hover,.abas button:hover{transform:none;box-shadow:none}
+@media (prefers-reduced-motion:reduce){button,button::after,.pcfOnda{transition:none!important;animation:none!important}button:hover{transform:none!important}}
 button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
 .btns{display:grid;gap:8px}
 .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
@@ -331,7 +344,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-15.05';
+const VERSAO = '2026-10-15.06';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -4043,6 +4056,13 @@ async function salvarGcodeDireto(){
   };
 }
 
+</script>
+<script>
+// onda animada no clique de qualquer botão
+document.addEventListener('pointerdown', ev => { const b = ev.target.closest && ev.target.closest('button'); if (!b || b.disabled) return;
+  try { const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height), o = document.createElement('span'); o.className = 'pcfOnda';
+    o.style.cssText = `width:${d}px;height:${d}px;left:${ev.clientX - r.left - d / 2}px;top:${ev.clientY - r.top - d / 2}px`;
+    b.appendChild(o); setTimeout(() => o.remove(), 600) } catch (e) {} }, true);
 </script>
 </body>
 </html>

@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-15.05",
+ "tela": "2026-10-15.06",
  "plugin": "2026-10-15.09",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-15.06",
+   "plugin": "2026-10-15.09",
+   "data": "15/10 19:30",
+   "titulo": "Botões animados",
+   "itens": [
+    "Botões sobem com sombra ao passar o mouse, afundam ao clicar e mostram uma onda no clique",
+    "Botões coloridos têm um brilho que passa por cima no mouse"
+   ]
+  },
   {
    "tela": "2026-10-15.05",
    "plugin": "2026-10-15.09",
