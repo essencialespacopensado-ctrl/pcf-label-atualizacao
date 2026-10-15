@@ -1,7 +1,11 @@
 {
   "versao": "1.1.1",
-  "rbz": "https://raw.githubusercontent.com/essencialespacopensado-ctrl/pcf-label-atualizacao/main/PCF_Ferramentas.rbz",
+  "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Nomes dos botões mais curtos e técnicos: PCF · Medidas, PCF · Encostar, PCF · Cotas, PCF · Ambiente, PCF · Girar"
+    "Arrastou o móvel e clicou numa parede: ele gira paralelo à parede e encosta (não seleciona mais a parede)",
+    "Encostar e enviar para a parede param no PRIMEIRO obstáculo, mesmo que ele pegue só a quina do móvel",
+    "Cotas de afastamento medem a face inteira do móvel (antes só o meio)",
+    "Arrastar continua leve: medição completa só quando o móvel para",
+    "Atualizações chegam na hora (sem esperar o cache do GitHub)"
   ]
 }
