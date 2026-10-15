@@ -1,11 +1,11 @@
 {
-  "versao": "1.1.1",
+  "versao": "1.1.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Botões do painel com efeito de clique: afundam ao apertar e piscam em azul quando executam",
     "Arrastou o móvel e clicou numa parede: ele gira paralelo à parede e encosta (não seleciona mais a parede)",
     "Encostar e enviar para a parede param no PRIMEIRO obstáculo, mesmo que ele pegue só a quina do móvel",
-    "Cotas de afastamento medem a face inteira do móvel (antes só o meio)",
-    "Arrastar continua leve: medição completa só quando o móvel para",
-    "Atualizações chegam na hora (sem esperar o cache do GitHub)"
+    "Cotas de afastamento medem a face inteira do móvel",
+    "Atualizações chegam na hora"
   ]
 }
