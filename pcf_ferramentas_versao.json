@@ -1,11 +1,10 @@
 {
-  "versao": "1.2.0",
+  "versao": "1.2.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "NOVO: Recorte orgânico (aba Criar paredes / peças). Selecione a modelagem da peça e clique: cria o tamponamento Dinabox com 10 mm de sobra de cada lado, contorno por fora, furos por dentro, profundidade espessura + 0,05, na camada DB Contorno",
-    "O tamponamento do recorte fica acima do teto, na mesma posição da modelagem (a modelagem não é apagada)",
-    "Botões do painel com efeito de clique",
-    "Arrastou o móvel e clicou numa parede: gira paralelo e encosta",
-    "Encostar para no primeiro obstáculo"
+    "Barra de ferramentas nova (\"PCF\"): Painel, Mover/encostar e Recorte orgânico (no lugar do relógio)",
+    "Ligar/desligar cotas agora fica só no painel de medidas",
+    "Criar paredes/peças fica só na aba do painel; girar com o mouse fica no painel e no botão direito",
+    "Ícone novo para o Recorte orgânico"
   ]
 }
