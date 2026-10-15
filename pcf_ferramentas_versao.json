@@ -1,10 +1,10 @@
 {
-  "versao": "1.2.1",
+  "versao": "1.3.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Barra de ferramentas nova (\"PCF\"): Painel, Mover/encostar e Recorte orgânico (no lugar do relógio)",
-    "Ligar/desligar cotas agora fica só no painel de medidas",
-    "Criar paredes/peças fica só na aba do painel; girar com o mouse fica no painel e no botão direito",
-    "Ícone novo para o Recorte orgânico"
+    "NOVO: botão Criar moldura (barra PCF). Módulo com portas selecionado: moldura em cada porta; outra peça: moldura na própria peça",
+    "Tipos: Usinada – peça vazada, Usinada – rebaixo na porta (mínimo 40 mm) e 45 graus (4 réguas). Espessura 6, 15 ou 18 mm",
+    "Nome automático da modelagem: Moldura - Porta Esquerda - Nome do módulo (vai junto para o tamponamento e o plano)",
+    "No fim pergunta: Transformar em orgânico? (vazada e 45 graus)"
   ]
 }
