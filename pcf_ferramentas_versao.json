@@ -1,11 +1,7 @@
 {
-  "versao": "1.1.0",
+  "versao": "1.1.1",
   "rbz": "https://raw.githubusercontent.com/essencialespacopensado-ctrl/pcf-label-atualizacao/main/PCF_Ferramentas.rbz",
   "novidades": [
-    "Aviso de atualização: quando sair versão nova, aparece esta janela com o que mudou e o botão Atualizar agora",
-    "Seleção de várias peças: Ctrl soma, Shift alterna, caixa de seleção arrastando no vazio",
-    "Arrastar um dos selecionados leva todos juntos",
-    "Plugin mais leve: só redesenha quando há cotas para mostrar",
-    "Cotas de afastamento aparecem ao clicar no módulo"
+    "Nomes dos botões mais curtos e técnicos: PCF · Medidas, PCF · Encostar, PCF · Cotas, PCF · Ambiente, PCF · Girar"
   ]
 }

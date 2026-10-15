@@ -398,9 +398,9 @@ module PCFLabel
     return if $pcf_botao_nomes
     $pcf_botao_nomes = true
     tb = UI.toolbar('PCF Label')
-    cn = UI::Command.new('Ocultar / mostrar números') { PCFLabel.alternar_nomes }
-    cn.tooltip = 'PCF Label: ocultar / mostrar os números das peças'
-    cn.status_bar_text = 'Liga e desliga a etiqueta "PCF Nomes" (os números em cima das peças)'
+    cn = UI::Command.new('PCF · Números') { PCFLabel.alternar_nomes }
+    cn.tooltip = 'PCF · Números'
+    cn.status_bar_text = 'Mostrar / ocultar nº das peças'
     cn.set_validation_proc { (l = Sketchup.active_model.layers[PCFLabel::ETIQ]) && !l.visible? ? MF_UNCHECKED : MF_CHECKED }
     ic2 = File.join(File.dirname(__FILE__), 'pcf_nomes.png')
     if File.exist?(ic2) then cn.small_icon = ic2; cn.large_icon = ic2 end
@@ -413,9 +413,9 @@ module PCFLabel
     return if $pcf_botao_det
     $pcf_botao_det = true
     tb = UI.toolbar('PCF Label')
-    cd = UI::Command.new('Detalhamento (cenas + LayOut)') { PCFLabel.detalhar }
-    cd.tooltip = 'PCF Label: criar cenas e o detalhamento no LayOut (padrão Zonta)'
-    cd.status_bar_text = 'Cria as cenas das paredes e monta o LayOut com cotas e números dos painéis, e salva o PDF'
+    cd = UI::Command.new('PCF · Detalhamento') { PCFLabel.detalhar }
+    cd.tooltip = 'PCF · Detalhamento'
+    cd.status_bar_text = 'Cenas · LayOut · PDF'
     ic = File.join(File.dirname(__FILE__), 'pcf_det.png')
     if File.exist?(ic) then cd.small_icon = ic; cd.large_icon = ic end
     tb.add_item(cd); tb.show
@@ -1118,7 +1118,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-15.10'
+  PLUGIN_VERSAO = '2026-10-15.11'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
@@ -1472,14 +1472,14 @@ module PCFLabel
   end
 
   unless file_loaded?(__FILE__)
-    cmd = UI::Command.new('PCF → Aspire') { PCFLabel.enviar }
-    cmd.tooltip = 'PCF Label: otimizar as peças modeladas e abrir no Aspire'
-    cmd.status_bar_text = 'Envia todas as peças visíveis para o otimizador do PCF Label'
+    cmd = UI::Command.new('PCF · Nesting') { PCFLabel.enviar }
+    cmd.tooltip = 'PCF · Nesting'
+    cmd.status_bar_text = 'Plano de corte · etiquetas · G-code'
     ico = File.join(File.dirname(__FILE__), 'pcf.png')
     if File.exist?(ico) then cmd.small_icon = ico; cmd.large_icon = ico end
     tb = UI::Toolbar.new('PCF Label'); tb.add_item(cmd); tb.show
-    UI.menu('Extensions').add_item('PCF Label → Aspire') { PCFLabel.enviar }
-    UI.menu('Extensions').add_item('PCF Label → numerar peças') { UI.messagebox(PCFLabel.numerar) }
+    UI.menu('Extensions').add_item('PCF · Plano de corte') { PCFLabel.enviar }
+    UI.menu('Extensions').add_item('PCF · Numerar peças') { UI.messagebox(PCFLabel.numerar) }
     file_loaded(__FILE__)
   end
 end

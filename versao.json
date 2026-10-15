@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-15.07",
- "plugin": "2026-10-15.10",
+ "plugin": "2026-10-15.11",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-15.07",
+   "plugin": "2026-10-15.11",
+   "data": "15/10 19:40",
+   "titulo": "Botões com nomes curtos",
+   "itens": [
+    "Botões do SketchUp: PCF · Nesting, PCF · Números, PCF · Detalhamento (vale depois de reabrir o SketchUp)"
+   ]
+  },
   {
    "tela": "2026-10-15.07",
    "plugin": "2026-10-15.10",
