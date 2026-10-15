@@ -1,0 +1,193 @@
+[
+ {
+  "tela": "2026-10-15.04",
+  "plugin": "2026-10-15.08",
+  "data": "15/10 19:10",
+  "titulo": "Cores sem cadastrar de novo",
+  "itens": [
+   "Cor do Dinabox já vem com o nome: do arquivo do Dinabox ou do nome da própria imagem da cor (ex.: CARVALHO-EUROPEU-BON808c)",
+   "Variações da mesma cor (ex.: 101969_H e 101969_V, 65965_H1…) usam o mesmo cadastro: cadastrou uma, vale para todas, em todos os projetos",
+   "Na janela de materiais, ao digitar o nome numa variação, as outras variações da mesma cor já recebem o nome",
+   "Nome que não é certeza (uma palavra só, tipo Branco ou Preto) continua perguntando"
+  ]
+ },
+ {
+  "tela": "2026-10-15.03",
+  "plugin": "2026-10-15.06",
+  "data": "15/10 16:55",
+  "titulo": "Versão nova passa de um PC para os outros",
+  "itens": [
+   "O computador que tiver a versão mais nova coloca ela no Dropbox sozinho, e os outros computadores instalam na hora"
+  ]
+ },
+ {
+  "tela": "2026-10-15.03",
+  "plugin": "2026-10-15.05",
+  "data": "15/10 14:10",
+  "titulo": "G-code salva .tap",
+  "itens": [
+   "Salvar o G-code agora grava os arquivos .tap direto na pasta que você escolher (lembra a última pasta) e abre a pasta no final"
+  ]
+ },
+ {
+  "tela": "2026-10-15.02",
+  "plugin": "2026-10-15.04",
+  "data": "15/10 09:15",
+  "titulo": "Atualização online ligada",
+  "itens": [
+   "O número da peça agora aparece no 3D mesmo quando os dois lados dela encostam em outras peças",
+   "As atualizações chegam pela internet, em todos os computadores, sem Dropbox"
+  ]
+ },
+ {
+  "tela": "2026-10-15.02",
+  "plugin": "2026-10-15.02",
+  "data": "15/10 08:20",
+  "titulo": "Atualização pela internet",
+  "itens": [
+   "O plugin passa a buscar versões novas pela internet (sem Dropbox), a cada 10 minutos e logo ao abrir o SketchUp"
+  ]
+ },
+ {
+  "tela": "2026-10-15.01",
+  "plugin": "2026-10-15.01",
+  "data": "15/10 08:15",
+  "titulo": "Atualiza sozinho",
+  "itens": [
+   "O PCF Label se atualiza sozinho em todos os computadores: quando sai versão nova, instala na hora e mostra um aviso verde com o que mudou",
+   "A versão aparece no canto de baixo à esquerda como data e número (ex.: 15/10 nº 01)"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99zc",
+  "plugin": "2026-10-14.94",
+  "data": "14/10 18:45",
+  "titulo": "Travar chapa, outra arrumação e chapa a chapa",
+  "itens": [
+   "🔒 Travar chapa: nenhuma peça entra nem sai (otimizar, juntar chapas, encaixar peças novas e arrastar respeitam)",
+   "🔄 Outra arrumação: troca a organização da chapa com as mesmas peças (cada clique, uma opção)",
+   "Otimizar enche a chapa 1 ao máximo (grandes, médias e pequenas nos vãos) antes de abrir a 2, e assim por diante",
+   "Peças novas do projeto vão primeiro para os vãos das chapas que já existem",
+   "ERRO GRAVE corrigido: dois projetos com o mesmo nome (ex.: 'Projeto Técnico 01' de clientes diferentes) podiam abrir o plano um do outro — agora cada projeto tem o seu",
+   "A legenda \"Furo / recorte (vaza)\" embaixo das chapas não aparece mais",
+   "Pergunta obrigatória para cada material: \"É lâmina de madeira?\" (Sim, lâmina natural / Não, MDF) — não calcula sem a resposta; depois de respondida não pergunta de novo",
+   "Materiais e cores: na lateral fica só o botão 🎨 Abrir materiais e cores (com um resumo); cadastro, aplicar material, cores em uso e nova cor abrem numa janela organizada",
+   "Chapa de 1 face: mostra como colocar na máquina — ⬆ FACE (lâmina) PARA CIMA ou ⬇ FACE PARA BAIXO (quando as peças têm rebaixo no verso, que vão em chapa separada). Aparece no plano, na folha A4 e no G-code",
+   "Peça com rebaixo: etiqueta e lista dizem qual lado vai para cima (lado do rebaixo)"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99w",
+  "plugin": "2026-10-14.93",
+  "data": "14/10 18:00",
+  "titulo": "Revisão completa",
+  "itens": [
+   "Cada clique da tela rodava 2–3 vezes no SketchUp depois de atualizar (causa das duas abas de impressão e da lentidão ao arrastar) — agora roda 1 vez",
+   "Lista de peças e etiquetas mostravam furos de OUTRAS peças (ex.: 'Furo 716×731' em quase todas) — agora só os furos da própria peça",
+   "Profundidade do furo na lista: 18,05 (antes mostrava 18,35)",
+   "Nomes repetidos ao abrir o plano (dois 'Painel 9') — corrigido",
+   "Juntar chapas começa pela cor com a chapa mais vazia"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99u",
+  "plugin": "2026-10-14.92",
+  "data": "14/10 17:30",
+  "titulo": "Arrastar peça: os números não trocam mais",
+  "itens": [
+   "Antes, ao mexer uma peça, a numeração era refeita pela posição: a peça mexida ganhava outro número e outra peça igual ficava com o número dela — parecia que não tinha mexido (e os números no 3D mudavam)",
+   "Agora os números só são feitos quando o plano é calculado (Otimizar / Reiniciar do zero); mexer à mão não troca",
+   "Ao abrir o plano de novo, os números ficam como estavam salvos",
+   "Diagnóstico: o que acontece ao arrastar fica registrado no Dropbox para o Claude conferir"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99s",
+  "plugin": "2026-10-14.91",
+  "data": "14/10 17:20",
+  "titulo": "Atualizar recarrega a tela na hora",
+  "itens": [
+   "Depois de clicar em Atualizar agora, a tela abre de novo já na versão nova",
+   "Versão aparece no canto de baixo à esquerda (ex.: PCF Label · versão 1.99s)"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99r",
+  "data": "14/10 17:00",
+  "titulo": "Arrastar dentro da mesma chapa funciona",
+  "itens": [
+   "Antes a peça voltava para o lugar de onde saiu (parecia que não mexia)",
+   "Agora ela fica onde você soltou (ou num lugar livre bem perto, nunca no de onde saiu)",
+   "Se não tiver espaço, as peças do caminho é que mudam de lugar — Ctrl+Z desfaz"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99p",
+  "data": "14/10 16:50",
+  "titulo": "A peça fica onde você soltou",
+  "itens": [
+   "Soltou numa chapa sem espaço: a peça fica nessa chapa (entra para dentro da margem)",
+   "As peças que estavam no caminho vão para outro lugar livre da chapa, para outra chapa da mesma cor/espessura ou para uma chapa nova",
+   "Só volta se a peça for maior que a chapa"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99n",
+  "plugin": "2026-10-14.90",
+  "data": "14/10 16:35",
+  "titulo": "Atualização só quando você clicar",
+  "itens": [
+   "Não atualiza mais sozinho: aparece o botão ⬆ Atualização disponível com o que mudou",
+   "Você escolhe ⬆ Atualizar agora ou Agora não — o plano fica salvo"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99m",
+  "data": "14/10 16:30",
+  "titulo": "Reiniciar do zero de verdade e pergunta o material",
+  "itens": [
+   "♻ Reiniciar do zero apaga tudo do projeto (planos, cores trocadas, nomes, furos/rebaixos) e carrega de novo do SketchUp",
+   "Material com nome só do SketchUp (ex.: 'Preto') agora pergunta 'de que material é?' — não adivinha mais",
+   "Depois de reiniciar, confere todos os materiais (nome, veio, faces) antes de calcular"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99k",
+  "data": "14/10 16:22",
+  "titulo": "Encaixe tipo quebra-cabeça",
+  "itens": [
+   "Peças das chapas mais vazias vão para os vãos das mais cheias pelo contorno real",
+   "Com veio + 2 faces: espelha e vira 180° (veio no mesmo sentido) para encaixar escada com escada"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99j",
+  "data": "14/10 16:15",
+  "titulo": "Regras de corte do Paulo",
+  "itens": [
+   "Z de segurança 30 mm acima da chapa (48,3 na chapa de 18,3)",
+   "Ordem: furos → rebaixos → peças pequenas → peças grandes",
+   "Espelhar só peça 2 faces sem rebaixo; sobra não tem veio (gira à vontade)",
+   "Peças maiores que a chapa giram 90° (até contra o veio) e entram nas chapas da mesma cor"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99f",
+  "data": "14/10 15:58",
+  "titulo": "Só junta mesma cor e espessura",
+  "itens": [
+   "Chapa nunca mistura cor ou espessura",
+   "Peça com espessura errada no nome da cor vai para a chapa da espessura certa",
+   "Arrastar para chapa de outra cor/espessura não deixa mais"
+  ]
+ },
+ {
+  "tela": "2026-10-14.99b",
+  "data": "14/10 15:40",
+  "titulo": "Veio não se perde mais",
+  "itens": [
+   "O que você marca (veio, 2 faces, lâmina) vale em todos os PCs e um PC desatualizado não desmarca",
+   "Sem veio gira sozinho; com veio segue o desenho"
+  ]
+ }
+]
