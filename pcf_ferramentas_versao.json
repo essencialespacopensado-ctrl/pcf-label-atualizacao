@@ -1,11 +1,11 @@
 {
-  "versao": "1.1.2",
+  "versao": "1.2.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Botões do painel com efeito de clique: afundam ao apertar e piscam em azul quando executam",
-    "Arrastou o móvel e clicou numa parede: ele gira paralelo à parede e encosta (não seleciona mais a parede)",
-    "Encostar e enviar para a parede param no PRIMEIRO obstáculo, mesmo que ele pegue só a quina do móvel",
-    "Cotas de afastamento medem a face inteira do móvel",
-    "Atualizações chegam na hora"
+    "NOVO: Recorte orgânico (aba Criar paredes / peças). Selecione a modelagem da peça e clique: cria o tamponamento Dinabox com 10 mm de sobra de cada lado, contorno por fora, furos por dentro, profundidade espessura + 0,05, na camada DB Contorno",
+    "O tamponamento do recorte fica acima do teto, na mesma posição da modelagem (a modelagem não é apagada)",
+    "Botões do painel com efeito de clique",
+    "Arrastou o móvel e clicou numa parede: gira paralelo e encosta",
+    "Encostar para no primeiro obstáculo"
   ]
 }
