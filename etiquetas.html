@@ -331,7 +331,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-15.04';
+const VERSAO = '2026-10-15.05';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3325,10 +3325,10 @@ function perguntarMateriais(sempre){
       <h2 style="margin:0 0 4px;font-size:18px">Cores dos materiais</h2>
       <div class="hint" style="margin-bottom:10px">Diga qual é a cor de cada código que veio do projeto. <b>Lâmina natural</b> usa chapa 2720 × 1820, já vem com veio e você precisa dizer se é 1 ou 2 faces.<br><b>Sobras:</b> digite as medidas das sobras que você tem (ex.: <i>1200x900; 800x600</i>, comprimento no sentido do veio) — o plano usa as sobras primeiro.<br>Com veio + 1 face: não gira nem espelha · Com veio + 2 faces: só espelha · Sem veio: gira e espelha à vontade.</div>
       <datalist id="dlCores">${nomesConhecidos.map(n => `<option value="${esc(n)}">`).join('')}</datalist>
-      <table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;border-bottom:1px solid #ddd"><th></th><th style="padding:6px">Código</th><th>Esp.</th><th>Peças</th><th>Cor</th><th>Lâmina de madeira?</th><th>Veio</th><th>Faces</th><th>Sobras (mm)</th></tr>
+      <table style="width:100%;border-collapse:collapse;font-size:14px"><tr style="text-align:left;border-bottom:1px solid #ddd"><th></th><th style="padding:6px">Material</th><th>Esp.</th><th>Peças</th><th>Cor</th><th>Lâmina de madeira?</th><th>Veio</th><th>Faces</th><th>Sobras (mm)</th></tr>
       ${L.map((r, i) => { const v = ini(r); return `<tr class="mLin" data-i="${i}" style="border-bottom:1px solid #eee${cfg.matOk[r.key] ? '' : ';background:#fff8e0'}">
         <td style="padding:6px">${r.foto ? `<img class="mFoto" src="${esc(r.foto)}" title="clique para ampliar" style="width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid #999;cursor:zoom-in;display:block" onerror="this.onerror=null;this.removeAttribute('src');this.style.background='${r.rgb ? `rgb(${r.rgb.join(',')})` : '#eee'}'">` : `<span style="display:inline-block;width:64px;height:64px;border-radius:6px;border:1px solid #999;background:${r.rgb ? `rgb(${r.rgb.join(',')})` : '#eee'}"></span>`}</td>
-        <td style="padding:6px"><b>${esc(r.cod || r.cor)}</b>${cfg.matOk[r.key] ? '' : ' <span style="color:#b8860b;font-size:11px">novo</span>'}${r.textura ? `<div class="hint" style="font-size:11px">textura: ${esc(r.textura)}</div>` : ''}</td>
+        <td style="padding:6px"><b>${esc(r.cod ? (v.nome || sugestaoCor(r.cod) || 'sem nome') : r.cor)}</b>${cfg.matOk[r.key] ? '' : ' <span style="color:#b8860b;font-size:11px">novo</span>'}${r.cod ? `<div class="hint" style="font-size:10px;color:#999">${esc(r.cod)}</div>` : ''}</td>
         <td>${r.cod ? [...r.esps].join(' / ') + ' mm' : '—'}</td>
         <td><a href="#" class="mVer" data-i="${i}" title="mostrar as peças no 3D">${r.pecas.length}</a></td>
         <td>${r.cod ? `<input class="mNome" data-i="${i}" list="dlCores" value="${esc(v.nome)}" placeholder="${esc(sugestaoCor(r.cod) ? 'de que material é? (' + sugestaoCor(r.cod) + '?)' : 'de que material é?')}" style="width:170px${v.nome ? '' : ';outline:2px solid #c8102e;background:#ffecec'}">` : esc(r.cor)}</td>

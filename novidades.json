@@ -1,5 +1,16 @@
 [
  {
+  "tela": "2026-10-15.05",
+  "plugin": "2026-10-15.09",
+  "data": "15/10 19:10",
+  "titulo": "Nomes no lugar dos códigos",
+  "itens": [
+   "A janela de materiais mostra o NOME da cor (o mesmo do Dinabox); o código fica pequeno embaixo, só para referência",
+   "Materiais próprios do Dinabox (DB inox, db_metal…) já entram com nome (Inox, Metal…)",
+   "Atualizações agora chegam só pela internet (nada mais pelo Dropbox)"
+  ]
+ },
+ {
   "tela": "2026-10-15.04",
   "plugin": "2026-10-15.08",
   "data": "15/10 19:10",

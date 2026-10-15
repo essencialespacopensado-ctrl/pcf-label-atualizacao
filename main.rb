@@ -1067,7 +1067,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-15.08'
+  PLUGIN_VERSAO = '2026-10-15.09'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
@@ -1247,6 +1247,10 @@ module PCFLabel
   # nome certo (sem chute): cadastro seu/variação, ou o nome que o próprio Dinabox dá à cor
   def self.nome_conhecido(cod, mt, banco)
     r = reg_cor(cod, banco); return r['nome'].to_s.strip if r
+    # materiais próprios do Dinabox (DB inox, db_preto, db_metal8…): o nome está no próprio material
+    if cod.to_s =~ /^db[\s_]+([a-zà-ú].*)$/i
+      t = $1.tr('_', ' ').sub(/\d+$/, '').strip; return t[0].upcase + t[1..-1] unless t.empty?
+    end
     if cod.to_s =~ /^DB\d+$/i
       tx = File.join(Sketchup.find_support_file('Plugins'), 'DinaBox', 'materiais', "#{cod}.txt")
       n = (File.binread(tx).force_encoding('UTF-8')[/\[NOME\](.*?)\[\/NOME\]/m, 1].to_s.strip rescue '')
