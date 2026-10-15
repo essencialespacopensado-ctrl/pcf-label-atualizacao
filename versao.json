@@ -1,12 +1,22 @@
 {
  "tela": "2026-10-15.07",
- "plugin": "2026-10-15.11",
+ "plugin": "2026-10-15.12",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-15.07",
+   "plugin": "2026-10-15.12",
+   "data": "15/10 19:45",
+   "titulo": "Atualiza mais rápido",
+   "itens": [
+    "Confere a internet a cada 2 minutos e também na hora em que você abre o PCF Label",
+    "Baixa direto a última publicação, sem esperar o atraso de 5 minutos do GitHub"
+   ]
+  },
   {
    "tela": "2026-10-15.07",
    "plugin": "2026-10-15.11",

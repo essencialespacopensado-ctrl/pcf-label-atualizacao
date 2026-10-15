@@ -934,6 +934,7 @@ module PCFLabel
     dados[:projetoChave] = (nome_plano rescue nil)
     dados[:cfgComum] = (JSON.parse(File.read(File.join(pasta_comum, 'config.json'), encoding: 'UTF-8')) rescue nil)
     (checar_atualizacao(true) rescue nil)   # se tiver versão nova, instala sozinho
+    (checar_online rescue nil)              # e pela internet, na hora
     (espalhar_versao rescue nil)            # se este PC tiver a mais nova, põe no Dropbox para os outros
     @dados_atual = dados; @plano_id = id_plano(dados[:planoId]); @plano_nome = dados[:planoNome]
     @dados_json = JSON.generate(dados).gsub('</', '<\/')
@@ -1118,7 +1119,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-15.11'
+  PLUGIN_VERSAO = '2026-10-15.12'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
@@ -1142,9 +1143,27 @@ module PCFLabel
   rescue
     fim.call(nil) rescue nil
   end
+  # pega o nº da última publicação (commit) para baixar a versão exata, sem esperar o cache de 5 min do GitHub
+  def self.ultimo_commit(&fim)
+    return fim.call(nil) unless defined?(Sketchup::Http::Request)
+    req = Sketchup::Http::Request.new('https://api.github.com/repos/essencialespacopensado-ctrl/pcf-label-atualizacao/commits/main', Sketchup::Http::GET)
+    req.headers = { 'Accept' => 'application/vnd.github.sha', 'User-Agent' => 'PCF-Label' }
+    req.start { |_r, res| sha = (res && res.status_code == 200) ? res.body.to_s.strip[/\A[0-9a-f]{40}\z/] : nil; fim.call(sha) rescue nil }
+    (@reqs ||= []) << req; @reqs.shift while @reqs.size > 10
+  rescue
+    fim.call(nil) rescue nil
+  end
   def self.checar_online
-    u = url_online; return unless u
+    u0 = url_online; return unless u0
     return if @online_ocupado; @online_ocupado = true
+    ultimo_commit do |sha|
+      u = (sha && u0.include?('/main/')) ? u0.sub('/main/', "/#{sha}/") : u0
+      checar_online_em(u)
+    end
+  rescue
+    @online_ocupado = false
+  end
+  def self.checar_online_em(u)
     baixar(u + 'versao.json') do |txt|
       begin
         man = txt && (JSON.parse(txt.dup.force_encoding('UTF-8')) rescue nil)
@@ -1493,8 +1512,13 @@ unless $pcf_tm_atual
   UI.start_timer(300, true) { PCFLabel.atualizar_sozinho }
 end
 # atualização NA HORA: confere a pasta do Dropbox a cada 5 s (só lê os arquivos quando a data deles muda)
+# internet: confere a cada 2 min (troca o timer antigo de 10 min sem precisar reabrir o SketchUp)
+if $pcf_tm_online && $pcf_tm_online_int != 120
+  (UI.stop_timer($pcf_tm_online) rescue nil); $pcf_tm_online = nil
+end
 unless $pcf_tm_online
-  $pcf_tm_online = UI.start_timer(600, true) { (PCFLabel.checar_online rescue nil); (PCFLabel.espalhar_versao rescue nil) }
+  $pcf_tm_online_int = 120
+  $pcf_tm_online = UI.start_timer(120, true) { (PCFLabel.checar_online rescue nil) }
   UI.start_timer(15, false) { (PCFLabel.checar_online rescue nil); (PCFLabel.espalhar_versao rescue nil) }
 end
 unless $pcf_tm_rapido
