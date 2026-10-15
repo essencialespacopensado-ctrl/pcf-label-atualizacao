@@ -1,12 +1,21 @@
 {
- "tela": "2026-10-15.06",
- "plugin": "2026-10-15.09",
+ "tela": "2026-10-15.07",
+ "plugin": "2026-10-15.10",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-15.07",
+   "plugin": "2026-10-15.10",
+   "data": "15/10 19:40",
+   "titulo": "Tela de carregamento",
+   "itens": [
+    "Ao abrir o PCF Label aparece na hora uma tela de carregamento no meio, com animação, enquanto ele lê as peças e monta o plano"
+   ]
+  },
   {
    "tela": "2026-10-15.06",
    "plugin": "2026-10-15.09",

@@ -232,6 +232,57 @@ module PCFLabel
   end
 
   # ---- tela do PCF dentro do SketchUp (em vez do navegador) ----
+  SPLASH = <<~'HTMLSPLASH'
+<div id="pcfSplash" style="position:fixed;inset:0;z-index:100000;display:flex;align-items:center;justify-content:center;background:radial-gradient(ellipse at center,#14213a 0%,#0a0f1c 70%);font-family:'Segoe UI',system-ui,sans-serif;color:#e8f1ff;transition:opacity .45s ease">
+<style>
+#pcfSplash .sg{position:absolute;inset:0;background-image:linear-gradient(rgba(80,160,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(80,160,255,.07) 1px,transparent 1px);background-size:32px 32px;animation:spGrid 6s linear infinite}
+@keyframes spGrid{to{background-position:32px 32px}}
+#pcfSplash .sc{position:relative;text-align:center;padding:34px 46px;border:1px solid rgba(90,170,255,.35);border-radius:16px;background:rgba(10,20,40,.72);box-shadow:0 0 40px rgba(40,140,255,.25),inset 0 0 30px rgba(40,140,255,.08);min-width:360px}
+#pcfSplash svg{display:block;margin:0 auto 14px}
+#pcfSplash .r1{transform-origin:60px 60px;animation:spGira 1.6s linear infinite}
+#pcfSplash .r2{transform-origin:60px 60px;animation:spGira 2.6s linear infinite reverse}
+#pcfSplash .r3{transform-origin:60px 60px;animation:spPulsa 1.6s ease-in-out infinite}
+@keyframes spGira{to{transform:rotate(360deg)}}
+@keyframes spPulsa{0%,100%{opacity:.35;transform:scale(.92)}50%{opacity:1;transform:scale(1.04)}}
+#pcfSplash h1{margin:0;font-size:26px;letter-spacing:6px;font-weight:700;background:linear-gradient(90deg,#5fb4ff,#c8e6ff,#ff4d6d);-webkit-background-clip:text;background-clip:text;color:transparent}
+#pcfSplash .st{margin:8px 0 16px;font-size:13px;letter-spacing:1px;color:#9fc3ee;min-height:18px}
+#pcfSplash .bar{height:4px;border-radius:4px;background:rgba(95,180,255,.15);overflow:hidden;position:relative}
+#pcfSplash .bar i{position:absolute;top:0;left:-40%;width:40%;height:100%;background:linear-gradient(90deg,transparent,#5fb4ff,#ff4d6d,transparent);animation:spBar 1.2s ease-in-out infinite}
+@keyframes spBar{to{left:100%}}
+#pcfSplash .v{margin-top:12px;font-size:10px;letter-spacing:2px;color:#5d7aa3}
+</style>
+<div class="sg"></div>
+<div class="sc">
+<svg width="120" height="120" viewBox="0 0 120 120">
+<circle class="r2" cx="60" cy="60" r="52" fill="none" stroke="#2c5d99" stroke-width="2" stroke-dasharray="6 10"/>
+<circle class="r1" cx="60" cy="60" r="42" fill="none" stroke="url(#spG)" stroke-width="5" stroke-linecap="round" stroke-dasharray="150 120"/>
+<g class="r3"><rect x="40" y="36" width="40" height="48" rx="3" fill="none" stroke="#9fd0ff" stroke-width="2"/><path d="M40 52h40M58 36v48" stroke="#ff4d6d" stroke-width="1.6" stroke-dasharray="3 3"/></g>
+<defs><linearGradient id="spG" x1="0" x2="1"><stop offset="0" stop-color="#5fb4ff"/><stop offset="1" stop-color="#ff4d6d"/></linearGradient></defs>
+</svg>
+<h1>PCF LABEL</h1>
+<div class="st" id="pcfSplashTxt">Lendo as peças do SketchUp…</div>
+<div class="bar"><i></i></div>
+<div class="v">PLANO DE CORTE · ETIQUETAS · G-CODE</div>
+</div>
+<script>(function(){var t=['Lendo as peças do SketchUp…','Conferindo materiais e cores…','Montando as chapas…','Preparando o plano de corte…'],i=0,e=document.getElementById('pcfSplashTxt');window.__pcfSpT=setInterval(function(){if(!e||!e.isConnected)return clearInterval(window.__pcfSpT);i=(i+1)%t.length;e.textContent=t[i]},1100)})();</script>
+</div>
+  HTMLSPLASH
+  # abre a janela já com a tela de carregamento (aparece na hora, antes de ler as peças)
+  def self.splash
+    html = "<!doctype html><html><head><meta charset=\"utf-8\"><title>PCF Label</title></head><body style=\"margin:0;background:#0a0f1c\">#{SPLASH}</body></html>"
+    if @dlg && @dlg.visible?
+      @dlg.set_html(html); @dlg.bring_to_front
+    else
+      @dlg = UI::HtmlDialog.new(dialog_title: 'PCF Label - plano de corte', preferences_key: 'PCFLabel.tela', scrollable: true,
+                                resizable: true, width: 1400, height: 900, style: UI::HtmlDialog::STYLE_DIALOG)
+      callbacks(@dlg)
+      @dlg.set_on_closed { restaurar_vista rescue nil }
+      @dlg.set_html(html)
+      @dlg.show
+    end
+  rescue
+    nil
+  end
   def self.abrir_tela(arquivo)
     if @dlg && @dlg.visible?
       @dlg.set_file(arquivo); @dlg.bring_to_front; return
@@ -1067,7 +1118,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-15.09'
+  PLUGIN_VERSAO = '2026-10-15.10'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
@@ -1325,10 +1376,21 @@ module PCFLabel
   end
 
   def self.enviar
+    splash
+    UI.start_timer(0.35, false) do
+      begin
+        enviar_ja
+      rescue => e
+        (@dlg.close rescue nil); UI.messagebox("PCF Label: erro ao abrir — #{e.message}")
+      end
+    end   # deixa a tela de carregamento aparecer antes do trabalho pesado
+  end
+  def self.enviar_ja
     m = Sketchup.active_model
     pecas = []
     coletar(m.entities, Geom::Transformation.new, [], pecas)
     if pecas.empty?
+      (@dlg.close rescue nil)
       UI.messagebox('PCF Label: nenhuma peça encontrada.')
       return
     end
