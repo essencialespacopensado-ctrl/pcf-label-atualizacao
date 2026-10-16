@@ -386,7 +386,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-16.04';
+const VERSAO = '2026-10-16.05';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -2986,7 +2986,8 @@ function ligarArraste(){
     const mm = ev => { const pt = svg.createSVGPoint(); pt.x = ev.clientX; pt.y = ev.clientY; const r = pt.matrixTransform(svg.getScreenCTM().inverse()); return [r.x, HF - r.y] };
     svg.querySelectorAll('g.mv').forEach(el => {
       const fi = +el.dataset.f, k = +el.dataset.i;
-      el.addEventListener('dblclick', ev => { ev.preventDefault(); irParaNome(PLANO.folhas[fi].pos[k].it.p) });
+      // 2 cliques = aproxima nesta peça (tela cheia + zoom); o nome fica no botão direito → ✎ Nome da peça
+      el.addEventListener('dblclick', ev => { ev.preventDefault(); ev.stopPropagation(); zoomNaPeca(fi, el) });
       el.addEventListener('contextmenu', ev => { ev.preventDefault(); menuPlano(fi, k, ev.clientX, ev.clientY) });
       el.addEventListener('pointerdown', ev => {
         if (ev.button !== 0) return; ev.preventDefault();
@@ -3137,7 +3138,48 @@ function mostrarAtual(){
 }
 // ---- ver uma chapa em tela cheia (botão ⛶ no título da chapa; Esc ou o botão de novo fecha) ----
 let FOLHA_CHEIA = null;
+// ---- zoom na chapa: 2 cliques na peça aproxima; rodinha do mouse aproxima/afasta; arrastar o fundo (ou botão do meio) move a vista ----
+const ZOOM = {};   // chapa -> viewBox atual (fica mesmo quando a tela redesenha depois de mexer uma peça)
+function vbDe(svg){ const v = svg.viewBox.baseVal; return [v.x, v.y, v.width, v.height] }
+function porVb(svg, fi, vb){ svg.setAttribute('viewBox', vb.map(n => +n.toFixed(2)).join(' ')); ZOOM[fi] = vb }
+function zoomNaPeca(fi, el){
+  if (FOLHA_CHEIA !== fi) telaCheia(fi);
+  setTimeout(() => { const svg = document.querySelector(`#otimBox .folha[data-folha="${fi}"] svg`); if (!svg) return;
+    const g = el.isConnected ? el : svg.querySelector(`g.mv[data-i="${el.dataset.i}"]`); if (!g) return;
+    const r = g.getBoundingClientRect(), M = svg.getScreenCTM().inverse(), p = svg.createSVGPoint();
+    p.x = r.left; p.y = r.top; const a = p.matrixTransform(M); p.x = r.right; p.y = r.bottom; const b = p.matrixTransform(M);
+    const w = Math.max(b.x - a.x, 150), h = Math.max(b.y - a.y, 150), cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2, k = 2.2;
+    porVb(svg, fi, [cx - w * k / 2, cy - h * k / 2, w * k, h * k]);
+    if ($('cncMsg')) { $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = '🔍 Zoom na peça · rodinha = mais/menos zoom · arraste o fundo para andar · 2 cliques no fundo = chapa inteira · Esc sai' } }, 30);
+}
+function ligarZoom(){
+  document.querySelectorAll('#otimBox .folha svg').forEach(svg => {
+    const fi = +svg.closest('.folha').dataset.folha;
+    if (!svg.dataset.vb0) svg.dataset.vb0 = svg.getAttribute('viewBox');
+    if (ZOOM[fi]) svg.setAttribute('viewBox', ZOOM[fi].join(' '));
+    if (svg._zoomLigado) return; svg._zoomLigado = true;
+    const pto = ev => { const p = svg.createSVGPoint(); p.x = ev.clientX; p.y = ev.clientY; return p.matrixTransform(svg.getScreenCTM().inverse()) };
+    svg.addEventListener('wheel', ev => {
+      if (FOLHA_CHEIA !== fi && !ZOOM[fi] && !ev.ctrlKey) return;   // fora da tela cheia a rodinha rola a página (com Ctrl dá zoom)
+      ev.preventDefault();
+      const [x, y, w, h] = vbDe(svg), q = pto(ev), f = ev.deltaY > 0 ? 1.2 : 1 / 1.2;
+      const v0 = svg.dataset.vb0.split(/\s+/).map(Number);
+      if (f > 1 && w * f >= v0[2]) { porVb(svg, fi, v0); delete ZOOM[fi]; return }
+      porVb(svg, fi, [q.x - (q.x - x) * f, q.y - (q.y - y) * f, w * f, h * f]);
+    }, {passive: false});
+    svg.addEventListener('pointerdown', ev => {
+      const fundo = !(ev.target.closest && ev.target.closest('g.mv'));
+      if (!(ev.button === 1 || (ev.button === 0 && fundo && ZOOM[fi]))) return;
+      ev.preventDefault(); const ini = [ev.clientX, ev.clientY], vb = vbDe(svg), esc = vb[2] / svg.getBoundingClientRect().width;
+      const mv = e => porVb(svg, fi, [vb[0] - (e.clientX - ini[0]) * esc, vb[1] - (e.clientY - ini[1]) * esc, vb[2], vb[3]]);
+      const fim = () => { window.removeEventListener('pointermove', mv); window.removeEventListener('pointerup', fim) };
+      window.addEventListener('pointermove', mv); window.addEventListener('pointerup', fim);
+    });
+    svg.addEventListener('dblclick', ev => { if (ev.target.closest && ev.target.closest('g.mv')) return; porVb(svg, fi, svg.dataset.vb0.split(/\s+/).map(Number)); delete ZOOM[fi] });
+  });
+}
 function aplicarCheia(){
+  try { ligarZoom() } catch (e) {}
   document.querySelectorAll('.folha.cheia').forEach(d => d.classList.remove('cheia'));
   document.querySelectorAll('.btnCheia').forEach(b => b.textContent = '⛶ Tela cheia');
   if (FOLHA_CHEIA === null) return;
@@ -3146,12 +3188,14 @@ function aplicarCheia(){
   d.classList.add('cheia'); const b = d.querySelector('.btnCheia'); if (b) b.textContent = '✕ Fechar tela cheia';
 }
 function telaCheia(idx){
+  if (FOLHA_CHEIA === idx) delete ZOOM[idx];
   FOLHA_CHEIA = (FOLHA_CHEIA === idx) ? null : idx; aplicarCheia();
+  if (FOLHA_CHEIA === null) document.querySelectorAll('#otimBox .folha svg').forEach(svg => { const fi = +svg.closest('.folha').dataset.folha; if (!ZOOM[fi] && svg.dataset.vb0) svg.setAttribute('viewBox', svg.dataset.vb0) });
   try { if (FOLHA_CHEIA !== null && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
         else if (FOLHA_CHEIA === null && document.fullscreenElement) document.exitFullscreen().catch(() => {}) } catch (e) {}
 }
 document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.btnCheia'); if (!b) return; e.preventDefault(); e.stopPropagation(); telaCheia(+b.dataset.cheia) }, true);
-document.addEventListener('keydown', e => { if (e.key === 'Escape' && FOLHA_CHEIA !== null) { FOLHA_CHEIA = null; aplicarCheia(); try { if (document.fullscreenElement) document.exitFullscreen() } catch (er) {} } });
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && FOLHA_CHEIA !== null) { delete ZOOM[FOLHA_CHEIA]; FOLHA_CHEIA = null; aplicarCheia(); document.querySelectorAll('#otimBox .folha svg').forEach(svg => { if (svg.dataset.vb0) svg.setAttribute('viewBox', svg.dataset.vb0) }); try { if (document.fullscreenElement) document.exitFullscreen() } catch (er) {} } });
 document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && FOLHA_CHEIA !== null) { FOLHA_CHEIA = null; aplicarCheia() } });
 function renderPlano(){
   try { setTimeout(aplicarCheia, 0) } catch (e) {}

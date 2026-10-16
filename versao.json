@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-16.04",
+ "tela": "2026-10-16.05",
  "plugin": "2026-10-16.03",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,17 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.05",
+   "plugin": "2026-10-16.03",
+   "data": "16/10 13:40",
+   "titulo": "Zoom na peça",
+   "itens": [
+    "2 cliques na peça: abre a chapa em tela cheia já com zoom nela — dá para arrastar a peça normalmente",
+    "Rodinha do mouse: mais/menos zoom onde está o mouse · arraste o fundo (ou botão do meio) para andar · 2 cliques no fundo = chapa inteira",
+    "Nome da peça agora fica no botão direito → ✎ Nome da peça"
+   ]
+  },
   {
    "tela": "2026-10-16.04",
    "plugin": "2026-10-16.03",
