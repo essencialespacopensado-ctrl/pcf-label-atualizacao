@@ -1,10 +1,10 @@
 {
-  "versao": "1.4.6",
+  "versao": "1.4.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba CURVA: opção 'Ranhurar para dobrar' — a chapa sai aberta no tamanho da face de fora, com as ranhuras do lado de dentro só no trecho curvo (recorte Dinabox: contorno por fora + ranhuras por dentro)",
-    "Escolha a pele que fica sem cortar, a largura da ranhura, a fresa e o espaçamento (vazio = automático)",
-    "A aba Curva agora aceita o grupo inteiro: acha sozinha a peça que dobra",
-    "Recorte orgânico de tudo o que estiver selecionado, inclusive dentro de grupos"
+    "Ranhura para dobrar: escolha o sentido (ranhuras verticais ou horizontais)",
+    "Recuo inicial (da ponta até a 1ª ranhura) e quanto da peça é ranhurado",
+    "Profundidade da ranhura e distância entre ranhuras (centro a centro)",
+    "Vazio = automático pela curva; o quadro mostra de qual ponta o recuo é contado"
   ]
 }
