@@ -1205,7 +1205,14 @@ module PCFLabel
     d = copia(@dados_vivos)
     pl = ler_plano(id)
     if pl
-      d[:pecas] = copia(pl['pecas']) if pl['pecas'].is_a?(Array) && !pl['pecas'].empty?
+      if pl['pecas'].is_a?(Array) && !pl['pecas'].empty?
+        # o plano guarda as peças de quando foi feito; peça que apareceu depois no projeto (estava oculta, foi desenhada…)
+        # entra junto, para cair em "fora do plano" e ganhar lugar sem mexer nas chapas que você já ajustou
+        salvas = copia(pl['pecas'])
+        ids = salvas.map { |x| (x['id'] || x[:id]).to_s }
+        novas = (@dados_vivos[:pecas] || []).reject { |x| ids.include?((x[:id] || x['id']).to_s) }
+        d[:pecas] = salvas + copia(novas)
+      end
       d[:planoArq] = pl
     else
       d[:planoArq] = nil
@@ -1307,7 +1314,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-16.03'
+  PLUGIN_VERSAO = '2026-10-16.04'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end

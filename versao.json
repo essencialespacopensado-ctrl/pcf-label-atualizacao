@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-16.06",
- "plugin": "2026-10-16.03",
+ "plugin": "2026-10-16.04",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.06",
+   "plugin": "2026-10-16.04",
+   "data": "16/10 13:45",
+   "titulo": "Peça nova entra no plano salvo",
+   "itens": [
+    "Peça que aparece no projeto depois que o plano foi salvo (estava oculta ou foi desenhada depois) agora entra no plano ao abrir, sem mexer nas chapas que você já ajustou"
+   ]
+  },
   {
    "tela": "2026-10-16.06",
    "plugin": "2026-10-16.03",
