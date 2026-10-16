@@ -1,12 +1,24 @@
 {
- "tela": "2026-10-16.07",
- "plugin": "2026-10-16.04",
+ "tela": "2026-10-16.08",
+ "plugin": "2026-10-16.05",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.08",
+   "plugin": "2026-10-16.05",
+   "data": "16/10 14:00",
+   "titulo": "Plano acompanha o projeto",
+   "itens": [
+    "Peça que você mudou no SketchUp (medida, recorte ou espessura) sai do lugar antigo e ganha lugar novo no plano salvo, com o mesmo número — as outras peças não mexem",
+    "Furação/rebaixo alterado aparece na hora, na mesma posição",
+    "Peça apagada do projeto sai do plano; peça só oculta continua",
+    "Otimizar de novo já usa as medidas de agora"
+   ]
+  },
   {
    "tela": "2026-10-16.07",
    "plugin": "2026-10-16.04",

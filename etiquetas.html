@@ -386,7 +386,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-16.07';
+const VERSAO = '2026-10-16.08';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3104,6 +3104,11 @@ function abrirPlanoSalvo(sx){
   const porId = new Map(D.pecas.map(p => [p.id, p])), faltam = [], usadas = new Set();
   const assin = p => [Math.round(Math.max(p.w, p.h)), Math.round(Math.min(p.w, p.h)), Math.round(Math.abs(areaPoly(polyPts(p))) / 1000)].join('x');
   const fotoObj = JSON.parse(s.foto);
+  // peça que você mudou no projeto (medida ou recorte): sai do lugar antigo e ganha lugar de novo (as outras não mexem)
+  const mudaram = [];
+  const espDe = c => { const m = /(\d+(?:[.,]\d+)?)\s*mm\s*$/.exec(c || ''); return m ? +m[1].replace(',', '.') : null };
+  if (D.origem === 'sketchup') fotoObj.forEach(f => { const ef = espDe(f.cor); f.pos = f.pos.filter(o => { const p = porId.get(o.id); const ep = p && espDe(p.cor);
+    if (p && ((o.sig && assin(p) !== o.sig) || (ef && ep && Math.abs(ef - ep) > 0.05))) { mudaram.push(p); p._nSalvo = o.n; return false } return true }) });
   fotoObj.forEach(f => f.pos.forEach(o => { if (porId.has(o.id)) usadas.add(porId.get(o.id)) }));
   fotoObj.forEach(f => f.pos.forEach(o => { if (porId.has(o.id) || !o.sig) return;
     const c = D.pecas.find(p => !usadas.has(p) && !(p.dentro && p.tipo !== 'peca') && assin(p) === o.sig);
@@ -3119,7 +3124,8 @@ function abrirPlanoSalvo(sx){
     const maes = D.pecas.filter(p => !(p.dentro && p.tipo !== 'peca')), todos = folhas.flatMap(f => f.pos.map(pp => pp.it.p));
     if (todos.length && todos.every(p => salvos.has(p.id)) && new Set(todos.map(p => salvos.get(p.id))).size === todos.length) {
       todos.forEach(p => { p.n = salvos.get(p.id); if (p._nomeAuto && D.origem === 'sketchup') p.nome = 'Painel ' + p.n });
-      let k = Math.max(...todos.map(p => p.n)); maes.filter(p => !todos.includes(p)).forEach(p => { p.n = ++k; if (p._nomeAuto && D.origem === 'sketchup') p.nome = 'Painel ' + p.n });
+      const nUsados = new Set(todos.map(p => p.n));
+      let k = Math.max(...todos.map(p => p.n), ...mudaram.map(p => +p._nSalvo || 0)); maes.filter(p => !todos.includes(p)).forEach(p => { p.n = (p._nSalvo && !nUsados.has(p._nSalvo)) ? p._nSalvo : ++k; nUsados.add(p.n); if (p._nomeAuto && D.origem === 'sketchup') p.nome = 'Painel ' + p.n });
       D.pecas.filter(p => !maes.includes(p)).forEach(p => { p.n = ++k });
       D.pecas.sort((a, b) => a.n - b.n); PLANO.numFixo = true; try { sincronizarSketchUp() } catch (e) {} } }
   // chapas sem peça ajustada à mão encostam no batente (canto superior direito); as ajustadas ficam como você deixou
@@ -3130,7 +3136,7 @@ function abrirPlanoSalvo(sx){
   folhas.forEach(f => { if (!f.cor) return; f.pos.forEach(pp => { const p = pp.it.p; if (p.cor !== f.cor) { p.cor = f.cor; D.pecas.forEach(q => { if (q.dentro && q.tipo !== 'peca' && paiDe(q) === p) q.cor = f.cor }) } }) });
   renderPlano();
   $('cncMsg').className = faltam.length || fora.length ? 'hint erro' : 'hint ok';
-  $('cncMsg').textContent = `📂 Plano de ${s.data} aberto.` + (cs0.ok ? ` ✔ ${cs0.ok} peça(s) que estavam em cima de outra foram para o lugar livre mais perto${cs0.mudou.length ? ' (' + txtMudou(cs0.mudou) + ')' : ''} — o resto ficou como você ajustou.` : '') + (cs0.falta.length ? ` ⚠ Sem lugar livre para nº ${cs0.falta.join(', ')}: arraste para outra chapa.` : '') + (faltam.length ? ` ${faltam.length} peça(s) do plano não existem mais no Aspire.` : '') + (fora.length ? ` Peças que não estavam no plano: nº ${fora.map(p => p.n).join(', ')}.` : '');
+  $('cncMsg').textContent = `📂 Plano de ${s.data} aberto.` + (mudaram.length ? ` ✏ Peça(s) que você mudou no projeto ganharam lugar novo: nº ${mudaram.map(p => p.n).join(', ')}.` : '') + (cs0.ok ? ` ✔ ${cs0.ok} peça(s) que estavam em cima de outra foram para o lugar livre mais perto${cs0.mudou.length ? ' (' + txtMudou(cs0.mudou) + ')' : ''} — o resto ficou como você ajustou.` : '') + (cs0.falta.length ? ` ⚠ Sem lugar livre para nº ${cs0.falta.join(', ')}: arraste para outra chapa.` : '') + (faltam.length ? ` ${faltam.length} peça(s) do plano não existem mais no Aspire.` : '') + (fora.length ? ` Peças que não estavam no plano: nº ${fora.map(p => p.n).join(', ')}.` : '');
 }
 // com plano na tela, a folha de corte de agora (como está no Aspire) fica escondida
 let VER_ATUAL = false;

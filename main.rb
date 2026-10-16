@@ -1208,10 +1208,14 @@ module PCFLabel
       if pl['pecas'].is_a?(Array) && !pl['pecas'].empty?
         # o plano guarda as peças de quando foi feito; peça que apareceu depois no projeto (estava oculta, foi desenhada…)
         # entra junto, para cair em "fora do plano" e ganhar lugar sem mexer nas chapas que você já ajustou
-        salvas = copia(pl['pecas'])
-        ids = salvas.map { |x| (x['id'] || x[:id]).to_s }
-        novas = (@dados_vivos[:pecas] || []).reject { |x| ids.include?((x[:id] || x['id']).to_s) }
-        d[:pecas] = salvas + copia(novas)
+        # peça que está no projeto vem com a medida de AGORA (você mexeu nela → o plano ajusta);
+        # peça do plano que só está oculta continua igual; peça apagada do projeto sai do plano
+        base = ->(x) { (x['id'] || x[:id]).to_s.sub(/\Ask/, '').split('#').first.to_s }
+        vivas = copia(@dados_vivos[:pecas] || [])
+        ids_vivos = vivas.map { |x| base.call(x) }
+        mod = Sketchup.active_model
+        ocultas = copia(pl['pecas']).reject { |x| b = base.call(x); ids_vivos.include?(b) || (b =~ /\A\d+\z/ && mod.find_entity_by_persistent_id(b.to_i).nil?) }
+        d[:pecas] = vivas + ocultas
       end
       d[:planoArq] = pl
     else
@@ -1314,7 +1318,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-16.04'
+  PLUGIN_VERSAO = '2026-10-16.05'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
