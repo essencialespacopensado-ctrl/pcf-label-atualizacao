@@ -1,9 +1,11 @@
 {
-  "versao": "1.3.3",
+  "versao": "1.4.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba Criar com todos os botões empilhados: Ambiente, Peça avulsa, Recorte orgânico, Moldura e Vão",
-    "Moldura agora fica dentro da aba (sem janela separada), com todas as opções",
-    "Cada bloco abre e fecha clicando no título (e lembra como você deixou)"
+    "Painel com uma aba para cada ferramenta: Medidas, Paredes, Peça, Orgânico, Moldura, Vão, Elétrica e Hidráulica",
+    "Construtor de paredes LINEAR: clique ponto a ponto (ou digite o comprimento), a espessura é descontada sozinha em cada canto, em qualquer ângulo",
+    "Construir piso e teto seguindo exatamente o contorno das paredes",
+    "Elétrica e Hidráulica: mini biblioteca, pega a parede do centro da tela, mede pelo centro do ponto (altura e distância da esquerda) e já cota",
+    "CORREÇÃO: moldura não fica mais afastada da porta"
   ]
 }
