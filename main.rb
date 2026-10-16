@@ -53,15 +53,95 @@ module PCFLabel
     t.empty? ? nil : t.capitalize
   end
 
+  # ---- usinagens desenhadas com a fresa do Dinabox (PCF Ferramentas: orgânico, ranhuras, rebaixo de moldura) ----
+  # dinabox_polyline = caminho do CENTRO da fresa; align 1 = por fora, 2 = por dentro; pz = profundidade (mm)
+  def self.usinagem?(x)
+    x.get_attribute('dinabox', 'polyline').is_a?(String) ||
+      (x.respond_to?(:definition) && x.definition.name =~ /dinabox_polyline/i) ||
+      x.get_attribute('pcf', 'tipo') == 'linha_corte'
+  end
+
+  # laços (fechados ou abertos) das arestas de uma polyline, em ordem
+  def self.cadeias(defn)
+    eds = defn.entities.grep(Sketchup::Edge)
+    viz = Hash.new { |hh, k| hh[k] = [] }
+    eds.each { |ed| viz[ed.start] << ed; viz[ed.end] << ed }
+    usadas = {}
+    res = []
+    inicio = viz.keys.sort_by { |vx| viz[vx].size == 1 ? 0 : 1 }
+    inicio.each do |v0|
+      next if viz[v0].all? { |ed| usadas[ed] }
+      pts = [v0.position]; v = v0; fechado = false
+      loop do
+        ed = viz[v].find { |x| !usadas[x] }
+        break unless ed
+        usadas[ed] = true
+        v = ed.other_vertex(v)
+        if v == v0 then fechado = true; break end
+        pts << v.position
+      end
+      res << [pts, fechado] if pts.size >= 2
+    end
+    res
+  end
+
+  # afasta um contorno 2D (d > 0 para fora, d < 0 para dentro)
+  def self.afastar2(pts, d)
+    n = pts.size
+    return pts if n < 3 || d.abs < 1e-9
+    ar = 0.0
+    pts.each_with_index { |p, i| q = pts[(i + 1) % n]; ar += p[0] * q[1] - q[0] * p[1] }
+    sg = ar > 0 ? 1.0 : -1.0 # anti-horário: normal para fora = (dy, -dx)
+    pts.each_with_index.map do |p, i|
+      a = pts[i - 1]; b = pts[(i + 1) % n]
+      e1 = [p[0] - a[0], p[1] - a[1]]; e2 = [b[0] - p[0], b[1] - p[1]]
+      l1 = Math.hypot(*e1); l2 = Math.hypot(*e2)
+      next p if l1 < 1e-9 || l2 < 1e-9
+      n1 = [sg * e1[1] / l1, -sg * e1[0] / l1]; n2 = [sg * e2[1] / l2, -sg * e2[0] / l2]
+      m = [n1[0] + n2[0], n1[1] + n2[1]]; ml = Math.hypot(*m)
+      next [p[0] + n1[0] * d, p[1] + n1[1] * d] if ml < 1e-9
+      cs = (m[0] * n1[0] + m[1] * n1[1]) / ml
+      k = d / [cs, 0.2].max
+      [p[0] + m[0] / ml * k, p[1] + m[1] / ml * k]
+    end
+  end
+
+  # recorta um polígono 2D na caixa [x0,y0,x1,y1] (Sutherland-Hodgman)
+  def self.recortar2(pts, cx)
+    x0, y0, x1, y1 = cx
+    lados = [[->(p) { p[0] >= x0 }, ->(a, b) { t = (x0 - a[0]) / (b[0] - a[0]); [x0, a[1] + t * (b[1] - a[1])] }],
+             [->(p) { p[0] <= x1 }, ->(a, b) { t = (x1 - a[0]) / (b[0] - a[0]); [x1, a[1] + t * (b[1] - a[1])] }],
+             [->(p) { p[1] >= y0 }, ->(a, b) { t = (y0 - a[1]) / (b[1] - a[1]); [a[0] + t * (b[0] - a[0]), y0] }],
+             [->(p) { p[1] <= y1 }, ->(a, b) { t = (y1 - a[1]) / (b[1] - a[1]); [a[0] + t * (b[0] - a[0]), y1] }]]
+    lados.each do |dentro, corta|
+      ent = pts; pts = []
+      next if ent.empty?
+      ent.each_with_index do |p, i|
+        a = ent[i - 1]
+        if dentro.(p)
+          pts << corta.(a, p) unless dentro.(a)
+          pts << p
+        elsif dentro.(a)
+          pts << corta.(a, p)
+        end
+      end
+    end
+    pts
+  end
+
   def self.coletar(ents, tr, cam, pecas, pai_bb = nil, pids = [], herd = nil, origem = nil)
     ents.each do |e|
       next unless e.is_a?(Sketchup::Group) || e.is_a?(Sketchup::ComponentInstance)
       next if e.hidden? || !camada_visivel?(e.layer)
       next if e.get_attribute('pcf', 'nome') || e.name == 'PCF Nome'    # texto 3D do nome não é peça
+      next if usinagem?(e)                                             # linha de fresa / linha de conferência não é peça
+      # modelagem que o PCF Ferramentas já transformou em tamponamento/chapa aberta: corta só o tamponamento
+      vid = e.get_attribute('pcf', 'virou')
+      next if vid && (Sketchup.active_model.find_entity_by_persistent_id(vid.to_i) rescue nil)
       d = e.definition
       orig = origem || origem_de(e, d)
       t = tr * e.transformation
-      filhos = d.entities.select { |x| (x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance)) && !x.get_attribute('pcf', 'nome') && x.name != 'PCF Nome' }
+      filhos = d.entities.select { |x| (x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance)) && !x.get_attribute('pcf', 'nome') && x.name != 'PCF Nome' && !usinagem?(x) }
       faces = d.entities.grep(Sketchup::Face)
       nome = e.name.to_s.empty? ? d.name.to_s : e.name.to_s
       if faces.size >= 4 && filhos.empty?
@@ -121,6 +201,45 @@ module PCFLabel
           de_cima = (x[:n] % n) > 0                        # fundo olhando para cima = rebaixo aberto em cima
           { pts3: x[:pts], prof: (de_cima ? dd : esp_mm - dd).round(2), lado: de_cima ? 1 : -1 }
         end
+        # usinagens da fresa do Dinabox (orgânico, ranhuras): contorno por fora, furos e rebaixos por dentro
+        pl_cont = nil; pl_furos = []; pl_rebs = []
+        d.entities.each do |pl|
+          next unless pl.respond_to?(:definition) && pl.get_attribute('dinabox', 'polyline').is_a?(String)
+          dados = (JSON.parse(pl.get_attribute('dinabox', 'polyline')) rescue nil)
+          next unless dados
+          raio = dados['di'].to_f.mm / 2.0
+          pz = dados['pz'].to_f
+          tp = t * pl.transformation
+          cadeias(pl.definition).each do |lp, fechado|
+            w = lp.map { |p| p.transform(tp) }
+            prof_plano = dep.(w[0])                       # em que face está desenhada
+            uv2 = w.map { |p| q = p - o; [q % u, q % v] }
+            if fechado && uv2.size >= 3
+              final = afastar2(uv2, dados['align'].to_s == '1' ? -raio : raio)
+            elsif uv2.size == 2                           # linha reta aberta: ranhura da largura da fresa
+              a, b = uv2; dx = b[0] - a[0]; dy = b[1] - a[1]; l = Math.hypot(dx, dy)
+              next if l < 1e-6
+              nx = -dy / l * raio; ny = dx / l * raio
+              final = [[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]]
+            else
+              next
+            end
+            p3 = final.map { |x, y| o.offset(u, x).offset(v, y).offset(n, prof_plano) }
+            atravessa = pz >= esp_mm - 0.3
+            if dados['align'].to_s == '1'
+              if atravessa
+                arf = ->(pp) { s2 = 0.0; pp.each_with_index { |q1, k| q2 = pp[(k + 1) % pp.size]; s2 += q1[0] * q2[1] - q2[0] * q1[1] }; s2.abs / 2 }
+                pl_cont = [p3, arf.(final)] if pl_cont.nil? || arf.(final) > pl_cont[1]
+              end
+            elsif atravessa
+              pl_furos << p3
+            else
+              lado = -prof_plano.to_mm < esp_mm / 2.0 ? 1 : -1
+              pl_rebs << { pts3: p3, prof: pz.round(2), lado: lado, pl: true }
+            end
+          end
+        end
+        rebs.concat(pl_rebs)
         # se a maioria dos rebaixos é do outro lado, vira a peça (a máquina só usina por cima)
         virar = rebs.count { |r| r[:lado] < 0 } > rebs.count { |r| r[:lado] > 0 }
         p2 = ->(p) { w = p - o; [((virar ? -1 : 1) * (w % u)).to_mm.round(2), (w % v).to_mm.round(2)] }
@@ -131,12 +250,21 @@ module PCFLabel
         ar2 = ->(pp) { s2 = 0.0; pp.each_with_index { |q1, k| q2 = pp[(k + 1) % pp.size]; s2 += q1[0] * q2[1] - q2[0] * q1[1] }; (s2 / 2).abs }
         cand = [ext_loop.(f)]; cand << ext_loop.(f_baixo[:f]) if f_baixo
         contorno = cand.map { |pp| pp.map { |p| p2.(p) } }.max_by { |pp| ar2.(pp) }
+        contorno = pl_cont[0].map { |p| p2.(p) } if pl_cont   # recorte feito com a fresa do Dinabox: a peça é o contorno da fresa
         # furos: buracos que aparecem nas duas faces (atravessam)
         buracos = ->(fc) { fc ? fc.loops.reject(&:outer?).map { |lp| lp.vertices.map { |vv| p2.(vv.position.transform(t)) } } : [] }
         cen = ->(pp) { [pp.sum { |q| q[0] } / pp.size, pp.sum { |q| q[1] } / pp.size] }
         dentro2 = ->(pt, pp) { c = false; j = pp.size - 1; pp.each_with_index { |q, i2| r = pp[j]; c = !c if ((q[1] > pt[1]) != (r[1] > pt[1])) && (pt[0] < (r[0] - q[0]) * (pt[1] - q[1]) / (r[1] - q[1]) + q[0]); j = i2 }; c }
-        rebs2 = rebs.map { |r| { pts: r[:pts3].map { |p| p2.(p) }, prof: r[:prof], lado: (virar ? -r[:lado] : r[:lado]) } }
+        rebs2 = rebs.map { |r| { pts: r[:pts3].map { |p| p2.(p) }, prof: r[:prof], lado: (virar ? -r[:lado] : r[:lado]), pl: r[:pl] } }
+        # ranhura que passa da borda: só até a borda da peça (o contorno corta o resto)
+        unless pl_rebs.empty?
+          xs = contorno.map(&:first); ys = contorno.map(&:last)
+          caixa = [xs.min, ys.min, xs.max, ys.max]
+          rebs2 = rebs2.map { |r| r[:pl] ? r.merge(pts: recortar2(r[:pts], caixa).map { |x, y| [x.round(2), y.round(2)] }) : r }.reject { |r| r[:pts].size < 3 }
+        end
+        rebs2.each { |r| r.delete(:pl) }
         furos = (buracos.(f) + buracos.(f_baixo && f_baixo[:f])).reject { |h| c = cen.(h); rebs2.any? { |r| dentro2.(c, r[:pts]) } }
+        furos += pl_furos.map { |pp| pp.map { |p| p2.(p) } }
         # o mesmo furo visto nas duas faces conta uma vez
         furos = furos.each_with_object([]) { |h, acc| c = cen.(h); acc << h unless acc.any? { |g| g2 = cen.(g); (g2[0] - c[0]).abs < 1 && (g2[1] - c[1]).abs < 1 } }
         mat = e.material ? e.material.display_name : (faces.map { |x| x.material && x.material.display_name }.compact.group_by(&:itself).max_by { |_, vv| vv.size }&.first)
@@ -1119,7 +1247,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-15.12'
+  PLUGIN_VERSAO = '2026-10-16.01'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
