@@ -1,9 +1,10 @@
 {
-  "versao": "1.4.9",
+  "versao": "1.5.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Chapa curva aberta vai 5000 mm para cima na MESMA posição da peça no projeto (como o orgânico)",
-    "Fica no prumo (em pé ou deitada, sem inclinar), com a face das ranhuras para o lado de dentro da curva",
-    "Chapa 1 face / 2 faces no lugar de laminado; ranhura com sentido, recuo, comprimento, profundidade e distância"
+    "Aba CURVA cria agrupadas: selecione várias peças ou o grupo inteiro",
+    "As peças curvas saem abertas (ranhuradas se marcado) e as peças planas do grupo saem como recorte orgânico, tudo de uma vez",
+    "Tudo vai 5000 mm para cima na posição de cada peça, no prumo; um Ctrl+Z desfaz tudo",
+    "Peças ocultas no grupo são ignoradas"
   ]
 }
