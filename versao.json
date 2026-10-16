@@ -1,12 +1,22 @@
 {
- "tela": "2026-10-16.02",
- "plugin": "2026-10-16.02",
+ "tela": "2026-10-16.03",
+ "plugin": "2026-10-16.03",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.03",
+   "plugin": "2026-10-16.03",
+   "data": "16/10 13:30",
+   "titulo": "Mostra qual recorte é",
+   "itens": [
+    "Nos recortes a conferir: ao clicar para ver, o SketchUp destaca em VERMELHO só aquele furo/rebaixo (com o nome FURO 1, REBAIXO 2…)",
+    "No desenho da peça na tela, o recorte também pisca em vermelho, e a mensagem diz qual é e a medida dele"
+   ]
+  },
   {
    "tela": "2026-10-16.02",
    "plugin": "2026-10-16.02",

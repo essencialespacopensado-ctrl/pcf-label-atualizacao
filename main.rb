@@ -258,7 +258,7 @@ module PCFLabel
         buracos = ->(fc) { fc ? fc.loops.reject(&:outer?).map { |lp| lp.vertices.map { |vv| p2.(vv.position.transform(t)) } } : [] }
         cen = ->(pp) { [pp.sum { |q| q[0] } / pp.size, pp.sum { |q| q[1] } / pp.size] }
         dentro2 = ->(pt, pp) { c = false; j = pp.size - 1; pp.each_with_index { |q, i2| r = pp[j]; c = !c if ((q[1] > pt[1]) != (r[1] > pt[1])) && (pt[0] < (r[0] - q[0]) * (pt[1] - q[1]) / (r[1] - q[1]) + q[0]); j = i2 }; c }
-        rebs2 = rebs.map { |r| { pts: r[:pts3].map { |p| p2.(p) }, prof: r[:prof], lado: (virar ? -r[:lado] : r[:lado]), pl: r[:pl] } }
+        rebs2 = rebs.map { |r| { pts: r[:pts3].map { |p| p2.(p) }, prof: r[:prof], lado: (virar ? -r[:lado] : r[:lado]), pl: r[:pl], p3: r[:pts3] } }
         # ranhura que passa da borda: só até a borda da peça (o contorno corta o resto)
         unless pl_rebs.empty?
           xs = contorno.map(&:first); ys = contorno.map(&:last)
@@ -266,10 +266,16 @@ module PCFLabel
           rebs2 = rebs2.map { |r| r[:pl] ? r.merge(pts: recortar2(r[:pts], caixa).map { |x, y| [x.round(2), y.round(2)] }) : r }.reject { |r| r[:pts].size < 3 }
         end
         rebs2.each { |r| r.delete(:pl) }
-        furos = (buracos.(f) + buracos.(f_baixo && f_baixo[:f])).reject { |h| c = cen.(h); rebs2.any? { |r| dentro2.(c, r[:pts]) } }
-        furos += pl_furos.map { |pp| pp.map { |p| p2.(p) } }
+        rebs3 = rebs2.map { |r| r.delete(:p3) }
+        # furos com o contorno 3D junto (para mostrar no SketchUp qual recorte é qual)
+        buracos3 = ->(fc) { fc ? fc.loops.reject(&:outer?).map { |lp| lp.vertices.map { |vv| vv.position.transform(t) } } : [] }
+        pares = (buracos3.(f) + buracos3.(f_baixo && f_baixo[:f])).map { |h3| [h3.map { |p| p2.(p) }, h3] }
+        pares = pares.reject { |h, _| c = cen.(h); rebs2.any? { |r| dentro2.(c, r[:pts]) } }
+        pares += pl_furos.map { |pp| [pp.map { |p| p2.(p) }, pp] }
         # o mesmo furo visto nas duas faces conta uma vez
-        furos = furos.each_with_object([]) { |h, acc| c = cen.(h); acc << h unless acc.any? { |g| g2 = cen.(g); (g2[0] - c[0]).abs < 1 && (g2[1] - c[1]).abs < 1 } }
+        pares = pares.each_with_object([]) { |(h, h3), acc| c = cen.(h); acc << [h, h3] unless acc.any? { |g, _| g2 = cen.(g); (g2[0] - c[0]).abs < 1 && (g2[1] - c[1]).abs < 1 } }
+        furos = pares.map(&:first)
+        (@rec3 ||= {})[e.persistent_id.to_s] = { 'f' => pares.map(&:last), 'r' => rebs3 }
         mat = e.material ? e.material.display_name : (faces.map { |x| x.material && x.material.display_name }.compact.group_by(&:itself).max_by { |_, vv| vv.size }&.first)
         mat ||= herd
         auto = (orig == 'Dinabox' && papel_dinabox(d)) || papel(n, vs, pai_bb || Sketchup.active_model.bounds, esp)
@@ -745,6 +751,49 @@ module PCFLabel
       end
     end
   end
+  # contorno de um recorte (furo/rebaixo) desenhado por cima de tudo, em vermelho piscando
+  if defined?(Sketchup::Overlay)
+    class DestaqueRecorte < Sketchup::Overlay
+      attr_accessor :alvo
+      def initialize; super('pcf.destaque_recorte', 'PCF Label: recorte destacado'); @alvo = nil end
+      def draw(view)
+        return unless @alvo
+        pts, txt = @alvo
+        view.line_stipple = ''
+        view.drawing_color = Sketchup::Color.new(255, 255, 255); view.line_width = 9
+        view.draw2d(GL_LINE_LOOP, pts.map { |p| view.screen_coords(p) })
+        view.drawing_color = Sketchup::Color.new(230, 0, 60); view.line_width = 5
+        view.draw2d(GL_LINE_LOOP, pts.map { |p| view.screen_coords(p) })
+        c = Geom::Point3d.new(pts.sum(&:x) / pts.size, pts.sum(&:y) / pts.size, pts.sum(&:z) / pts.size)
+        q = view.screen_coords(c)
+        view.draw_text(Geom::Point3d.new(q.x, q.y - 9, 0), txt, size: 13, bold: true, align: TextAlignCenter, color: Sketchup::Color.new(230, 0, 60))
+      end
+    end
+  end
+  def self.destacar_recorte(base, tipo, idx)
+    return unless defined?(DestaqueRecorte)
+    m = Sketchup.active_model
+    c = caminho(base)
+    return unless c
+    lista, t = c
+    inst = lista.last
+    pecas = []
+    coletar([inst], t * inst.transformation.inverse, [], pecas)
+    r = (@rec3 || {})[inst.persistent_id.to_s]
+    return unless r
+    pts = (r[tipo] || [])[idx - 1]
+    return unless pts && pts.size >= 2
+    @destaque = nil if @destaque && @destaque_m != m
+    unless @destaque
+      @destaque = m.overlays.to_a.find { |o| o.overlay_id == 'pcf.destaque_recorte' rescue false }
+      unless @destaque then @destaque = DestaqueRecorte.new; m.overlays.add(@destaque) end
+      @destaque_m = m
+    end
+    @destaque.enabled = true rescue nil
+    @destaque.alvo = [pts, "#{tipo == 'f' ? 'FURO' : 'REBAIXO'} #{idx}"]
+    m.active_view.invalidate
+  end
+
   def self.overlay_numero(inst, lista_t, ref)
     return unless defined?(NumeroAberto)
     m = Sketchup.active_model
@@ -855,6 +904,14 @@ module PCFLabel
       File.binwrite(File.join(ENV['APPDATA'], 'PCF Label', 'diag.json'), ref[4..-1].to_s.b) rescue nil
       return true
     end
+    # recorte dentro da peça (#f1 = furo 1, #r2 = rebaixo 2): mostra a peça e destaca SÓ esse recorte
+    if (rec = ref.to_s[/#([fr])(\d+)\z/])
+      base = ref.to_s.sub(/#[fr]\d+\z/, '')
+      ok = selecionar(base)
+      destacar_recorte(base, rec[1], rec[2..].to_i) rescue nil
+      return ok
+    end
+    (@destaque.alvo = nil rescue nil) if @destaque
     m = Sketchup.active_model
     c = caminho(ref)
     return false unless c
@@ -1250,7 +1307,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-16.02'
+  PLUGIN_VERSAO = '2026-10-16.03'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
