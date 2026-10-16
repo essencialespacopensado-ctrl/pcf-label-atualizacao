@@ -1,10 +1,9 @@
 {
-  "versao": "1.4.7",
+  "versao": "1.4.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Ranhura para dobrar: escolha o sentido (ranhuras verticais ou horizontais)",
-    "Recuo inicial (da ponta até a 1ª ranhura) e quanto da peça é ranhurado",
-    "Profundidade da ranhura e distância entre ranhuras (centro a centro)",
-    "Vazio = automático pela curva; o quadro mostra de qual ponta o recuo é contado"
+    "Aba CURVA: no lugar de laminado externo/interno, escolha Chapa 1 face ou 2 faces",
+    "Chapa 1 face: as ranhuras vão na face de TRÁS (face B) e o acabamento fica para fora da curva",
+    "Ranhura: sentido vertical/horizontal, recuo inicial, quanto ranhurar, profundidade e distância entre ranhuras"
   ]
 }
