@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-16.08",
+ "tela": "2026-10-16.09",
  "plugin": "2026-10-16.06",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.09",
+   "plugin": "2026-10-16.06",
+   "data": "16/10 14:15",
+   "titulo": "📌 Encostar e fixar",
+   "itens": [
+    "Botão 📌 Encostar e fixar em cada chapa: depois que você arrumar, ele só aproxima as peças do batente (sem trocar a sua arrumação) e trava a chapa",
+    "Chapa fixada não muda mais: otimizar, juntar chapas e encaixar peças novas não mexem nela. Para soltar, clique em 🔒 Travada"
+   ]
+  },
   {
    "tela": "2026-10-16.08",
    "plugin": "2026-10-16.06",
