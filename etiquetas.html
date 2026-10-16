@@ -117,6 +117,11 @@ select.tipo.falta{border-color:#e0a800;background:#fff3cd}
 .folha h3 .org:hover{background:#eaf1fc}
 @media print{.folha h3 .org{display:none}}
 .folha svg{width:100%;height:auto;max-height:520px;display:block}
+.btnCheia{margin:0 8px 4px 0;padding:3px 10px;border:1px solid #1f5fbf;background:#eaf2ff;color:#1f5fbf;border-radius:6px;font-weight:700;cursor:pointer}
+.btnCheia:hover{background:#1f5fbf;color:#fff}
+.folha.cheia{position:fixed !important;inset:0 !important;z-index:99990 !important;background:#fff !important;margin:0 !important;padding:8px 12px !important;overflow:auto;box-sizing:border-box;width:auto !important;max-width:none !important}
+.folha.cheia svg{max-height:none !important;height:calc(100vh - 70px) !important;width:100% !important}
+.folha.cheia .btnCheia{background:#c8102e;border-color:#c8102e;color:#fff}
 .folha svg .pc{cursor:pointer}
 #folhas .folha svg .pc.peca{cursor:grab;touch-action:none}
 #folhas .folha svg .pc.movida path:first-child{fill:#d9f2e3}
@@ -381,7 +386,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-16.03';
+const VERSAO = '2026-10-16.04';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -2923,7 +2928,7 @@ function svgPlano(f, idx){
   }
   const area = f.pos.reduce((s, {it}) => s + Math.abs(areaPoly(polyPts(it.p))) - aberturas(it.p).reduce((a, h) => a + Math.abs(areaPoly(h)), 0), 0) / (W * H) * 100;
   usarChapa(null);
-  return `<div class="folha${TEC ? ' tec' : ''}" data-folha="${idx}"><h3><span>${f.retalho ? '<b style="background:#1f5fbf;color:#fff;padding:1px 8px;border-radius:4px;margin-right:6px">♻ CORTAR DE RETALHO</b>' : ''}${f.naoCoube ? `<button class="girarCaber" data-f="${idx}" style="background:#c8102e;color:#fff;border-color:#c8102e;margin:0 6px 4px 0;padding:4px 10px">↻ Girar para caber</button>` : ''}${f.naoCoube && f.pos.some(pp => ruins.has(pp)) ? '<b style="color:#c8102e">NÃO COUBE · </b>' : ''}${miniFoto(f.cor, 34)}${f.pos.some(pp => veioGirado(f, pp)) ? `<b style="background:#c8102e;color:#fff;padding:1px 6px;border-radius:4px;margin-right:4px" title="Peça maior que a chapa no sentido do veio: foi girada contra o veio">⚠ VEIO GIRADO: nº ${f.pos.filter(pp => veioGirado(f, pp)).map(pp => pp.it.p.n).join(', ')}</b>` : ''}Chapa ${nCh(idx)} · ${esc(f.cor)} · <b>${fmt(Math.max(W, H))} × ${fmt(Math.min(W, H))} mm</b>${f.dim ? ` · <b style="color:#8a5a00">SOBRA ${Math.max(W, H)} × ${Math.min(W, H)}</b>` : (cfg.lamina && cfg.lamina[f.cor] ? ` · lâmina natural ${Math.max(W, H)} × ${Math.min(W, H)}` : '')}${f.dim ? ' · <b>sobra: gira e espelha à vontade</b>' : f.pos.some(pp => temVeio(pp.it.p)) ? (cfg.oRetalho ? ' · <b style="color:#c8102e">com veio, mas retalho: gira</b>' : (f.pos.some(pp => veioGirado(f, pp)) ? ' · <b>com veio ↕ — só as marcadas em vermelho foram giradas (não cabiam)</b>' : ' · <b>com veio ↕ (não gira 90°)</b>')) : ''} · ${f.pos.length} peças · aprov. ${TEC ? `<span class="aprov"><i style="width:${Math.min(100, Math.round(area))}%"></i></span>` : ''}${Math.round(area)}%${txtLado(f) ? `<br><b style="display:inline-block;margin-top:3px;padding:1px 6px;border-radius:4px;background:${ladoFolha(f) === 'verso' ? '#c8102e' : '#1d7a46'};color:#fff">${txtLado(f)}</b>` : ''}</span><button class="org orgP" data-f="${idx}" title="Encosta as peças no canto superior direito com folga ${cfg.oFolga} mm e margem ${cfg.oMargem} mm">🧲 Organizar chapa</button>${f.naoCoube ? '' : `<button class="org travP" data-f="${idx}" title="Travada: nenhuma peça entra nem sai desta chapa (otimizar, juntar chapas e arrastar não mexem nela). Dentro dela você ainda pode pedir outra arrumação." style="${f.trava ? 'background:#1f5fbf;color:#fff;border-color:#1f5fbf' : ''}">${f.trava ? '🔒 Travada' : '🔓 Travar'}</button><button class="org outraP" data-f="${idx}" title="Troca a arrumação desta chapa pelas mesmas peças (cada clique, uma opção diferente)">🔄 Outra arrumação</button>`}</h3>
+  return `<div class="folha${TEC ? ' tec' : ''}" data-folha="${idx}"><h3><span><button class="btnCheia" data-cheia="${idx}" title="Ver esta chapa em tela cheia (Esc fecha)">⛶ Tela cheia</button>${f.retalho ? '<b style="background:#1f5fbf;color:#fff;padding:1px 8px;border-radius:4px;margin-right:6px">♻ CORTAR DE RETALHO</b>' : ''}${f.naoCoube ? `<button class="girarCaber" data-f="${idx}" style="background:#c8102e;color:#fff;border-color:#c8102e;margin:0 6px 4px 0;padding:4px 10px">↻ Girar para caber</button>` : ''}${f.naoCoube && f.pos.some(pp => ruins.has(pp)) ? '<b style="color:#c8102e">NÃO COUBE · </b>' : ''}${miniFoto(f.cor, 34)}${f.pos.some(pp => veioGirado(f, pp)) ? `<b style="background:#c8102e;color:#fff;padding:1px 6px;border-radius:4px;margin-right:4px" title="Peça maior que a chapa no sentido do veio: foi girada contra o veio">⚠ VEIO GIRADO: nº ${f.pos.filter(pp => veioGirado(f, pp)).map(pp => pp.it.p.n).join(', ')}</b>` : ''}Chapa ${nCh(idx)} · ${esc(f.cor)} · <b>${fmt(Math.max(W, H))} × ${fmt(Math.min(W, H))} mm</b>${f.dim ? ` · <b style="color:#8a5a00">SOBRA ${Math.max(W, H)} × ${Math.min(W, H)}</b>` : (cfg.lamina && cfg.lamina[f.cor] ? ` · lâmina natural ${Math.max(W, H)} × ${Math.min(W, H)}` : '')}${f.dim ? ' · <b>sobra: gira e espelha à vontade</b>' : f.pos.some(pp => temVeio(pp.it.p)) ? (cfg.oRetalho ? ' · <b style="color:#c8102e">com veio, mas retalho: gira</b>' : (f.pos.some(pp => veioGirado(f, pp)) ? ' · <b>com veio ↕ — só as marcadas em vermelho foram giradas (não cabiam)</b>' : ' · <b>com veio ↕ (não gira 90°)</b>')) : ''} · ${f.pos.length} peças · aprov. ${TEC ? `<span class="aprov"><i style="width:${Math.min(100, Math.round(area))}%"></i></span>` : ''}${Math.round(area)}%${txtLado(f) ? `<br><b style="display:inline-block;margin-top:3px;padding:1px 6px;border-radius:4px;background:${ladoFolha(f) === 'verso' ? '#c8102e' : '#1d7a46'};color:#fff">${txtLado(f)}</b>` : ''}</span><button class="org orgP" data-f="${idx}" title="Encosta as peças no canto superior direito com folga ${cfg.oFolga} mm e margem ${cfg.oMargem} mm">🧲 Organizar chapa</button>${f.naoCoube ? '' : `<button class="org travP" data-f="${idx}" title="Travada: nenhuma peça entra nem sai desta chapa (otimizar, juntar chapas e arrastar não mexem nela). Dentro dela você ainda pode pedir outra arrumação." style="${f.trava ? 'background:#1f5fbf;color:#fff;border-color:#1f5fbf' : ''}">${f.trava ? '🔒 Travada' : '🔓 Travar'}</button><button class="org outraP" data-f="${idx}" title="Troca a arrumação desta chapa pelas mesmas peças (cada clique, uma opção diferente)">🔄 Outra arrumação</button>`}</h3>
     ${TEC ? svgTecFundo(W, H, idx, defs, MONO) : `<svg viewBox="${-m} ${-m} ${W + 2*m} ${H + 2*m}">${defs}<defs>${hachDefs(idx)}</defs><g pointer-events="none"><circle cx="0" cy="${H}" r="28" fill="#c8102e"/><text x="40" y="${H + 120}" font-size="80" font-weight="700" font-family="Arial" fill="#c8102e">0,0 máquina</text></g><text x="${W / 2}" y="${-40}" font-size="120" font-weight="700" text-anchor="middle" font-family="Arial" fill="#222">${fmt(W)} mm</text><text x="${-40}" y="${H / 2}" font-size="120" font-weight="700" text-anchor="middle" font-family="Arial" fill="#222" transform="rotate(-90 ${-40} ${H / 2})">${fmt(H)} mm</text><rect x="0" y="0" width="${W}" height="${H}" fill="#fff" stroke="#888" stroke-width="5"/>`}${g}</svg>${legendaHach(usados)}</div>`;
 }
 // fundo técnico: chapa escura com grade milimetrada, cotas com setas, zero da máquina e batente
@@ -3130,7 +3135,26 @@ function mostrarAtual(){
   const ver = !PLANO || VER_ATUAL;
   ['folhas', 'movBar', 'avisoCorte', 'avisoRec'].forEach(id => { if ($(id)) $(id).style.display = ver ? '' : 'none' });
 }
+// ---- ver uma chapa em tela cheia (botão ⛶ no título da chapa; Esc ou o botão de novo fecha) ----
+let FOLHA_CHEIA = null;
+function aplicarCheia(){
+  document.querySelectorAll('.folha.cheia').forEach(d => d.classList.remove('cheia'));
+  document.querySelectorAll('.btnCheia').forEach(b => b.textContent = '⛶ Tela cheia');
+  if (FOLHA_CHEIA === null) return;
+  const d = document.querySelector(`#otimBox .folha[data-folha="${FOLHA_CHEIA}"]`) || document.querySelector(`.folha[data-folha="${FOLHA_CHEIA}"]`);
+  if (!d) { FOLHA_CHEIA = null; return }
+  d.classList.add('cheia'); const b = d.querySelector('.btnCheia'); if (b) b.textContent = '✕ Fechar tela cheia';
+}
+function telaCheia(idx){
+  FOLHA_CHEIA = (FOLHA_CHEIA === idx) ? null : idx; aplicarCheia();
+  try { if (FOLHA_CHEIA !== null && !document.fullscreenElement && document.documentElement.requestFullscreen) document.documentElement.requestFullscreen().catch(() => {});
+        else if (FOLHA_CHEIA === null && document.fullscreenElement) document.exitFullscreen().catch(() => {}) } catch (e) {}
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('.btnCheia'); if (!b) return; e.preventDefault(); e.stopPropagation(); telaCheia(+b.dataset.cheia) }, true);
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && FOLHA_CHEIA !== null) { FOLHA_CHEIA = null; aplicarCheia(); try { if (document.fullscreenElement) document.exitFullscreen() } catch (er) {} } });
+document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && FOLHA_CHEIA !== null) { FOLHA_CHEIA = null; aplicarCheia() } });
 function renderPlano(){
+  try { setTimeout(aplicarCheia, 0) } catch (e) {}
   try { faceNoVerso() } catch (e) {}
   if (!PLANO) { $('otimBox').innerHTML = ''; mostrarAtual(); if (renumerar()) { renderTabela(); renderPrev(); renderMat(); renderFolhas() } return }
   // numeração: só quando o plano é feito (otimizar / reiniciar). Mexer peça à mão NÃO troca os números (senão parece que não mexeu)

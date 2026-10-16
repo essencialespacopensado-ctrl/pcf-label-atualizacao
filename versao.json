@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-16.03",
+ "tela": "2026-10-16.04",
  "plugin": "2026-10-16.03",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.04",
+   "plugin": "2026-10-16.03",
+   "data": "16/10 13:35",
+   "titulo": "Chapa em tela cheia",
+   "itens": [
+    "Botão ⛶ Tela cheia no título de cada chapa: a chapa ocupa a tela inteira (dá para mexer nas peças do mesmo jeito)",
+    "Esc ou ✕ Fechar tela cheia volta ao normal"
+   ]
+  },
   {
    "tela": "2026-10-16.03",
    "plugin": "2026-10-16.03",
