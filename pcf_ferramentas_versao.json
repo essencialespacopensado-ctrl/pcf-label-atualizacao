@@ -1,8 +1,9 @@
 {
-  "versao": "1.5.3",
+  "versao": "1.5.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Corrigido: o botão Recorte orgânico da barra PCF agora cria um orgânico para CADA peça selecionada (também dentro de grupos)",
-    "Aba 3D: G-code de peça esculpida (desbaste, acabamento com V-bit e recorte)"
+    "Encostar para no PRIMEIRO obstáculo, inclusive chapas finas (prateleira, fundo de 6 mm, porta) que antes passavam entre os raios",
+    "Vale para os botões de encostar (esquerda, direita, parede, chão, teto) e para o botão direito do mouse na parede",
+    "Botão Recorte orgânico da barra faz um orgânico para cada peça selecionada"
   ]
 }
