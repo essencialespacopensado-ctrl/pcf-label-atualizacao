@@ -1,11 +1,9 @@
 {
-  "versao": "1.4.0",
+  "versao": "1.4.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Painel com uma aba para cada ferramenta: Medidas, Paredes, Peça, Orgânico, Moldura, Vão, Elétrica e Hidráulica",
-    "Construtor de paredes LINEAR: clique ponto a ponto (ou digite o comprimento), a espessura é descontada sozinha em cada canto, em qualquer ângulo",
-    "Construir piso e teto seguindo exatamente o contorno das paredes",
-    "Elétrica e Hidráulica: mini biblioteca, pega a parede do centro da tela, mede pelo centro do ponto (altura e distância da esquerda) e já cota",
-    "CORREÇÃO: moldura não fica mais afastada da porta"
+    "Paredes: o traço procura o eixo (vermelho, verde, paralelo ou perpendicular à parede anterior) e gruda nele, mas sai se você puxar decididamente. A linha fica colorida quando está no eixo",
+    "Recorte orgânico: o tamponamento sobe 5000 mm acima da modelagem, para não ficar na frente dos móveis",
+    "A linha de corte agora fica dentro da peça: apagou ou moveu a peça, a linha vai junto"
   ]
 }
