@@ -1,12 +1,23 @@
 {
  "tela": "2026-10-15.07",
- "plugin": "2026-10-15.12",
+ "plugin": "2026-10-16.02",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-15.07",
+   "plugin": "2026-10-16.02",
+   "data": "16/10 10:45",
+   "titulo": "Lê os cortes da fresa do Dinabox",
+   "itens": [
+    "Peças orgânicas e chapas curvas ranhuradas do PCF Ferramentas saem no plano e no G-code",
+    "Linha por fora = contorno da peça; por dentro atravessando = furo/vazado; por dentro raso = rebaixo/ranhura com a profundidade certa",
+    "A modelagem que já virou tamponamento não sai duplicada no plano"
+   ]
+  },
   {
    "tela": "2026-10-15.07",
    "plugin": "2026-10-15.12",

@@ -80,6 +80,9 @@ module PCFLabel
         if v == v0 then fechado = true; break end
         pts << v.position
       end
+      if !fechado && pts.size > 3 && pts.first == pts.last # fechou num vértice repetido (== já usa a tolerância do SketchUp)
+        pts.pop; fechado = true
+      end
       res << [pts, fechado] if pts.size >= 2
     end
     res
@@ -1247,7 +1250,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-16.01'
+  PLUGIN_VERSAO = '2026-10-16.02'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
