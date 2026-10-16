@@ -1,9 +1,8 @@
 {
-  "versao": "1.5.4",
-  "rbz": "PCF_Ferramentas.rbz",
-  "novidades": [
-    "Encostar para no PRIMEIRO obstáculo, inclusive chapas finas (prateleira, fundo de 6 mm, porta) que antes passavam entre os raios",
-    "Vale para os botões de encostar (esquerda, direita, parede, chão, teto) e para o botão direito do mouse na parede",
-    "Botão Recorte orgânico da barra faz um orgânico para cada peça selecionada"
-  ]
+ "versao": "1.5.5",
+ "rbz": "PCF_Ferramentas.rbz",
+ "novidades": [
+  "Botão Cotas na tela de volta na barra PCF: um clique liga, outro desliga (fica marcado quando está ligado)",
+  "Continua também no painel, aba Medidas"
+ ]
 }
