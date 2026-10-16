@@ -1,8 +1,10 @@
 {
- "versao": "1.5.5",
+ "versao": "1.5.6",
  "rbz": "PCF_Ferramentas.rbz",
  "novidades": [
-  "Botão Cotas na tela de volta na barra PCF: um clique liga, outro desliga (fica marcado quando está ligado)",
-  "Continua também no painel, aba Medidas"
+  "Recorte orgânico agora leva também os REBAIXOS e CANAIS desenhados na peça (que não vazam): mesma forma, profundidade e lado da peça",
+  "Canal que chega na borda da peça sai aberto (a fresa passa para fora)",
+  "A linha de conferência mostra os rebaixos também",
+  "Botão Cotas na tela na barra PCF"
  ]
 }
