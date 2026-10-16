@@ -378,7 +378,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-16.01';
+const VERSAO = '2026-10-16.02';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -893,14 +893,14 @@ function organizarFolha(nome){
 // ---- mesmas ferramentas na prévia do encaixe (plano vindo do otimizador / SketchUp) ----
 let HISTP = [], REDOP = [];
 const fotoP = () => JSON.stringify(PLANO.folhas.map(f => ({cor: f.cor, naoCoube: f.naoCoube, dim: f.dim, trava: f.trava || undefined, pos: f.pos.map(pp => { const p = pp.it.p;
-  return {id: p.id, sig: [Math.round(Math.max(p.w, p.h)), Math.round(Math.min(p.w, p.h)), Math.round(Math.abs(areaPoly(polyPts(p))) / 1000)].join('x'), x: pp.x, y: pp.y, rot: pp.rot || 0, esp: !!pp.esp, m: !!pp.manual, mx: !!pp.mexida, n: p.n} })})));
+  return {id: p.id, sig: [Math.round(Math.max(p.w, p.h)), Math.round(Math.min(p.w, p.h)), Math.round(Math.abs(areaPoly(polyPts(p))) / 1000)].join('x'), x: pp.x, y: pp.y, rot: pp.rot || 0, esp: !!pp.esp, fv: !!pp.fv, m: !!pp.manual, mx: !!pp.mexida, n: p.n} })})));
 function marcarP(){ if (!PLANO) return; HISTP.push(fotoP()); if (HISTP.length > 200) HISTP.shift(); REDOP = []; ULTIMO = 'plano' }
 function voltarFotoP(txt){
   let voltouP = false;
   const its = new Map(); D.pecas.forEach(p => its.set(p.id, {p})); PLANO.folhas.forEach(f => f.pos.forEach(pp => its.set(pp.it.p.id, pp.it)));
   PLANO.folhas = JSON.parse(txt).map(f => ({cor: f.cor, naoCoube: f.naoCoube, dim: f.dim, trava: f.trava, pos: f.pos.filter(o => its.has(o.id)).map(o => { const it = its.get(o.id), p = it.p;
     if (!p.on && !p.dentro) { p.on = true; voltouP = true }
-    return {it, x: o.x, y: o.y, rot: o.rot, esp: o.esp, manual: !!o.m, mexida: !!o.mx, poly: orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, o.rot, o.esp)} })}));
+    return {it, x: o.x, y: o.y, rot: o.rot, esp: o.esp, fv: !!o.fv, manual: !!o.m, mexida: !!o.mx, poly: orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, o.rot, o.esp)} })}));
   if (voltouP) { salvar(); renderTabela() }
   depoisDeMover(true);
 }
@@ -2665,7 +2665,7 @@ async function otimizar(segundosExtra){
   const grupos = {};
   // cor com a espessura errada no nome (ex.: peça de 15,3 com cor "… 18.3mm"): vai para a cor da espessura certa — nunca junta espessuras diferentes
   pais.forEach(p => { const c = corReal(p); if (c !== p.cor) { p.cor = c; D.pecas.forEach(q => { if (q.dentro && paiDe(q) === p) q.cor = c }); if (typeof cores !== 'undefined' && !cores.includes(c)) cores.push(c) } });
-  pais.forEach(p => { const k = cfg.oSepCor ? (p.cor || '(sem cor)') + (ladoCima(p) === 'verso' ? '§verso' : '') : 'todas as cores'; (grupos[k] = grupos[k] || []).push({p}) });
+  pais.forEach(p => { const k = cfg.oSepCor ? (p.cor || '(sem cor)') + (ladoCima(p) === 'verso' && !juntaFV() ? '§verso' : '') : 'todas as cores'; (grupos[k] = grupos[k] || []).push({p}) });
   const folhas = [], grandes = [];
   // espessura/cor com pouquinha peça não abre chapa nova: vai para a lista de retalho
   const retalhos = [], U = (chW - 2 * marg) * (chH - 2 * marg), DE_RETALHO = new Set();
@@ -2675,8 +2675,8 @@ async function otimizar(segundosExtra){
   let tent = 0; const ks = Object.keys(grupos), EXTRA = 0, porGrupo = Object.keys(ORDENS).length * 2 + 1 + EXTRA, total = ks.length * porGrupo;
   for (const k of ks) {
     // chapas do plano anterior que têm peça ajustada à mão: essas peças ficam no lugar, o resto é recalculado em volta
-    const fixas = ANT ? ANT.folhas.filter(f => (cfg.oSepCor ? f.cor + (ladoFolha(f) === 'verso' ? '§verso' : '') === k : true) && !f.dim && !f.naoCoube)
-      .map(f => f.pos.filter(pp => ajustada(pp) && pais.includes(pp.it.p) && (cfg.oSepCor ? (pp.it.p.cor || '(sem cor)') + (ladoCima(pp.it.p) === 'verso' ? '§verso' : '') === k : true))).filter(a => a.length) : [];
+    const fixas = ANT ? ANT.folhas.filter(f => (cfg.oSepCor ? f.cor + (ladoFolha(f) === 'verso' && !juntaFV() ? '§verso' : '') === k : true) && !f.dim && !f.naoCoube)
+      .map(f => f.pos.filter(pp => ajustada(pp) && pais.includes(pp.it.p) && (cfg.oSepCor ? (pp.it.p.cor || '(sem cor)') + (ladoCima(pp.it.p) === 'verso' && !juntaFV() ? '§verso' : '') === k : true))).filter(a => a.length) : [];
     const fixP = new Set(fixas.flat().map(pp => pp.it.p));
     grupos[k] = grupos[k].filter(x => !fixP.has(x.p));
     const ini = fixas.length ? (GW, GH, gc) => fixas.map(lista => { const ch = novaChapa(GW, GH), P = 1 + gc, R = RES_ENC; ch.fixa = true;
@@ -2781,7 +2781,7 @@ function girarGrandesAuto(){
     let resto = [];
     ps.forEach(p => {
       const outras = PLANO.folhas.filter(g => g.cor === cor && !g.naoCoube && !g.trava);
-      for (const g of outras) { if ((ladoFolha(g) === 'verso') !== (ladoCima(p) === 'verso')) continue; const [W, H] = dimF(g); usarChapa(g);
+      for (const g of outras) { if (juntaFV() ? (ladoCima(p) === 'verso' && ladoFolha(g) === 'face') : ((ladoFolha(g) === 'verso') !== (ladoCima(p) === 'verso'))) continue; const [W, H] = dimF(g); usarChapa(g);
         const r = encaixar(g.pos.map(pp => ({p: pp.it.p, fixo: [pp.rot, pp.esp]})).concat([{p, opc: opcDe(p)}]), W, H, gap, marg, 'real', 'yx', !!g.dim); usarChapa(null);
         if (r.chapas.length === 1 && !r.grandes.length) { trocarPos(g, r.chapas[0].pos); return } }
       resto.push(p) });
@@ -2796,6 +2796,16 @@ function girarGrandesAuto(){
 // CHAPA DE 1 FACE: o lado do rebaixo vai sempre PARA CIMA. Peça "virada" (rebaixos no verso) = verso para cima
 // -> precisa de chapa com a face para BAIXO (separada das outras). Sem rebaixo: face (lâmina) para cima.
 const corK = k => String(k).split('§')[0];
+// Paulo (16/10): na mesma espessura/cor, peça SEM rebaixo vai junto na chapa de face para baixo (verso), espelhada,
+// em vez de abrir outra chapa. Desliga com cfg.juntarFV = false.
+function juntaFV(){ return cfg.juntarFV !== false }
+function faceNoVerso(){
+  if (!PLANO || !juntaFV()) return;
+  PLANO.folhas.forEach(f => { const verso = ladoFolha(f) === 'verso';
+    f.pos.forEach(pp => { const p = pp.it.p; if (!p || duplaFace(p)) return;
+      const quer = verso && ladoCima(p) === 'face';
+      if (quer !== !!pp.fv) { orientarSem(pp, pp.rot || 0, !pp.esp); pp.fv = quer } }) });
+}
 function ladoCima(p){ return p && !duplaFace(p) && p.virada ? 'verso' : 'face' }
 function ladoFolha(f){ if (!f || !f.pos.length || duplaFace(f.pos[0].it.p)) return null; return f.pos.some(pp => ladoCima(pp.it.p) === 'verso') ? 'verso' : 'face' }
 function txtLado(f){ const l = ladoFolha(f); return l === 'verso' ? '⬇ FACE PARA BAIXO (verso para cima: rebaixos do verso)' : l === 'face' ? '⬆ FACE (lâmina) PARA CIMA' : '' }
@@ -3081,7 +3091,7 @@ function abrirPlanoSalvo(sx){
     if (c) { usadas.add(c); o.id = c.id } }));
   const corNome = c => { const m = /^(\S+) (\S+mm)$/.exec(c || ''); return m && (cfg.nomeCod[m[1]] || '').trim() ? `${cfg.nomeCod[m[1]].trim()} ${m[2]}` : c };
   const folhas = fotoObj.map(f => ({cor: corNome(f.cor), naoCoube: f.naoCoube, dim: f.dim, trava: f.trava, pos: f.pos.filter(o => porId.has(o.id) || (faltam.push(o.id), false)).map(o => { const p = porId.get(o.id);
-    return {it: {p}, x: o.x, y: o.y, rot: o.rot, esp: o.esp, manual: !!o.m, mexida: !!o.mx, poly: orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, o.rot, o.esp)} })})).filter(f => f.pos.length);
+    return {it: {p}, x: o.x, y: o.y, rot: o.rot, esp: o.esp, fv: !!o.fv, manual: !!o.m, mexida: !!o.mx, poly: orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, o.rot, o.esp)} })})).filter(f => f.pos.length);
   const noPlano = new Set(folhas.flatMap(f => f.pos.map(pp => pp.it.p)));
   const fora = D.pecas.filter(p => !(p.dentro && p.tipo !== 'peca') && p.on && !noPlano.has(p));
   PLANO = {folhas, grandes: [], retalhos: [], filhosDe: PLANO_FILHOS, ms: 0, tent: 0, gc: s.gc || null};
@@ -3111,6 +3121,7 @@ function mostrarAtual(){
   ['folhas', 'movBar', 'avisoCorte', 'avisoRec'].forEach(id => { if ($(id)) $(id).style.display = ver ? '' : 'none' });
 }
 function renderPlano(){
+  try { faceNoVerso() } catch (e) {}
   if (!PLANO) { $('otimBox').innerHTML = ''; mostrarAtual(); if (renumerar()) { renderTabela(); renderPrev(); renderMat(); renderFolhas() } return }
   // numeração: só quando o plano é feito (otimizar / reiniciar). Mexer peça à mão NÃO troca os números (senão parece que não mexeu)
   if (!PLANO.numFixo) { PLANO.numFixo = true; if (renumerar()) { renderTabela(); renderPrev(); renderMat() } }

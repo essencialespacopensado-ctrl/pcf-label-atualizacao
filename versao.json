@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-16.01",
+ "tela": "2026-10-16.02",
  "plugin": "2026-10-16.02",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.02",
+   "plugin": "2026-10-16.02",
+   "data": "16/10 12:20",
+   "titulo": "Mesma espessura na mesma chapa",
+   "itens": [
+    "Material 1 face: peças sem rebaixo agora vão junto na chapa de face para baixo (com as peças de rebaixo no verso), espelhadas para sair certas",
+    "Não abre mais uma chapa a mais só porque umas peças têm rebaixo no verso e outras não"
+   ]
+  },
   {
    "tela": "2026-10-16.01",
    "plugin": "2026-10-16.02",
