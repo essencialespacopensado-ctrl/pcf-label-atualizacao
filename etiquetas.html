@@ -386,7 +386,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-16.05';
+const VERSAO = '2026-10-16.06';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -2987,7 +2987,7 @@ function ligarArraste(){
     svg.querySelectorAll('g.mv').forEach(el => {
       const fi = +el.dataset.f, k = +el.dataset.i;
       // 2 cliques = aproxima nesta peça (tela cheia + zoom); o nome fica no botão direito → ✎ Nome da peça
-      el.addEventListener('dblclick', ev => { ev.preventDefault(); ev.stopPropagation(); zoomNaPeca(fi, el) });
+      el.addEventListener('dblclick', ev => { ev.preventDefault(); ev.stopPropagation() });
       el.addEventListener('contextmenu', ev => { ev.preventDefault(); menuPlano(fi, k, ev.clientX, ev.clientY) });
       el.addEventListener('pointerdown', ev => {
         if (ev.button !== 0) return; ev.preventDefault();
@@ -3008,7 +3008,10 @@ function ligarArraste(){
           const pf = mm(e);
           logTela({ev: 'soltou', tipo: e.type, de: fi + 1, para: alvo ? destino + 1 : null, peca: pp.it.p.n, anda: Math.round(Math.hypot(pf[0] - ini[0], pf[1] - ini[1]))});
           if ((destino === fi && Math.hypot(pf[0] - ini[0], pf[1] - ini[1]) < 3) || !alvo) { el.classList.remove('arrastando'); el.removeAttribute('transform');
-            if (Math.hypot(pf[0] - ini[0], pf[1] - ini[1]) < 3 && e.detail < 2) mostrar3D(pp.it.p);   // clique simples = mostrar no 3D
+            if (Math.hypot(pf[0] - ini[0], pf[1] - ini[1]) < 3) {   // clique sem arrastar
+              const agora = Date.now(), u = window.ULT_CLIQUE_PECA;
+              if (u && u.p === pp.it.p && agora - u.t < 450) { window.ULT_CLIQUE_PECA = null; zoomNaPeca(fi, el) }   // 2 cliques = zoom na peça
+              else { window.ULT_CLIQUE_PECA = {p: pp.it.p, t: agora}; if (e.detail < 2) mostrar3D(pp.it.p) } }   // clique simples = mostrar no 3D
             return }
           // chapa TRAVADA: nenhuma peça entra nem sai (dentro dela pode mexer)
           if (destino !== fi && PLANO.folhas[destino] && (PLANO.folhas[destino].trava || PLANO.folhas[fi].trava)) { el.classList.remove('arrastando'); el.removeAttribute('transform');
