@@ -1,9 +1,9 @@
 {
-  "versao": "1.4.8",
+  "versao": "1.4.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba CURVA: no lugar de laminado externo/interno, escolha Chapa 1 face ou 2 faces",
-    "Chapa 1 face: as ranhuras vão na face de TRÁS (face B) e o acabamento fica para fora da curva",
-    "Ranhura: sentido vertical/horizontal, recuo inicial, quanto ranhurar, profundidade e distância entre ranhuras"
+    "Chapa curva aberta vai 5000 mm para cima na MESMA posição da peça no projeto (como o orgânico)",
+    "Fica no prumo (em pé ou deitada, sem inclinar), com a face das ranhuras para o lado de dentro da curva",
+    "Chapa 1 face / 2 faces no lugar de laminado; ranhura com sentido, recuo, comprimento, profundidade e distância"
   ]
 }
