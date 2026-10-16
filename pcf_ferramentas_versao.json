@@ -1,10 +1,8 @@
 {
-  "versao": "1.5.2",
+  "versao": "1.5.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Nova aba 3D: selecione a peça esculpida e gere o G-code da CNC (.tap, mesmo formato da máquina)",
-    "Sai em 3 arquivos: 1 desbaste em camadas (fresa 6 mm, deixa 0,5 mm), 2 acabamento com V-bit seguindo a superfície, 3 recorte que solta a peça no fim",
-    "Bloco avulso encostado no batente (canto superior direito); Z0 = mesa; Z de segurança 30 mm acima do bloco",
-    "Corrigido: ranhura da peça curva sai na largura certa; PCF Label já lê orgânicos e ranhuras"
+    "Corrigido: o botão Recorte orgânico da barra PCF agora cria um orgânico para CADA peça selecionada (também dentro de grupos)",
+    "Aba 3D: G-code de peça esculpida (desbaste, acabamento com V-bit e recorte)"
   ]
 }
