@@ -386,7 +386,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-16.06';
+const VERSAO = '2026-10-16.07';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -961,7 +961,7 @@ function girarParaCaber(fi){
       const usin = (PLANO_FILHOS.get(p) || []).some(q => q.tipo === 'rebaixo' || q.tipo === 'usinagem');
       const opc = []; [0, 90, 180, 270].forEach(r => (usin || (temVeio(p) && !duplaFace(p)) ? [false] : [false, true]).forEach(e => opc.push([r, e])));
       // 1º: chapas da mesma cor (as mais vazias primeiro)
-      const outras = PLANO.folhas.filter(g => g !== fn && !g.naoCoube && !g.trava && g.cor === fn.cor && (ladoFolha(g) === 'verso') === (ladoFolha(fn) === 'verso'))
+      const outras = PLANO.folhas.filter(g => g !== fn && !g.naoCoube && !g.trava && g.cor === fn.cor && (juntaFV() || (ladoFolha(g) === 'verso') === (ladoFolha(fn) === 'verso')))
         .sort((a, b) => a.pos.reduce((s2, x) => s2 + x.it.p.w * x.it.p.h, 0) - b.pos.reduce((s2, x) => s2 + x.it.p.w * x.it.p.h, 0));
       let feito = null;
       for (const g of outras) {
@@ -2831,8 +2831,8 @@ function corReal(p){
 }
 // cor + espessura + tamanho da chapa: só junta / troca peças entre chapas com a MESMA chave
 const espChapa = f => { const es = [...new Set((f.pos || []).map(pp => Math.round((+pp.it.p.esp || 0) * 10) / 10))]; return es.length === 1 ? es[0] : es.sort().join('/') };
-const chaveChapa = f => (f.cor || '') + '|' + espChapa(f) + '|' + dimF(f).join('x') + (f.dim ? '|sobra' : '') + (ladoFolha(f) === 'verso' ? '|verso' : '');
-const mesmaChapa = (a, b) => !!a && !!b && a.cor === b.cor && espChapa(a) === espChapa(b) && dimF(a).join() === dimF(b).join() && (ladoFolha(a) === 'verso') === (ladoFolha(b) === 'verso');
+const chaveChapa = f => (f.cor || '') + '|' + espChapa(f) + '|' + dimF(f).join('x') + (f.dim ? '|sobra' : '') + (!juntaFV() && ladoFolha(f) === 'verso' ? '|verso' : '');
+const mesmaChapa = (a, b) => !!a && !!b && a.cor === b.cor && espChapa(a) === espChapa(b) && dimF(a).join() === dimF(b).join() && (juntaFV() || (ladoFolha(a) === 'verso') === (ladoFolha(b) === 'verso'));
 const veioGirado = (f, pp) => !f.dim && !cfg.oRetalho && temVeio(pp.it.p) && ((pp.rot || 0) % 180 !== 0);
 // posição final de um ponto da peça (mesma conta que o Aspire vai fazer)
 function transfPeca(f){
