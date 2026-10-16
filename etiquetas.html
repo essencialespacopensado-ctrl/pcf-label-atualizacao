@@ -378,7 +378,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-15.07';
+const VERSAO = '2026-10-16.01';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -1879,8 +1879,10 @@ function avisoForaEtiqueta(){ const f = foraDoPlano(); if (f.length && $('cncMsg
 async function incluirForaDoPlano(){
   const fora = foraDoPlano(); if (!fora.length) return;
   const salvo = PLANO, foraS = new Set(fora), onAntes = new Map(D.pecas.map(p => [p, p.on])), cfgAntes = cfg.oPeqRet, salvarAntes = salvarPlanoLocal;
+  // enquanto calcula, as outras peças ficam desmarcadas SÓ na memória: não pode gravar isso (senão elas somem do plano depois)
+  const salvarEstado = salvar;
   let novas = [];
-  salvarPlanoLocal = () => {};
+  salvarPlanoLocal = () => {}; salvar = () => {};
   try {
     D.pecas.forEach(p => { if (!foraS.has(p) && !(p.dentro && p.tipo !== 'peca')) p.on = false });
     cfg.oPeqRet = false; PLANO = null;
@@ -1888,7 +1890,8 @@ async function incluirForaDoPlano(){
     novas = PLANO ? PLANO.folhas : [];
   } catch (e) { novas = []; $('cncMsg').className = 'hint erro'; $('cncMsg').textContent = 'Não consegui encaixar: ' + e.message }
   finally {
-    D.pecas.forEach(p => p.on = onAntes.get(p)); cfg.oPeqRet = cfgAntes; salvarPlanoLocal = salvarAntes; PLANO = salvo;
+    D.pecas.forEach(p => p.on = onAntes.get(p)); cfg.oPeqRet = cfgAntes; salvarPlanoLocal = salvarAntes; salvar = salvarEstado; PLANO = salvo;
+    try { salvar() } catch (e) {}
   }
   if (novas.length) { PLANO.folhas.push(...novas);
     // as peças novas vão primeiro para os vãos das chapas que já existem (não mexe nas outras peças nem nas travadas)

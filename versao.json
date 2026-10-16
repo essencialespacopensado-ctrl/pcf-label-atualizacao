@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-15.07",
+ "tela": "2026-10-16.01",
  "plugin": "2026-10-16.02",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.01",
+   "plugin": "2026-10-16.02",
+   "data": "16/10 12:15",
+   "titulo": "Peças não somem mais do plano",
+   "itens": [
+    "Corrigido: ao encaixar peças fora do plano, as outras peças ficavam gravadas como desmarcadas e sumiam do plano na próxima vez que abria",
+    "As peças continuam marcadas como estavam"
+   ]
+  },
   {
    "tela": "2026-10-15.07",
    "plugin": "2026-10-16.02",
