@@ -1,9 +1,10 @@
 {
-  "versao": "1.4.3",
+  "versao": "1.4.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Corrigido: recorte orgânico saía esticado/fora do lugar no Dinabox (a linha de conferência confundia a medida do Dinabox)",
-    "A linha de corte agora fica dentro da chapa, na face — continua apagando e movendo junto com a peça",
-    "Mesma correção na linha do rebaixo da moldura"
+    "Nova aba CURVA: selecione a peça curva e calcule o tamanho aberto de cada chapa (ex.: 9+9) e dos laminados externo e interno",
+    "Mostra o ângulo da curva, os raios interno/externo e o ângulo das pontas",
+    "Botão 'Criar chapas e laminados abertos': cria as chapas como tamponamento Dinabox (5000 mm acima, ao lado da curva)",
+    "Corrigido: recorte orgânico saía esticado/fora do lugar no Dinabox"
   ]
 }
