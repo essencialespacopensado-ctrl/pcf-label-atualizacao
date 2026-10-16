@@ -1,11 +1,10 @@
 {
-  "versao": "1.4.5",
+  "versao": "1.4.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Recorte orgânico de TUDO o que estiver selecionado: várias peças de uma vez",
-    "Também entra nos grupos: selecione um grupo com várias peças dentro e cria um recorte para cada peça",
-    "Peça sem nome dentro de grupo recebe o nome do grupo (ex.: Armário - peça 1)",
-    "Aba CURVA: tamanho aberto das chapas e laminados de peças curvas + ângulos",
-    "Corrigido: recorte orgânico saía esticado no Dinabox"
+    "Aba CURVA: opção 'Ranhurar para dobrar' — a chapa sai aberta no tamanho da face de fora, com as ranhuras do lado de dentro só no trecho curvo (recorte Dinabox: contorno por fora + ranhuras por dentro)",
+    "Escolha a pele que fica sem cortar, a largura da ranhura, a fresa e o espaçamento (vazio = automático)",
+    "A aba Curva agora aceita o grupo inteiro: acha sozinha a peça que dobra",
+    "Recorte orgânico de tudo o que estiver selecionado, inclusive dentro de grupos"
   ]
 }
