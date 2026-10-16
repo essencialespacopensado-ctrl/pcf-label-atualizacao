@@ -292,6 +292,7 @@ td.fita input{width:auto;margin:0}
     <h2>⚙ Ferramentas e usinagem</h2>
     <div class="row">
       <div><label>Ferramenta de corte</label><select id="tCorte"></select></div>
+      <div><label>Corte de peça 25 mm ou mais</label><select id="t25"></select></div>
       <div><label>Transpasse (mm)</label><input id="transp" type="number" step="0.05"></div>
     </div>
     <div class="row">
@@ -386,7 +387,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-16.09';
+const VERSAO = '2026-10-16.10';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -441,7 +442,9 @@ let cores = ls.get('etq_cores', null) || (AQ && AQ.cores) || [];
 // configuração igual em todos os PCs: a deste PC ou a da pasta comum do Dropbox (D.cfgComum), a que foi mexida por último
 const CFG_L = ls.get('etq_cfg', {}), CFG_C = D.cfgComum || (typeof CFG_SEMENTE !== 'undefined' ? CFG_SEMENTE : {});
 const CFG_N = (+CFG_C._t || 0) > (+CFG_L._t || 0) ? CFG_C : CFG_L, CFG_V = CFG_N === CFG_C ? CFG_L : CFG_C;
-let cfg = Object.assign({empresa:'', preset:'100x50', lw:100, lh:50, copias:1, bc:true, fitaPerda:10, fitaLarg:0, veio:{}, fech:{}, tCorte:2, tReb:1, tMel:4, transp:0.05, pqArea:0.05, p1:90, melFinal:2.5, melPass:4, melSobrep:'', soPCF:true, mag:null, oFolga:10, oMargem:15, oSepCor:true, oRot:true, oRetalho:false, oPeqRet:true, veioTudo:false, oEspelhar:false}, (AQ && AQ.cfg) || {}, CFG_V, CFG_N);
+let cfg = Object.assign({empresa:'', preset:'100x50', lw:100, lh:50, copias:1, bc:true, fitaPerda:10, fitaLarg:0, veio:{}, fech:{}, tCorte:2, tReb:2, t25:2, tMel:4, transp:0.05, pqArea:0.05, p1:90, melFinal:2.5, melPass:4, melSobrep:'', soPCF:true, mag:null, oFolga:10, oMargem:15, oSepCor:true, oRot:true, oRetalho:false, oPeqRet:true, veioTudo:false, oEspelhar:false}, (AQ && AQ.cfg) || {}, CFG_V, CFG_N);
+// Paulo (16/10): fresa de 6 mm como padrão no corte, no corte de peça grossa e no rebaixo (uma vez só; depois você muda à vontade)
+if (!cfg.fresa6) { const t6 = (cfg.mag || []).find(x => +x.d === 6 && /reta/i.test(x.nome)); const t = t6 ? +t6.t : 2; cfg.tCorte = t; cfg.t25 = t; cfg.tReb = t; cfg.fresa6 = true }
 // listas por cor (nomes, veio, lâmina…) juntam as do plano, deste PC e do Dropbox — vale a mais nova em cada cor
 ['nomeCod', 'nomeConf', 'veio', 'lamina', 'matOk', 'dupla', 'sobras', 'fech'].forEach(k => cfg[k] = Object.assign({}, (AQ && AQ.cfg && AQ.cfg[k]) || {}, CFG_V[k] || {}, CFG_N[k] || {}));
 // veio / dupla face / lâmina: o que VOCÊ marcou não se perde. Vale a marcação mais recente feita à mão (marcT);
@@ -680,8 +683,8 @@ const profCorte = () => +(D.espessura) + (+cfg.transp || 0);
 const espP = p => (p && +p.esp) || +D.espessura;   // espessura da peça (do SketchUp) ou a do projeto
 // espessura usada no CORTE: a cheia, sem os décimos (6,3 → 6 · 15,3 → 15 · 18,3 → 18 · 25,3 → 25); a lista de materiais continua com 6,3 etc.
 const espCorte = p => Math.floor(espP(p) + 0.001);
-// ferramenta do corte: peça de 25 mm ou mais usa a T4 automaticamente
-const ferrCorte = p => espCorte(p) >= 25 ? ferr(4) : ferr(cfg.tCorte);
+// ferramenta do corte: a escolhida (padrão 6 mm); peça de 25 mm ou mais usa a de 'Corte de peça 25 mm ou mais' (padrão 6 mm também)
+const ferrCorte = p => espCorte(p) >= 25 ? ferr(cfg.t25 || cfg.tCorte) : ferr(cfg.tCorte);
 const pequena = p => (p.c * p.l / 1e6) < (+cfg.pqArea || 0);
 const TIPOS = {peca:'Peça', usinagem:'Usinagem', rebaixo:'Rebaixo', furo:'Furo / recorte'};
 // lado da fresa e passadas de cada contorno (iguais ao Aspire)
@@ -1158,7 +1161,11 @@ function organizarCore(f){
   usarChapa(f);
   // giro feito à mão = travado; veio já girado (não cabia) continua girado
   const atual = pp => [pp.rot || 0, !!pp.esp];
-  const itens = f.pos.map(pp => pp.manual ? {p: pp.it.p, opc: [atual(pp)]} : veioGirado(f, pp) ? {p: pp.it.p, opc: opcoesGiro({p: pp.it.p}).map(([r, e]) => [((pp.rot || 0) + r) % 360, e ? !pp.esp : !!pp.esp])} : {p: pp.it.p});
+  // peça de face numa chapa de face para baixo vai espelhada: já encaixa espelhada (antes encaixava normal e espelhava depois → ficava uma em cima da outra)
+  const fvAntes = new Map(f.pos.map(pp => [pp.it.p, !!pp.fv]));
+  const mantemFV = new Set(f.pos.filter(pp => pp.manual || veioGirado(f, pp)).map(pp => pp.it.p));
+  const comFV = (p, opc) => queroFV(f, p) ? opc.map(([r, e]) => [r, !e]) : opc;
+  const itens = f.pos.map(pp => pp.manual ? {p: pp.it.p, opc: [atual(pp)]} : veioGirado(f, pp) ? {p: pp.it.p, opc: opcoesGiro({p: pp.it.p}).map(([r, e]) => [((pp.rot || 0) + r) % 360, e ? !pp.esp : !!pp.esp])} : queroFV(f, pp.it.p) ? {p: pp.it.p, opc: comFV(pp.it.p, f.dim ? opcoesSobra({p: pp.it.p}) : opcoesGiro({p: pp.it.p}))} : {p: pp.it.p});
   let melhor = null, tent = 0; const cands = [];
   const avalia = r => { if (r.chapas.length !== 1 || r.grandes.length) return;
     const ch = r.chapas[0]; let mx = 0, my = 0;
@@ -1172,7 +1179,7 @@ function organizarCore(f){
   // não coube com as regras: cada peça também pode ficar no giro em que está agora (ex.: peça que você trouxe de outra chapa)
   if (!melhor) {
     const uniq = a => a.filter((o, i) => a.findIndex(q => q[0] === o[0] && q[1] === o[1]) === i);
-    const itens2 = f.pos.map(pp => pp.manual ? {p: pp.it.p, opc: [atual(pp)]} : {p: pp.it.p, opc: uniq((f.dim ? opcoesSobra({p: pp.it.p}) : opcoesGiro({p: pp.it.p})).concat([atual(pp)]))});
+    const itens2 = f.pos.map(pp => pp.manual ? {p: pp.it.p, opc: [atual(pp)]} : {p: pp.it.p, opc: uniq(comFV(pp.it.p, f.dim ? opcoesSobra({p: pp.it.p}) : opcoesGiro({p: pp.it.p})).concat([atual(pp)]))});
     for (const o of Object.keys(ORDENS)) for (const modo of ['yx', 'xy', 'topo']) { avalia(encaixar(itens2, W, H, gap, marg, o, modo, !!f.dim)); tent++ }
     for (let n = 1; n <= 24; n++) { avalia(encaixar(embaralhar(itens2, n * 7919 + 13), W, H, gap, marg, 'nenhuma', ['yx', 'topo', 'xy'][n % 3], !!f.dim)); tent++ }
     avalia(encaixar(itens2, W, H, gap, marg, 'real', 'chapa', !!f.dim));
@@ -1193,6 +1200,7 @@ function organizarCore(f){
   const fora = [];
   if (melhor) {
     trocarPos(f, melhor.pos);
+    f.pos.forEach(pp => { pp.fv = mantemFV.has(pp.it.p) ? !!fvAntes.get(pp.it.p) : queroFV(f, pp.it.p) });
     // leva o bloco para o canto superior direito e encosta peça por peça (se não bater em nada)
     { const q = f.pos.flatMap(polyFinal), dx = W - marg - Math.max(...q.map(v => v[0])), dy = H - marg - Math.max(...q.map(v => v[1]));
       f.pos.forEach(pp => { pp.x += Math.floor(dx); pp.y += Math.floor(dy) }) }
@@ -2179,7 +2187,7 @@ $('btnCsv').onclick = () => {
 // ---- CNC: configuracao ----
 function renderCNC(){
   const opts = sel => cfg.mag.map(x => `<option value="${x.t}"${+x.t === +sel ? ' selected' : ''}>T${x.t} · ${esc(x.nome)}</option>`).join('');
-  $('tCorte').innerHTML = opts(cfg.tCorte); $('tReb').innerHTML = opts(cfg.tReb); $('tMel').innerHTML = opts(cfg.tMel);
+  $('tCorte').innerHTML = opts(cfg.tCorte); $('t25').innerHTML = opts(cfg.t25 || cfg.tCorte); $('tReb').innerHTML = opts(cfg.tReb); $('tMel').innerHTML = opts(cfg.tMel);
   $('magTb').innerHTML = cfg.mag.map((x, i) => `<tr>${['t','nome','d','f','p','s','pd','so'].map(k => `<td><input data-m="${i}" data-k="${k}" value="${esc(x[k])}"${k === 'nome' ? ' style="min-width:80px"' : ''}></td>`).join('')}</tr>`).join('');
   const prof = (+D.espessura) - (+cfg.melFinal || 0), mp = +cfg.melPass || 4;
   $('melInfo').textContent = prof > 0 ? `Rebaixo de ${fmt(prof)} mm em ${Math.ceil(prof / mp - 1e-6)} passadas (chapa ${fmt(D.espessura)} → ${fmt(+cfg.melFinal)} mm).` : 'Espessura final maior que a chapa.';
@@ -2187,7 +2195,7 @@ function renderCNC(){
 [['transp','transp'],['pqArea','pqArea'],['p1','p1'],['melFinal','melFinal'],['melPass','melPass'],['melSobrep','melSobrep']].forEach(([id, k]) => {
   $(id).value = cfg[k]; $(id).addEventListener('input', e => { cfg[k] = e.target.value; salvar(); renderCNC(); renderFolhas() });
 });
-['tCorte','tReb','tMel'].forEach(id => $(id).addEventListener('change', e => { cfg[id] = +e.target.value; salvar() }));
+['tCorte','t25','tReb','tMel'].forEach(id => $(id).addEventListener('change', e => { cfg[id] = +e.target.value; salvar() }));
 $('soPCF').checked = !!cfg.soPCF; $('soPCF').addEventListener('change', e => { cfg.soPCF = e.target.checked; salvar() });
 $('magTb').addEventListener('input', e => { const m = e.target.dataset.m; if (m === undefined) return; const k = e.target.dataset.k; cfg.mag[m][k] = k === 'nome' ? e.target.value : +e.target.value; salvar() });
 $('magTb').addEventListener('change', () => renderCNC());
@@ -2814,12 +2822,16 @@ const corK = k => String(k).split('§')[0];
 // Paulo (16/10): na mesma espessura/cor, peça SEM rebaixo vai junto na chapa de face para baixo (verso), espelhada,
 // em vez de abrir outra chapa. Desliga com cfg.juntarFV = false.
 function juntaFV(){ return cfg.juntarFV !== false }
+function queroFV(f, p){ return !!(juntaFV() && p && !duplaFace(p) && ladoFolha(f) === 'verso' && ladoCima(p) === 'face') }
 function faceNoVerso(){
   if (!PLANO || !juntaFV()) return;
+  const viradas = [];
   PLANO.folhas.forEach(f => { const verso = ladoFolha(f) === 'verso';
     f.pos.forEach(pp => { const p = pp.it.p; if (!p || duplaFace(p)) return;
       const quer = verso && ladoCima(p) === 'face';
-      if (quer !== !!pp.fv) { orientarSem(pp, pp.rot || 0, !pp.esp); pp.fv = quer } }) });
+      if (quer !== !!pp.fv) { orientarSem(pp, pp.rot || 0, !pp.esp); pp.fv = quer; viradas.push([f, pp]) } }) });
+  // espelhar mudou o formato: se alguma ficou em cima de outra, vai para o lugar livre mais perto (nunca deixa sobreposta)
+  if (viradas.some(([f, pp]) => pecaBate(f, pp))) { try { corrigirSobreposicoes() } catch (e) {} }
 }
 function ladoCima(p){ return p && !duplaFace(p) && p.virada ? 'verso' : 'face' }
 function ladoFolha(f){ if (!f || !f.pos.length || duplaFace(f.pos[0].it.p)) return null; return f.pos.some(pp => ladoCima(pp.it.p) === 'verso') ? 'verso' : 'face' }

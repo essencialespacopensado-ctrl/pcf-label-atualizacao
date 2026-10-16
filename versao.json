@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-16.09",
+ "tela": "2026-10-16.10",
  "plugin": "2026-10-16.06",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,17 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.10",
+   "plugin": "2026-10-16.06",
+   "data": "16/10 14:30",
+   "titulo": "Fresa 6 mm e Organizar sem sobreposição",
+   "itens": [
+    "Fresa de 6 mm por padrão no corte, no corte de peça de 25 mm ou mais e no rebaixo — dá para trocar em ⚙ Ferramentas e usinagem (novo campo: Corte de peça 25 mm ou mais)",
+    "🧲 Organizar nunca deixa peça em cima de outra: a peça de face na chapa de face para baixo já é encaixada espelhada (antes espelhava depois e batia)",
+    "Se espelhar fizer alguma peça bater, ela vai sozinha para o lugar livre mais perto"
+   ]
+  },
   {
    "tela": "2026-10-16.09",
    "plugin": "2026-10-16.06",
