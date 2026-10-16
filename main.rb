@@ -1263,10 +1263,26 @@ module PCFLabel
     mt = (File.mtime(MODELO_TELA) rescue nil)
     return unless mt && @mt_tela && mt != @mt_tela
     @mt_tela = mt
-    sleep 0.5
-    html = File.read(MODELO_TELA, encoding: 'UTF-8').sub('__DADOS__') { @dados_json }
-    File.write(@saida, html, mode: 'w:UTF-8')
-    @dlg.set_file(@saida)
+    recarregar_seguro
+  end
+  # recarrega a tela (versão nova) SEM perder o que você fez: primeiro a tela grava o plano de agora,
+  # depois abre de novo com o plano mais novo do arquivo (antes abria com o plano de quando a tela foi aberta)
+  def self.recarregar_seguro
+    return unless @dlg && @dados_json && @saida
+    (@dlg.execute_script("try{clearTimeout(salvarPlanoLocal.tm);if(window.PLANO){salvarPlanoLocal()}}catch(e){}") rescue nil)
+    UI.start_timer(3.0, false) {
+      begin
+        d = JSON.parse(@dados_json)
+        pl = ler_plano(@plano_id || 'principal')
+        d['planoArq'] = pl if pl
+        @dados_json = JSON.generate(d).gsub('</', '<\\/')
+        File.write(@saida, File.read(MODELO_TELA, encoding: 'UTF-8').sub('__DADOS__') { @dados_json }, mode: 'w:UTF-8')
+        @mt_tela = File.mtime(MODELO_TELA) rescue nil
+        @dlg.set_file(@saida); log_atu('tela recarregada com o plano mais novo') rescue nil
+      rescue => e
+        (log_atu("erro ao recarregar: #{e.message}") rescue nil)
+      end
+    }
   end
 
   # abre o Aspire e o botão PCF (ponte) se estiverem fechados
@@ -1318,7 +1334,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-16.05'
+  PLUGIN_VERSAO = '2026-10-16.06'
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
@@ -1465,7 +1481,8 @@ module PCFLabel
       log_atu("tela copiada: agora #{versao_arq(MODELO_TELA, /VERSAO = '([^']+)'/)}")
       # recarrega a tela aberta já com a versão nova (o plano fica salvo)
       if @dlg && @dados_json && @saida
-        (File.write(@saida, File.read(MODELO_TELA, encoding: 'UTF-8').sub('__DADOS__') { @dados_json }, mode: 'w:UTF-8'); @mt_tela = File.mtime(MODELO_TELA); @dlg.set_file(@saida); log_atu('tela recarregada')) rescue log_atu("erro ao recarregar: #{$!.message}")
+        @mt_tela = File.mtime(MODELO_TELA) rescue nil
+        recarregar_seguro
       end
     else
       log_atu("tela: nada a copiar (Dropbox #{versao_arq(ht, /VERSAO = '([^']+)'/)} existe=#{File.exist?(ht)})")

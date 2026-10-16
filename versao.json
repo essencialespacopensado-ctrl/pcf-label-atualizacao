@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-16.08",
- "plugin": "2026-10-16.05",
+ "plugin": "2026-10-16.06",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.08",
+   "plugin": "2026-10-16.06",
+   "data": "16/10 14:10",
+   "titulo": "Atualizar não perde mais o plano",
+   "itens": [
+    "Quando chega versão nova, a tela grava o plano de agora e abre de novo com ele (antes voltava para o plano de quando a tela foi aberta)"
+   ]
+  },
   {
    "tela": "2026-10-16.08",
    "plugin": "2026-10-16.05",
