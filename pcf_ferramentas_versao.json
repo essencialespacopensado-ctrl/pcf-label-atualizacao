@@ -1,10 +1,9 @@
 {
-  "versao": "1.6.2",
+  "versao": "1.6.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: cada frente fica com a medida digitada, mesmo sem fechar o vão (o que sobra fica vazio em cima)",
-    "A altura da caixa não muda e não aparece mais aviso para mudar",
-    "Medidas alinhadas à esquerda em todas as abas",
-    "Gavetas empilhadas num bloco só; Igualar frentes; Enter aplica"
+    "Aba INTERNO: PRATELEIRAS — altura de cada uma (do fundo de dentro), mostra o vão abaixo; Enter move só aquela prateleira",
+    "RODAPÉ e ESPESSURAS do módulo (prateleiras, laterais, base/topo, fundo) direto na aba Interno",
+    "Funciona em qualquer módulo do Dinabox, com ou sem gavetas"
   ]
 }
