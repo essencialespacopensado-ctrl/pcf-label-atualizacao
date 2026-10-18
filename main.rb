@@ -534,13 +534,12 @@ module PCFLabel
   def self.botao_nomes
     return if $pcf_botao_nomes
     $pcf_botao_nomes = true
-    tb = UI.toolbar('PCF Label')
+    tb = UI.toolbar(PCFLabel::BARRA)
     cn = UI::Command.new('PCF · Números') { PCFLabel.alternar_nomes }
     cn.tooltip = 'PCF · Números'
     cn.status_bar_text = 'Mostrar / ocultar nº das peças'
     cn.set_validation_proc { (l = Sketchup.active_model.layers[PCFLabel::ETIQ]) && !l.visible? ? MF_UNCHECKED : MF_CHECKED }
-    ic2 = File.join(File.dirname(__FILE__), 'pcf_nomes.png')
-    if File.exist?(ic2) then cn.small_icon = ic2; cn.large_icon = ic2 end
+    PCFLabel.por_icone(cn, 'numeros', 'pcf_nomes.png')
     tb.add_item(cn); tb.show
     UI.menu('Extensions').add_item(cn)
   end
@@ -549,12 +548,11 @@ module PCFLabel
   def self.botao_detalhamento
     return if $pcf_botao_det
     $pcf_botao_det = true
-    tb = UI.toolbar('PCF Label')
+    tb = UI.toolbar(PCFLabel::BARRA)
     cd = UI::Command.new('PCF · Detalhamento') { PCFLabel.detalhar }
     cd.tooltip = 'PCF · Detalhamento'
     cd.status_bar_text = 'Cenas · LayOut · PDF'
-    ic = File.join(File.dirname(__FILE__), 'pcf_det.png')
-    if File.exist?(ic) then cd.small_icon = ic; cd.large_icon = ic end
+    PCFLabel.por_icone(cd, 'detalhamento', 'pcf_det.png')
     tb.add_item(cd); tb.show
     UI.menu('Extensions').add_item(cd)
   end
@@ -1334,7 +1332,14 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-16.06'
+  PLUGIN_VERSAO = '2026-10-18.01'
+  BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
+  # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
+  def self.por_icone(cmd, nome, png_antigo)
+    (@cmds ||= {})[nome] = cmd
+    f = [File.join(__dir__, 'icones', nome + '.svg'), File.join(__dir__, 'icones', nome + '.png'), File.join(__dir__, png_antigo)].find { |x| File.exist?(x) }
+    (cmd.small_icon = f; cmd.large_icon = f) if f
+  end
   def self.pasta_atualizacao
     File.join(pasta_comum, 'atualizacao')
   end
@@ -1382,6 +1387,7 @@ module PCFLabel
     baixar(u + 'versao.json') do |txt|
       begin
         man = txt && (JSON.parse(txt.dup.force_encoding('UTF-8')) rescue nil)
+        (sincronizar_icones(u, man) rescue nil) if man
         vt_atual = versao_arq(MODELO_TELA, /VERSAO = '([^']+)'/)
         if man && (man['tela'].to_s > vt_atual || man['plugin'].to_s > PLUGIN_VERSAO)
           arqs = (man['arquivos'] || ['etiquetas.html', 'main.rb']); baixados = {}
@@ -1408,6 +1414,25 @@ module PCFLabel
     end
   rescue
     @online_ocupado = false
+  end
+  # ícones dos botões também vêm pela internet: versao.json traz "icones" => { "nesting.svg" => sha1 };
+  # se o ícone daqui for diferente (ou não existir), baixa da pasta icones/ e troca no botão
+  def self.sincronizar_icones(u, man)
+    ic = man['icones']; return unless ic.is_a?(Hash) && !ic.empty?
+    require 'digest/sha1'; require 'fileutils'
+    pasta = File.join(__dir__, 'icones'); FileUtils.mkdir_p(pasta)
+    ic.each do |nome, sha|
+      next unless nome.to_s =~ /\A[\w\-.]+\.(png|svg)\z/i
+      f = File.join(pasta, nome)
+      next if (Digest::SHA1.hexdigest(File.binread(f)) rescue '') == sha.to_s
+      baixar(u + nome) do |b|
+        if b && b.bytesize > 20 && Digest::SHA1.hexdigest(b) == sha.to_s
+          (File.binwrite(f, b) rescue nil)
+          c = (@cmds || {})[File.basename(nome, '.*')]
+          (c.small_icon = f; c.large_icon = f) rescue nil if c
+        end
+      end
+    end
   end
   def self.atualizar_rapido; checar_atualizacao end
   def self.atualizar_sozinho; checar_atualizacao end   # (timers antigos chamam este nome: agora só confere)
@@ -1710,9 +1735,9 @@ module PCFLabel
     cmd = UI::Command.new('PCF · Nesting') { PCFLabel.enviar }
     cmd.tooltip = 'PCF · Nesting'
     cmd.status_bar_text = 'Plano de corte · etiquetas · G-code'
-    ico = File.join(File.dirname(__FILE__), 'pcf.png')
-    if File.exist?(ico) then cmd.small_icon = ico; cmd.large_icon = ico end
-    tb = UI::Toolbar.new('PCF Label'); tb.add_item(cmd); tb.show
+    PCFLabel.por_icone(cmd, 'nesting', 'pcf.png')
+    tb = UI.toolbar(PCFLabel::BARRA); tb.add_item(cmd); tb.show
+    ObjectSpace.each_object(UI::Toolbar) { |t| t.hide if t.name == 'PCF Label' && t.visible? }   # barra antiga separada: tudo fica na barra PCF
     UI.menu('Extensions').add_item('PCF · Plano de corte') { PCFLabel.enviar }
     UI.menu('Extensions').add_item('PCF · Numerar peças') { UI.messagebox(PCFLabel.numerar) }
     file_loaded(__FILE__)
