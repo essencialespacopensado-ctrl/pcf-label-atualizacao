@@ -1,9 +1,9 @@
 {
-  "versao": "1.6.3",
+  "versao": "1.6.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: PRATELEIRAS — altura de cada uma (do fundo de dentro), mostra o vão abaixo; Enter move só aquela prateleira",
-    "RODAPÉ e ESPESSURAS do módulo (prateleiras, laterais, base/topo, fundo) direto na aba Interno",
-    "Funciona em qualquer módulo do Dinabox, com ou sem gavetas"
+    "Aba INTERNO: COLOCAR prateleira — digite a altura (do fundo de dentro) e Enter; ela divide o vão",
+    "TIRAR prateleira — botão ✕ em cada uma; o vão de baixo vai até a próxima (se o vão de cima tiver gaveta/porta, avisa e não tira)",
+    "Mover prateleira, rodapé e espessuras continuam na mesma aba"
   ]
 }
