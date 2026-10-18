@@ -1,9 +1,10 @@
 {
- "versao": "1.5.7",
+ "versao": "1.6.0",
  "rbz": "PCF_Ferramentas.rbz",
  "novidades": [
-  "Seta ▲ Parede agora empurra o móvel para LONGE DE VOCÊ (pela sua vista) até encostar no que estiver atrás — parede ou outro móvel, tanto faz",
-  "Recorte orgânico leva os rebaixos/canais desenhados na peça",
-  "Botão Cotas na tela na barra PCF"
+  "Nova aba INTERNO no painel: edita as gavetas do módulo Dinabox selecionado",
+  "Altura de CADA frente separada (digite cada uma; mostra se a soma fecha o vão) e botão Igualar frentes",
+  "Quantidade de gavetas, folga entre frentes, tipo e comprimento da corrediça, altura da caixa e espessura da frente",
+  "Aviso quando a caixa da gaveta é alta demais para a frente"
  ]
 }
