@@ -1,11 +1,10 @@
 {
-  "versao": "1.6.1",
+  "versao": "1.6.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: gavetas EMPILHADAS num bloco só (uma linha por andar, de cima para baixo)",
-    "Digite a altura da frente de cada andar; a de cima fica com o que sobrar",
-    "Igualar frentes em um clique, inclusive a de cima",
-    "Vale para todas: corrediça, comprimento, altura da caixa e espessura mudam todas as gavetas juntas",
-    "O programa mede como cada gaveta acompanha o vão e corrige sozinho"
+    "Aba INTERNO: cada frente fica com a medida digitada, mesmo sem fechar o vão (o que sobra fica vazio em cima)",
+    "A altura da caixa não muda e não aparece mais aviso para mudar",
+    "Medidas alinhadas à esquerda em todas as abas",
+    "Gavetas empilhadas num bloco só; Igualar frentes; Enter aplica"
   ]
 }
