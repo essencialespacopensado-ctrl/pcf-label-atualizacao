@@ -1,8 +1,9 @@
 {
-  "versao": "1.9.0",
+  "versao": "1.9.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Avulsa encostada na BASE leva o nome da base (nunca lateral); nos outros casos vale a peça em que ela mais encosta",
+    "Avulsa (tamponamento) leva o nome da peça onde a MAIOR PARTE dela está encostada (maior área de contato) — lateral, base ou divisória",
+    "O módulo do tamponamento (ex.: Tamponamento engrossado, o nome que aparece no editor do Dinabox) também leva o nome 'Avulsa ...'",
     "Reagrupar uma peça não repete mais 'Avulsa' no nome dela"
   ]
 }
