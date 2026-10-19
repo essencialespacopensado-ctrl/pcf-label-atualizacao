@@ -1334,7 +1334,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-18.02'
+  PLUGIN_VERSAO = '2026-10-19.01'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1390,6 +1390,7 @@ module PCFLabel
       begin
         man = txt && (JSON.parse(txt.dup.force_encoding('UTF-8')) rescue nil)
         (sincronizar_icones(u, man) rescue nil) if man
+        (atualizar_ferramentas(u, man) rescue nil) if man
         vt_atual = versao_arq(MODELO_TELA, /VERSAO = '([^']+)'/)
         if man && (man['tela'].to_s > vt_atual || man['plugin'].to_s > PLUGIN_VERSAO)
           arqs = (man['arquivos'] || ['etiquetas.html', 'main.rb']); baixados = {}
@@ -1417,6 +1418,33 @@ module PCFLabel
   rescue
     @online_ocupado = false
   end
+  # o PCF Label também leva o PCF Ferramentas para a versão do versao.json ("ferramentas"): assim todos os PCs
+  # recebem, mesmo os que têm o atualizador antigo do Ferramentas (que o GitHub bloqueava)
+  def self.atualizar_ferramentas(u, man)
+    alvo = man['ferramentas'].to_s
+    return if alvo.empty? || @ferr_ocupado
+    atual = defined?(PCF::Ferramentas::VERSAO) ? PCF::Ferramentas::VERSAO.to_s : '0'
+    return unless (alvo.split('.').map(&:to_i) <=> atual.split('.').map(&:to_i)) == 1
+    @ferr_ocupado = true
+    baixar(u + 'PCF_Ferramentas.rbz') do |b|
+      begin
+        if b && b.bytesize > 1000
+          arq = File.join(ENV['TEMP'] || Dir.tmpdir, "PCF_Ferramentas_#{alvo}.rbz")
+          File.binwrite(arq, b)
+          Sketchup.install_from_archive(arq, false)
+          dir = File.join(Sketchup.find_support_file('Plugins'), 'pcf_ferramentas')
+          %w[main criar giro organica paredes pontos curva corte3d interno moldura atualizar].each { |n| f = File.join(dir, "#{n}.rb"); load f if File.exist?(f) }
+          (PCF::Ferramentas.recarregar_painel rescue nil)
+          (log_atu("PCF Ferramentas #{atual} -> #{alvo}") rescue nil)
+        end
+      rescue => e
+        (log_atu("erro ao atualizar PCF Ferramentas: #{e.message}") rescue nil)
+      ensure
+        @ferr_ocupado = false
+      end
+    end
+  end
+
   # ícones dos botões também vêm pela internet: versao.json traz "icones" => { "nesting.svg" => sha1 };
   # se o ícone daqui for diferente (ou não existir), baixa da pasta icones/ e troca no botão
   def self.sincronizar_icones(u, man)

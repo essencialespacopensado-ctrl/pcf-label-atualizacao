@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-16.10",
- "plugin": "2026-10-18.02",
+ "plugin": "2026-10-19.01",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.10",
+   "plugin": "2026-10-19.01",
+   "data": "19/10 10:35",
+   "titulo": "PCF Ferramentas em todos os PCs",
+   "itens": [
+    "O PCF Label agora também atualiza o PCF Ferramentas sozinho, em todos os PCs (versão 1.6.6: caixa e profundidade de cada gaveta na aba Interno)"
+   ]
+  },
   {
    "tela": "2026-10-16.10",
    "plugin": "2026-10-18.02",
@@ -393,5 +402,6 @@
   "nesting.svg": "ecf415858ce6433896013e30ecb5a3ad5f60c808",
   "numeros.svg": "1c89e120c8b85bd5bbbbb897958e564c5b73635c",
   "detalhamento.svg": "a19aabab38d54771ede57fd22b76426981f9bbc5"
- }
+ },
+ "ferramentas": "1.6.6"
 }
