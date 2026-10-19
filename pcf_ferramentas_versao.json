@@ -1,7 +1,8 @@
 {
-  "versao": "1.9.2",
+  "versao": "1.9.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "O nome do grupo/avulsa agora vai também no campo 'nome' que o editor do Dinabox mostra (ex.: Tamponamento engrossado → 1 - Avulsa Lateral direita)"
+    "Avulsa encostada no TOPO (base superior, ex.: rodateto) leva o nome do topo",
+    "O nome da avulsa mostra de qual móvel é a peça de referência — ex.: 1 - Avulsa Lateral direita (Caixa esquerda)"
   ]
 }
