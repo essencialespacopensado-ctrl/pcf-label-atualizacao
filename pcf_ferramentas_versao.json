@@ -1,7 +1,7 @@
 {
-  "versao": "2.1.0",
+  "versao": "2.1.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Agrupar/Nomear: peças ocultas do móvel também recebem o número — sem pegar as guias internas do Dinabox (DB Grid) nem opções que o Dinabox esconde"
+    "Agrupar: os tamponamentos ENCOSTADOS no móvel (e os encostados neles) entram sozinhos no grupo e ganham o nome pela referência — mesmo sem estarem selecionados (só os que ainda não têm grupo)"
   ]
 }
