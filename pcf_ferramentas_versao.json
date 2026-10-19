@@ -1,7 +1,8 @@
 {
-  "versao": "1.8.6",
+  "versao": "1.8.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Agrupar: peça avulsa (modelagem) ganha nome sozinha pela lateral, base ou divisória mais próxima do mesmo grupo — ex.: Cozinha - Avulsa Lateral esquerda (encostada nela, ou encostada numa peça que encosta nela; vale a mais perto e a maior)"
+    "Avulsa = toda peça sem nome do Dinabox (modelagem, porta 'Mdf_v'...): ganha nome pela lateral/base/divisória mais próxima do grupo (ex.: 2 - Avulsa Lateral direita)",
+    "Tubo e suporte de cabideiro não entram mais no grupo (são ferragem)"
   ]
 }
