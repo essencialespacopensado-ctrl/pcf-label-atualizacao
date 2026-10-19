@@ -1,8 +1,7 @@
 {
-  "versao": "1.8.0",
+  "versao": "1.8.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Botão '👁 Ver grupo' grande na aba Medidas: clique numa peça/nº (ou digite o nº) — marca o grupo em laranja e leva a tela até ele",
-    "Agrupar não numera mais ferragens (corrediça, dobradiça, puxador)"
+    "Agrupar: o nº também vai no nome do MÓDULO do Dinabox (o que aparece no editor do Dinabox, ex.: 1 - Tamponamento engrossado) quando todas as peças dele estão no mesmo grupo"
   ]
 }
