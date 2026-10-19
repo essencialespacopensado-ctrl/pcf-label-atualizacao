@@ -1,5 +1,5 @@
 {
-  "versao": "1.8.1",
+  "versao": "1.8.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
     "Agrupar: o nº também vai no nome do MÓDULO do Dinabox (o que aparece no editor do Dinabox, ex.: 1 - Tamponamento engrossado) quando todas as peças dele estão no mesmo grupo"
