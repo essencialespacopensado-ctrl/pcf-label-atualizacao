@@ -1,9 +1,7 @@
 {
-  "versao": "1.8.4",
+  "versao": "1.8.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Agrupar com NOME: digite no campo um nome (ex.: Cozinha, A1) — vai nas duas faces da peça, no nome da peça e no nome do Dinabox. Vazio = nº automático",
-    "Ocultou a peça ou o móvel (ou desligou a etiqueta dele): os números e as linhas de corte somem junto — e voltam quando mostrar de novo",
-    "Apagar números devolve o nome que a peça tinha antes"
+    "Agrupar: peça avulsa (modelagem) ganha nome sozinha pela lateral, base ou divisória mais próxima do mesmo grupo — ex.: Cozinha - Avulsa Lateral esquerda (encostada nela, ou encostada numa peça que encosta nela; vale a mais perto e a maior)"
   ]
 }
