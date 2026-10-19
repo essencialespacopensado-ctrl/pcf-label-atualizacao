@@ -1,8 +1,8 @@
 {
-  "versao": "1.9.4",
+  "versao": "1.9.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Avulsa encostada no TOPO (base superior, ex.: rodateto) leva o nome do topo",
-    "O nome da avulsa mostra de qual móvel é a peça de referência — ex.: 1 - Avulsa Lateral direita (Caixa esquerda)"
+    "Agrupar: as caixas e as peças delas MANTÊM o nome (o grupo aparece só no número 3D); só as avulsas (tamponamentos) ganham o nome com a referência — ex.: 1 - Avulsa Lateral direita (Caixa esquerda)",
+    "Avulsa encostada no topo (rodateto) leva o nome do topo"
   ]
 }
