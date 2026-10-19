@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-16.10",
- "plugin": "2026-10-19.02",
+ "plugin": "2026-10-19.03",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.10",
+   "plugin": "2026-10-19.03",
+   "data": "19/10 14:30",
+   "titulo": "Número no nome do Dinabox (corrigido)",
+   "itens": [
+    "O nº agora sai no nome da peça que o Dinabox exporta (antes mudava só o campo Nome)"
+   ]
+  },
   {
    "tela": "2026-10-16.10",
    "plugin": "2026-10-19.02",
@@ -413,5 +422,5 @@
   "numeros.svg": "1c89e120c8b85bd5bbbbb897958e564c5b73635c",
   "detalhamento.svg": "a19aabab38d54771ede57fd22b76426981f9bbc5"
  },
- "ferramentas": "1.7.7"
+ "ferramentas": "1.7.8"
 }

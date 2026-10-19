@@ -1,11 +1,10 @@
 {
-  "versao": "1.7.7",
+  "versao": "1.7.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Agrupar peças: nº automático (só selecionar e clicar Agrupar; digitar o nº é opcional)",
-    "Botão '✕ Apagar números' (tira o nº 3D, o nº do nome e do Nome do Dinabox)",
-    "Clicou numa peça ou no nº de um grupo: as outras peças do mesmo nº ficam marcadas em LARANJA; botão '🔍 Grupo' mostra o grupo todo",
-    "Botão direito do mouse: 'PCF · Agrupar peças' e 'PCF · Apagar números'",
-    "O nº também vai no Nome do Dinabox (ex.: 64 - Tamponamento), para sair na etiqueta"
+    "O nº agora aparece no NOME da peça no Dinabox (ex.: 503 - Capa esquerda) — antes mudava só o campo, mas o Dinabox exporta por outro texto",
+    "Nome da peça no grupo sai certo (Capa esquerda, não 'T')",
+    "Botão '✕ Apagar TODOS os números do projeto' (aba Medidas e botão direito do mouse) — pergunta antes, Ctrl+Z desfaz",
+    "A janela 'O que mudou' volta a aparecer depois de cada atualização"
   ]
 }

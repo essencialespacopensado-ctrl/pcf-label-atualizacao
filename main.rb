@@ -662,6 +662,19 @@ module PCFLabel
       o.set_attribute('dynamic_attributes', 'db01', novo)
       o.set_attribute('dynamic_attributes', '_db01_formula', novo.inspect)
       o.set_attribute('dynamic_attributes', 'name', novo) if o.get_attribute('dynamic_attributes', 'name') || o.is_a?(Sketchup::ComponentDefinition)
+      # o Dinabox exporta o nome pelo texto "dinabox_dados" ([P]código#NOME#…): troca ali também
+      dd = o.get_attribute('dynamic_attributes', 'dinabox_dados').to_s
+      if dd.start_with?('[P]') && (pt = dd.split('#', -1)).size >= 3
+        pt[1] = novo; o.set_attribute('dynamic_attributes', 'dinabox_dados', pt.join('#'))
+      end
+    end
+    # tamponamento: o nome está no módulo, mas o texto que o Dinabox exporta é o da peça
+    unless alvo == p
+      [p, p.definition].each do |o|
+        dd = o.get_attribute('dynamic_attributes', 'dinabox_dados').to_s
+        next unless dd.start_with?('[P]') && (pt = dd.split('#', -1)).size >= 3
+        pt[1] = novo; o.set_attribute('dynamic_attributes', 'dinabox_dados', pt.join('#'))
+      end
     end
     novo
   end
@@ -1360,7 +1373,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-19.02'
+  PLUGIN_VERSAO = '2026-10-19.03'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
