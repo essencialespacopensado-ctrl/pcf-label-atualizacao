@@ -1,9 +1,8 @@
 {
-  "versao": "1.6.4",
+  "versao": "1.6.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: COLOCAR prateleira — digite a altura (do fundo de dentro) e Enter; ela divide o vão",
-    "TIRAR prateleira — botão ✕ em cada uma; o vão de baixo vai até a próxima (se o vão de cima tiver gaveta/porta, avisa e não tira)",
-    "Mover prateleira, rodapé e espessuras continuam na mesma aba"
+    "Orgânico: a linha de corte vermelha agora fica no modelo, fora do painel do Dinabox (dentro do painel o Dinabox lia como usinagem e dava erro ao gerar a lista)",
+    "As usinagens (polilinhas) continuam dentro do painel do Dinabox, do jeito certo"
   ]
 }

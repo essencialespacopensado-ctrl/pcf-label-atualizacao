@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-16.10",
- "plugin": "2026-10-18.01",
+ "plugin": "2026-10-18.02",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.10",
+   "plugin": "2026-10-18.02",
+   "data": "18/10 23:20",
+   "titulo": "Números fora das peças do Dinabox",
+   "itens": [
+    "Os números 3D das peças do Dinabox agora ficam no modelo, por cima da peça, e não dentro dela (o Dinabox lia como usinagem e dava erro ao gerar a lista)"
+   ]
+  },
   {
    "tela": "2026-10-16.10",
    "plugin": "2026-10-18.01",

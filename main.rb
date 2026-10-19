@@ -666,10 +666,12 @@ module PCFLabel
           bp = Geom::BoundingBox.new; c[0][-2].definition.bounds.then { |b0| 8.times { |k| bp.add(b0.corner(k).transform(tp)) } }
           pc = bp.center
         end
-        if e.definition.count_instances == 1
+        # peça do Dinabox: o número NUNCA fica dentro dela (o Dinabox lê tudo que está dentro como usinagem e dá erro)
+        dentro_db = c[0].any? { |x| dinabox?(x, x.definition) }
+        if e.definition.count_instances == 1 && !dentro_db
           texto3d(e.definition.entities, e, c[1], nome, tag, mt, ref, pc)
         else
-          # componente repetido: o texto fica no modelo, na posição desta cópia
+          # componente repetido ou peça do Dinabox: o texto fica no modelo, na posição desta cópia
           (texto3d(e.definition.entities, e, c[1], nome, tag, mt, ref, pc) || []).each do |g|
             gw = m.entities.add_instance(g.definition, c[1] * g.transformation)
             gw.material = mt; gw.layer = tag; gw.name = 'PCF Nome'; gw.set_attribute('pcf', 'nome', ref.to_s)
@@ -1332,7 +1334,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-18.01'
+  PLUGIN_VERSAO = '2026-10-18.02'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
