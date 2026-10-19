@@ -1,7 +1,7 @@
 {
-  "versao": "2.0.9",
+  "versao": "2.1.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Agrupar/Nomear: peças ocultas (ocultas à mão ou com a etiqueta desligada) do móvel selecionado também recebem o número — só ficam de fora as opções que o próprio Dinabox esconde"
+    "Agrupar/Nomear: peças ocultas do móvel também recebem o número — sem pegar as guias internas do Dinabox (DB Grid) nem opções que o Dinabox esconde"
   ]
 }
