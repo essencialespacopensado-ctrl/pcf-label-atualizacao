@@ -1,7 +1,7 @@
 {
-  "versao": "1.7.4",
+  "versao": "1.7.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: voltaram o botão '⇕ Igualar frentes' e a conta da altura útil em cada gaveteiro"
+    "Aba MEDIDAS: botão 'Agrupar peças' — o mesmo nº em todas as peças selecionadas, com o nome do Dinabox, e o nº nos dois lados da peça"
   ]
 }
