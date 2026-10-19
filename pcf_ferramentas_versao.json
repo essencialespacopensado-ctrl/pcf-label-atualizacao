@@ -1,7 +1,7 @@
 {
-  "versao": "2.0.2",
+  "versao": "2.0.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Botão 'PCF · Números': 'Ocultar só o grupo' e 'Mostrar só o grupo' agora escondem também as PEÇAS (não só os números) — e continuam escondidas mesmo com 'Reexibir tudo'. 'Mostrar todos' traz tudo de volta"
+    "Botão 'PCF · Números': ocultar/mostrar o grupo esconde o móvel inteiro — peças, fitas de borda, ferragens, gavetas, tudo que é dele"
   ]
 }
