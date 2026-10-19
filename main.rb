@@ -697,6 +697,8 @@ module PCFLabel
       c = caminho(ref)
       next unless c
       e = c[0].last
+      # peça que já está num grupo do PCF Ferramentas: fica só com o número do grupo (uma peça = um número)
+      next if e.get_attribute('pcf', 'grupo')
       if e.respond_to?(:name=) && e.name != nome then e.name = nome; n += 1 end
       # peça do Dinabox: o nº também no Nome do Dinabox (sai na etiqueta dele)
       (nome_dinabox(c[0], nome.to_s[/\d+/]) if nome.to_s[/\d+/] && c[0].any? { |x| dinabox?(x, x.definition) }) rescue nil
@@ -1375,7 +1377,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-19.04'
+  PLUGIN_VERSAO = '2026-10-19.05'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

@@ -1,7 +1,9 @@
 {
-  "versao": "2.0.4",
+  "versao": "2.0.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Botão 'PCF · Números': ocultar/mostrar o grupo leva junto os agregados que estão dentro do móvel — gavetas, cabideiro, linhas de corte, fitas, modelagens sem grupo"
+    "Uma peça = um número só: agrupar tira qualquer número antigo da peça (do grupo ou do PC Label)",
+    "Não troca grupo por acidente: se a peça já está em outro grupo, pergunta antes (trocar / só as livres / cancelar)",
+    "Número sempre nos dois lados da peça"
   ]
 }

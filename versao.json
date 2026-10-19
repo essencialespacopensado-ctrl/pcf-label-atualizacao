@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-16.10",
- "plugin": "2026-10-19.04",
+ "plugin": "2026-10-19.05",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.10",
+   "plugin": "2026-10-19.05",
+   "data": "19/10 16:45",
+   "titulo": "Uma peça, um número",
+   "itens": [
+    "Peça que já está num grupo do PCF Ferramentas não recebe o número do plano (fica só com o do grupo)"
+   ]
+  },
   {
    "tela": "2026-10-16.10",
    "plugin": "2026-10-19.04",
@@ -431,5 +440,5 @@
   "numeros.svg": "1c89e120c8b85bd5bbbbb897958e564c5b73635c",
   "detalhamento.svg": "a19aabab38d54771ede57fd22b76426981f9bbc5"
  },
- "ferramentas": "2.0.4"
+ "ferramentas": "2.0.6"
 }
