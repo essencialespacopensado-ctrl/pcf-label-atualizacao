@@ -1,8 +1,9 @@
 {
-  "versao": "1.6.5",
+  "versao": "1.6.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Orgânico: a linha de corte vermelha agora fica no modelo, fora do painel do Dinabox (dentro do painel o Dinabox lia como usinagem e dava erro ao gerar a lista)",
-    "As usinagens (polilinhas) continuam dentro do painel do Dinabox, do jeito certo"
+    "Aba INTERNO: em cada gaveta agora ajusta a FRENTE, a ALTURA DA CAIXA e a PROFUNDIDADE (corrediça), uma por uma",
+    "Atualiza sozinho: quando sai versão nova, baixa e instala sem perguntar (confere a cada 10 min) e só mostra o que mudou",
+    "Corrigido: em alguns PCs a atualização não chegava (o GitHub bloqueava a busca); agora baixa pelo endereço direto"
   ]
 }
