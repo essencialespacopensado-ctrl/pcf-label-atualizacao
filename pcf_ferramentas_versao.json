@@ -1,8 +1,7 @@
 {
-  "versao": "2.0.1",
+  "versao": "2.0.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Botão 'PCF · Números' (na barra): Mostrar todos, Ocultar todos, Ocultar só o grupo X, ou Mostrar só o grupo X — os números ocultos continuam ocultos mesmo com 'Reexibir tudo'",
-    "Dois cliques no número: destaca só a peça dele"
+    "Botão 'PCF · Números': 'Ocultar só o grupo' e 'Mostrar só o grupo' agora escondem também as PEÇAS (não só os números) — e continuam escondidas mesmo com 'Reexibir tudo'. 'Mostrar todos' traz tudo de volta"
   ]
 }
