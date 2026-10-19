@@ -1,9 +1,9 @@
 {
-  "versao": "2.0.6",
+  "versao": "2.0.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Uma peça = um número só: agrupar tira qualquer número antigo da peça (do grupo ou do PC Label)",
-    "Não troca grupo por acidente: se a peça já está em outro grupo, pergunta antes (trocar / só as livres / cancelar)",
-    "Número sempre nos dois lados da peça"
+    "Botão 'PCF · Números' abre a janela 'PCF · Grupos', que fica ABERTA: uma caixinha por grupo — marcada aparece, desmarcada some (peças, números e agregados), na hora",
+    "Botões Todos / Nenhum e caixinha 'Mostrar os números'",
+    "Avulsa (tamponamento) agrupada com nome manual leva o grupo no nome do Dinabox mesmo sem lateral de referência"
   ]
 }
