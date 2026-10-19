@@ -1,7 +1,8 @@
 {
-  "versao": "1.7.9",
+  "versao": "1.8.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Agrupar peças: escolha 'Ambas', 'Só Dinabox' ou 'Só modelagens' (fica salvo; vale também para Apagar números e o botão direito)"
+    "Botão '👁 Ver grupo' grande na aba Medidas: clique numa peça/nº (ou digite o nº) — marca o grupo em laranja e leva a tela até ele",
+    "Agrupar não numera mais ferragens (corrediça, dobradiça, puxador)"
   ]
 }
