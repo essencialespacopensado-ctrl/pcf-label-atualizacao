@@ -1,8 +1,7 @@
 {
-  "versao": "2.0.8",
+  "versao": "2.0.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Nova aba NOMEAR no painel: dá o mesmo nome a todas as peças selecionadas de uma vez (SketchUp e Dinabox — Propriedades e etiqueta); peça de grupo mantém o grupo na frente",
-    "A parte 'Agrupar peças' (filtro, agrupar, ver grupo, apagar números) agora fica dentro da aba Nomear"
+    "Agrupar/Nomear: peças ocultas (ocultas à mão ou com a etiqueta desligada) do móvel selecionado também recebem o número — só ficam de fora as opções que o próprio Dinabox esconde"
   ]
 }
