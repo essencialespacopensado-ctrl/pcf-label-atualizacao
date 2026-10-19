@@ -1,5 +1,5 @@
 {
-  "versao": "1.9.7",
+  "versao": "1.9.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
     "Correção: clicar num número volta SEMPRE a marcar o grupo em laranja (antes parava depois de atualizar ou salvar o arquivo)"
