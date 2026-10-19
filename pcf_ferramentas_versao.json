@@ -1,7 +1,7 @@
 {
-  "versao": "1.9.8",
+  "versao": "1.9.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Correção: clicar num número volta SEMPRE a marcar o grupo em laranja (antes parava depois de atualizar ou salvar o arquivo)"
+    "Dois cliques no número 3D: destaca em laranja só a peça daquele número (um clique continua mostrando o grupo todo)"
   ]
 }
