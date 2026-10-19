@@ -1,9 +1,7 @@
 {
-  "versao": "1.7.1",
+  "versao": "1.7.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: a coluna Caixa mostra a altura REAL de cada gaveta (a mesma do desenho), não mais 0",
-    "Folga em cima e embaixo da caixa no cartão do gaveteiro",
-    "Coluna 'Vão/frente' para deixar claro que é o espaço da gaveta"
+    "Cotas e Medidas: ao selecionar uma gaveta do Dinabox, mostram o tamanho REAL da gaveta (antes mostravam o vão, ex.: 160 em vez de 41)"
   ]
 }
