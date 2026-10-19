@@ -1,8 +1,8 @@
 {
-  "versao": "1.6.7",
+  "versao": "1.6.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: coluna 'Altura Z' em cada gaveta — muda a posição dela na altura (0 = gaveta de baixo); corrediça e caixa acompanham",
-    "Cada gaveta: Frente, Altura Z, Caixa e Profundidade, uma por uma; Enter aplica"
+    "Aba INTERNO: a coluna 'Z caixa' agora mexe SÓ na parte interna da gaveta (caixa + corrediça); a frente fica parada",
+    "Mudar a altura das frentes não desfaz mais o Z das caixas"
   ]
 }
