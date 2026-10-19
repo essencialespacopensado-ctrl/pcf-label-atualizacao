@@ -1,8 +1,8 @@
 {
-  "versao": "2.1.7",
+  "versao": "2.1.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Avulsa ganha o nome pela referência mesmo quando o móvel foi renomeado no Nomear (usa o tipo real da peça: lateral, base, topo)",
-    "Agrupar usa SÓ as peças que você selecionou"
+    "Tamponamento simples: o nome (Agrupar e Nomear) agora aparece nas Propriedades do Dinabox e na etiqueta",
+    "Avulsa ganha o nome pela referência mesmo quando o móvel foi renomeado no Nomear"
   ]
 }
