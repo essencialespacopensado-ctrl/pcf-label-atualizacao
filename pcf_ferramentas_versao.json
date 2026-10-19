@@ -1,5 +1,5 @@
 {
-  "versao": "1.8.5",
+  "versao": "1.8.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
     "Agrupar: peça avulsa (modelagem) ganha nome sozinha pela lateral, base ou divisória mais próxima do mesmo grupo — ex.: Cozinha - Avulsa Lateral esquerda (encostada nela, ou encostada numa peça que encosta nela; vale a mais perto e a maior)"
