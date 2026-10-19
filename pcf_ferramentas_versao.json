@@ -1,8 +1,8 @@
 {
-  "versao": "2.1.8",
+  "versao": "2.1.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Tamponamento simples: o nome (Agrupar e Nomear) agora aparece nas Propriedades do Dinabox e na etiqueta",
-    "Avulsa ganha o nome pela referência mesmo quando o móvel foi renomeado no Nomear"
+    "Nomear com um MÓVEL do Dinabox selecionado (ex.: a Torre) muda o nome do móvel (aparece nas Propriedades do Dinabox); as peças de dentro ficam como estão",
+    "Tamponamento simples: o nome aparece nas Propriedades do Dinabox e na etiqueta"
   ]
 }
