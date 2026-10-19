@@ -1,8 +1,8 @@
 {
-  "versao": "2.2.6",
+  "versao": "2.2.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Construtor de paredes: a medida digitada é sempre o comprimento TOTAL da parede — vire para qualquer lado, a espessura vai sozinha para dentro da curva (sem opção por dentro/por fora). Tab inverte se precisar",
+    "Construtor de paredes: cada parede fica EXATAMENTE com a medida digitada, para qualquer lado que virar; onde abriria um vão no canto entra um bloco de canto (espessura × espessura). A espessura fica do lado em que você desenha (Tab inverte), nada troca sozinho",
     "Construtor de paredes: trocar de ferramenta (barra de espaço) agora CRIA as paredes já marcadas, não apaga mais. Esc continua cancelando",
     "Construtor de paredes: digitar a medida + Enter agora fixa a parede (antes o Enter terminava a ferramenta e perdia a medida). Enter sem medida continua terminando",
     "Peça Mãe: corte da fresa AO REDOR (contorno por fora, com 10 mm de sobra de chapa, igual ao recorte orgânico) + cortes entre as frentes",
