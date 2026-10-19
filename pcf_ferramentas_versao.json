@@ -1,9 +1,8 @@
 {
-  "versao": "1.6.6",
+  "versao": "1.6.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: em cada gaveta agora ajusta a FRENTE, a ALTURA DA CAIXA e a PROFUNDIDADE (corrediça), uma por uma",
-    "Atualiza sozinho: quando sai versão nova, baixa e instala sem perguntar (confere a cada 10 min) e só mostra o que mudou",
-    "Corrigido: em alguns PCs a atualização não chegava (o GitHub bloqueava a busca); agora baixa pelo endereço direto"
+    "Aba INTERNO: coluna 'Altura Z' em cada gaveta — muda a posição dela na altura (0 = gaveta de baixo); corrediça e caixa acompanham",
+    "Cada gaveta: Frente, Altura Z, Caixa e Profundidade, uma por uma; Enter aplica"
   ]
 }
