@@ -1,11 +1,11 @@
 {
-  "versao": "2.2.1",
+  "versao": "2.2.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Peça Mãe: corte da fresa AO REDOR (contorno por fora, com 10 mm de sobra de chapa, igual ao recorte orgânico) + cortes entre as frentes",
     "Peça Mãe: com o móvel inteiro selecionado, pega só as frentes e portas (não a contrafrente da gaveta), sem fita, na direção certa",
     "Peça Mãe: avisa quando a peça não cabe na chapa",
     "NOVO botão Peça Mãe (ao lado da Moldura): frentes/portas em sequência viram UMA peça no plano de corte, com o veio contínuo",
-    "A peça mãe sai com a fresa de 6 mm entre as frentes (corte passante): a CNC já separa as frentes na sequência certa",
-    "As frentes originais saem do relatório (sem cortar em dobro). Selecione a Peça Mãe e clique no botão de novo para desfazer"
+    "A peça mãe sai com a fresa de 6 mm entre as frentes (corte passante): a CNC já separa as frentes na sequência certa"
   ]
 }
