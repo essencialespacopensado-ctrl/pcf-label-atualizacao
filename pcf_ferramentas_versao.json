@@ -1,9 +1,8 @@
 {
-  "versao": "2.0.7",
+  "versao": "2.0.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Botão 'PCF · Números' abre a janela 'PCF · Grupos', que fica ABERTA: uma caixinha por grupo — marcada aparece, desmarcada some (peças, números e agregados), na hora",
-    "Botões Todos / Nenhum e caixinha 'Mostrar os números'",
-    "Avulsa (tamponamento) agrupada com nome manual leva o grupo no nome do Dinabox mesmo sem lateral de referência"
+    "Nova aba NOMEAR no painel: dá o mesmo nome a todas as peças selecionadas de uma vez (SketchUp e Dinabox — Propriedades e etiqueta); peça de grupo mantém o grupo na frente",
+    "A parte 'Agrupar peças' (filtro, agrupar, ver grupo, apagar números) agora fica dentro da aba Nomear"
   ]
 }
