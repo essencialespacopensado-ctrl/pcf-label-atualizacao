@@ -1,7 +1,7 @@
 {
-  "versao": "2.1.1",
+  "versao": "2.1.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Agrupar: os tamponamentos ENCOSTADOS no móvel (e os encostados neles) entram sozinhos no grupo e ganham o nome pela referência — mesmo sem estarem selecionados (só os que ainda não têm grupo)"
+    "Agrupar: só o tamponamento encostado DIRETO na seleção entra junto (com o nome pela referência, ex.: 9 - Avulsa Lateral esquerda (Torre escrivaninha)); o resto só entra se você selecionar"
   ]
 }
