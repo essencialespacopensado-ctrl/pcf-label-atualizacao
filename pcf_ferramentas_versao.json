@@ -1,9 +1,9 @@
 {
-  "versao": "1.7.0",
+  "versao": "1.7.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: Espessura da caixa da gaveta (laterais/contra-frentes) e Espessura do fundo da gaveta",
-    "★ Salvar como padrão em cada parte (gavetas, gavetas empilhadas, rodapé e espessuras)",
-    "Botão 'Usar padrão neste móvel' aplica tudo o que você salvou, em qualquer móvel"
+    "Aba INTERNO: a coluna Caixa mostra a altura REAL de cada gaveta (a mesma do desenho), não mais 0",
+    "Folga em cima e embaixo da caixa no cartão do gaveteiro",
+    "Coluna 'Vão/frente' para deixar claro que é o espaço da gaveta"
   ]
 }
