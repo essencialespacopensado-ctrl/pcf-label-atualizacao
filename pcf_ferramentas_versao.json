@@ -1,7 +1,9 @@
 {
-  "versao": "1.6.9",
+  "versao": "1.7.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "A aba Interno agora fica logo ao lado de Medidas"
+    "Aba INTERNO: Espessura da caixa da gaveta (laterais/contra-frentes) e Espessura do fundo da gaveta",
+    "★ Salvar como padrão em cada parte (gavetas, gavetas empilhadas, rodapé e espessuras)",
+    "Botão 'Usar padrão neste móvel' aplica tudo o que você salvou, em qualquer móvel"
   ]
 }
