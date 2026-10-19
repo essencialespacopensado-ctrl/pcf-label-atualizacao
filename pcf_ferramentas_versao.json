@@ -1,8 +1,9 @@
 {
-  "versao": "1.8.8",
+  "versao": "1.8.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Correção: tamponamento do Dinabox não é mais tratado como avulsa (fica com o nome dele, ex.: 1 - Tamponamento interno)",
-    "Se o filtro (Só Dinabox / Só modelagens) deixar a seleção vazia, aparece um aviso dizendo para trocar o filtro"
+    "Avulsa = TAMPONAMENTO do Dinabox: ao agrupar, ganha o nome pela lateral, base ou divisória mais próxima do mesmo grupo (ex.: Cozinha - Avulsa Lateral esquerda) — no nome da peça e no nome do Dinabox",
+    "Modelagens e portas voltam a ter o nome delas",
+    "Se o filtro (Só Dinabox / Só modelagens) deixar a seleção vazia, aparece um aviso para trocar o filtro"
   ]
 }
