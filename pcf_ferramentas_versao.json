@@ -1,8 +1,8 @@
 {
-  "versao": "2.1.5",
+  "versao": "2.1.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
     "Agrupar usa SÓ as peças que você selecionou: nada mais é puxado junto para o grupo",
-    "Avulsa (tamponamento) continua ganhando o nome pela referência em que encosta (lateral/base/divisória/topo), mesmo que o móvel não esteja no grupo"
+    "Avulsa (tamponamento) ganha o nome pela referência mesmo agrupada sozinha: usa a lateral/base/divisória/topo em que encosta, ou a que está atrás do tamponamento vizinho (ex.: 9 - Avulsa Topo (Torre escrivaninha))"
   ]
 }
