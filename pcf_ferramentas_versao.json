@@ -1,7 +1,7 @@
 {
-  "versao": "2.0.3",
+  "versao": "2.0.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Botão 'PCF · Números': ocultar/mostrar o grupo esconde o móvel inteiro — peças, fitas de borda, ferragens, gavetas, tudo que é dele"
+    "Botão 'PCF · Números': ocultar/mostrar o grupo leva junto os agregados que estão dentro do móvel — gavetas, cabideiro, linhas de corte, fitas, modelagens sem grupo"
   ]
 }
