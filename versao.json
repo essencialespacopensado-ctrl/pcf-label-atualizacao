@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-16.10",
- "plugin": "2026-10-19.03",
+ "plugin": "2026-10-19.04",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.10",
+   "plugin": "2026-10-19.04",
+   "data": "19/10 16:35",
+   "titulo": "Números por grupo",
+   "itens": [
+    "Botão 'PCF · Números': mostrar/ocultar todos, ocultar só um grupo ou deixar só um grupo"
+   ]
+  },
   {
    "tela": "2026-10-16.10",
    "plugin": "2026-10-19.03",
@@ -422,5 +431,5 @@
   "numeros.svg": "1c89e120c8b85bd5bbbbb897958e564c5b73635c",
   "detalhamento.svg": "a19aabab38d54771ede57fd22b76426981f9bbc5"
  },
- "ferramentas": "1.9.9"
+ "ferramentas": "2.0.0"
 }

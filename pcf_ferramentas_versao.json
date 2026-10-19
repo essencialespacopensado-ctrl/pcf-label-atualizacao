@@ -1,7 +1,8 @@
 {
-  "versao": "1.9.9",
+  "versao": "2.0.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Dois cliques no número 3D: destaca em laranja só a peça daquele número (um clique continua mostrando o grupo todo)"
+    "Botão 'PCF · Números' (na barra): escolha Mostrar todos, Ocultar todos, Ocultar só o grupo X, ou Mostrar só o grupo X",
+    "Dois cliques no número: destaca só a peça dele"
   ]
 }

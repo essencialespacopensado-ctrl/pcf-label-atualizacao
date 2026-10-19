@@ -569,6 +569,8 @@ module PCFLabel
   end
 
   def self.alternar_nomes
+    # com o PCF Ferramentas: menu com mostrar/ocultar todos, ocultar um grupo ou deixar só um grupo
+    return PCF::Ferramentas.numeros_menu if defined?(PCF::Ferramentas) && PCF::Ferramentas.respond_to?(:numeros_menu)
     m = Sketchup.active_model
     l = m.layers[ETIQ]
     return UI.messagebox('Ainda não tem números nas peças. Gere o plano no PCF Label primeiro.') unless l
@@ -1373,7 +1375,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-19.03'
+  PLUGIN_VERSAO = '2026-10-19.04'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
