@@ -1,8 +1,7 @@
 {
-  "versao": "1.6.8",
+  "versao": "1.6.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO: a coluna 'Z caixa' agora mexe SÓ na parte interna da gaveta (caixa + corrediça); a frente fica parada",
-    "Mudar a altura das frentes não desfaz mais o Z das caixas"
+    "A aba Interno agora fica logo ao lado de Medidas"
   ]
 }
