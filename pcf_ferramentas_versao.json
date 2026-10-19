@@ -1,7 +1,7 @@
 {
-  "versao": "1.7.3",
+  "versao": "1.7.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba INTERNO, Cada gaveta: sem a coluna do vão; ficam Altura da caixa, Z da caixa e Profundidade"
+    "Aba INTERNO: voltaram o botão '⇕ Igualar frentes' e a conta da altura útil em cada gaveteiro"
   ]
 }
