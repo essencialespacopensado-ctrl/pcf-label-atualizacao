@@ -642,6 +642,30 @@ module PCFLabel
     end
   end
 
+  # nº no NOME do Dinabox (campo "Nome" = db01), que é o que sai na etiqueta/relatório do Dinabox: "64 - Tamponamento".
+  # A peça que tem o campo Nome recebe nele; tamponamento (módulo de 1 peça) recebe no módulo.
+  def self.nome_dinabox(cam, num)
+    tem = ->(o) { o && o.respond_to?(:definition) && (o.definition.get_attribute('dynamic_attributes', '_db01_formula') || o.definition.get_attribute('dynamic_attributes', 'db01') || o.get_attribute('dynamic_attributes', 'db01')) }
+    p = cam.last
+    alvo = tem.(p) ? p : nil
+    if !alvo && cam.size > 1
+      mod = cam[-2]
+      pc = mod.definition.entities.count { |x| x.respond_to?(:definition) && x.definition.name =~ /\Adinabox_peca_/i }
+      alvo = mod if tem.(mod) && pc == 1
+    end
+    return nil unless alvo
+    atual = (alvo.get_attribute('dynamic_attributes', 'db01') || alvo.definition.get_attribute('dynamic_attributes', 'db01')).to_s
+    base = atual.sub(/\A\d+\s*-\s*/, '').strip
+    novo = base.empty? ? num.to_s : "#{num} - #{base}"
+    obs = [alvo]; obs << alvo.definition if alvo.definition.count_instances == 1
+    obs.each do |o|
+      o.set_attribute('dynamic_attributes', 'db01', novo)
+      o.set_attribute('dynamic_attributes', '_db01_formula', novo.inspect)
+      o.set_attribute('dynamic_attributes', 'name', novo) if o.get_attribute('dynamic_attributes', 'name') || o.is_a?(Sketchup::ComponentDefinition)
+    end
+    novo
+  end
+
   def self.renomear(mapa)
     m = Sketchup.active_model
     m.start_operation('PCF: nomes do corte', true, false, true)
@@ -659,6 +683,8 @@ module PCFLabel
       next unless c
       e = c[0].last
       if e.respond_to?(:name=) && e.name != nome then e.name = nome; n += 1 end
+      # peça do Dinabox: o nº também no Nome do Dinabox (sai na etiqueta dele)
+      (nome_dinabox(c[0], nome.to_s[/\d+/]) if nome.to_s[/\d+/] && c[0].any? { |x| dinabox?(x, x.definition) }) rescue nil
       begin
         pc = nil
         if c[0].length > 1
@@ -1334,7 +1360,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-19.01'
+  PLUGIN_VERSAO = '2026-10-19.02'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

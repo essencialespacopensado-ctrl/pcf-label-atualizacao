@@ -1,7 +1,7 @@
 {
-  "versao": "1.7.5",
+  "versao": "1.7.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Aba MEDIDAS: botão 'Agrupar peças' — o mesmo nº em todas as peças selecionadas, com o nome do Dinabox, e o nº nos dois lados da peça"
+    "Agrupar peças: o nº também vai no Nome do Dinabox (sai na etiqueta do Dinabox)"
   ]
 }

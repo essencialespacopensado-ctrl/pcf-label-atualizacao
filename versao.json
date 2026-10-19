@@ -1,12 +1,22 @@
 {
  "tela": "2026-10-16.10",
- "plugin": "2026-10-19.01",
+ "plugin": "2026-10-19.02",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-16.10",
+   "plugin": "2026-10-19.02",
+   "data": "19/10 14:20",
+   "titulo": "Número no nome do Dinabox",
+   "itens": [
+    "O número da peça agora também vai no Nome do Dinabox (ex.: 64 - Tamponamento), para sair na etiqueta do Dinabox",
+    "PCF Ferramentas 1.7.6: botão Agrupar peças (aba Medidas) também põe o nº no Nome do Dinabox"
+   ]
+  },
   {
    "tela": "2026-10-16.10",
    "plugin": "2026-10-19.01",
@@ -403,5 +413,5 @@
   "numeros.svg": "1c89e120c8b85bd5bbbbb897958e564c5b73635c",
   "detalhamento.svg": "a19aabab38d54771ede57fd22b76426981f9bbc5"
  },
- "ferramentas": "1.7.5"
+ "ferramentas": "1.7.6"
 }
