@@ -1,7 +1,9 @@
 {
-  "versao": "2.5.4",
+  "versao": "2.5.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correr: tudo o que você edita e salva (sistemas, perfis, cores, vidros, puxadores, dobradiças, padrões) vai para a NUVEM (GitHub privado pcf-dados) e vale para todos os PCs. Cole a chave uma vez em cada PC no ☁ Nuvem",
+    "Atualizações conferidas a cada 2 minutos: chegam em todos os PCs praticamente juntas",
     "Correr: portas sempre EM PÉ na frente do módulo Dinabox (antes entravam deitadas — o Dinabox usa outro eixo para a altura)",
     "Porta de alumínio mais bonita: quadro em 45° com degrau interno (baguete) dos dois lados do vidro",
     "Puxador de verdade: barra afastada da porta com 2 pés (ou perfil de altura toda), sempre dentro da porta",
