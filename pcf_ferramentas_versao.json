@@ -1,11 +1,11 @@
 {
-  "versao": "2.4.2",
+  "versao": "2.4.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Pontos: 'Selecionar todos' agora pega TODOS (os que estavam dentro de grupos vêm para fora, no mesmo lugar); pontos novos ficam sempre fora dos grupos",
     "Elétrica e Hidráulica: botão '👁 Esconder pontos' — esconde/mostra todos os pontos daquela aba (com cotas e escrita); clique de novo para mostrar",
     "Elétrica e Hidráulica: Distância primeiro e Altura depois (lado a lado)",
     "Elétrica e Hidráulica: campos organizados — 'Medir da' (esquerda/direita) em cima e Altura e Distância lado a lado (também no ponto selecionado)",
-    "Elétrica e Hidráulica: botões 'Selecionar todos' (seleciona todos os pontos daquela aba) e 'Apagar todos' (apaga todos de uma vez, pergunta antes; Ctrl+Z desfaz)",
-    "Pontos editáveis: selecione um ponto já colocado e, na aba Elétrica/Hidráulica, edite Altura, Medir da (esquerda/direita), Distância e, no ralo, Da parede — Enter move o ponto e a cota atualiza"
+    "Elétrica e Hidráulica: botões 'Selecionar todos' (seleciona todos os pontos daquela aba) e 'Apagar todos' (apaga todos de uma vez, pergunta antes; Ctrl+Z desfaz)"
   ]
 }
