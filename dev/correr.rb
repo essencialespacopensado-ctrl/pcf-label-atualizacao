@@ -369,61 +369,81 @@ module PCF
         g
       end
 
-      # projeto separado da porta de alumínio (por módulo): .skp com cenas Frontal e Traseira cotadas
-      # Faz uma cópia temporária: tira tudo menos as portas, cota, cria as cenas, salva a cópia e desfaz (seu projeto fica igual).
+      # projeto da porta de alumínio (separado por módulo), dentro do próprio projeto — seguro, não mexe no resto:
+      # as portas são copiadas (lado a lado, cotadas) numa etiqueta própria, longe do projeto (5 m abaixo do chão),
+      # e ganham 2 cenas só delas: "Porta alumínio <módulo> - Frontal" e "- Traseira". Nas outras cenas essa etiqueta fica oculta.
+      # Também salva um .skp só das portas (cotado) na pasta "Portas de alumínio", ao lado do projeto, para mandar ao serralheiro.
       def projeto_aluminio(g, a, s, n, w, hp)
         m = model
-        pasta = m.path.to_s.empty? ? File.join(ENV['USERPROFILE'] || Dir.home, 'Desktop') : File.dirname(m.path)
-        pasta = File.join(pasta, 'Portas de alumínio')
-        Dir.mkdir(pasta) unless Dir.exist?(pasta)
-        nome_arq = "Portas alumínio - #{a[:nome]}".gsub(/[\\\/:*?"<>|]/, '-')
-        arq = File.join(pasta, "#{nome_arq}.skp")
         portas = g.entities.select { |x| x.respond_to?(:get_attribute) && x.get_attribute('pcf', 'porta_alu') }
         raise 'sem portas de alumínio' if portas.empty?
-        cam = m.active_view.camera
-        cam0 = Sketchup::Camera.new(cam.eye, cam.target, cam.up, cam.perspective?, cam.fov)
-        m.start_operation('PCF: projeto da porta de alumínio (temporário)', true)
-        @no_visib = true
+        rotulo = "Porta alumínio #{a[:nome]}"
+        tag_nome = "PCF #{rotulo}"
+        m.start_operation("PCF: projeto da #{rotulo}", true)
         begin
-          # cópia das portas no mundo, lado a lado, com cotas
-          tr = g.transformation
+          # refazer = troca (apaga o projeto anterior deste módulo)
+          velhos = m.entities.select { |x| x.respond_to?(:get_attribute) && x.get_attribute('pcf', 'projeto_alu') == a[:e].persistent_id.to_s }
+          m.entities.erase_entities(velhos) unless velhos.empty?
+          m.pages.to_a.each { |pg| m.pages.erase(pg) if pg.name.start_with?(rotulo + ' - ') }
+          tag = m.layers[tag_nome] || m.layers.add(tag_nome)
+          tag.visible = true
+          gap = 300.0
           novo = m.entities.add_group
-          novo.name = "Portas de alumínio - #{a[:nome]}"
-          gap = 200.0
+          novo.name = "Projeto - #{rotulo}"
+          novo.layer = tag
+          novo.set_attribute('pcf', 'projeto_alu', a[:e].persistent_id.to_s)
           portas.each_with_index do |p, i|
             c = novo.entities.add_instance(p.definition, Geom::Transformation.new)
             pb = p.bounds
             c.transform!(Geom::Transformation.translation([-pb.min.x + i * (w + gap).mm, -pb.min.y, -pb.min.z]))
           end
-          pl = s['perfil_larg'].to_f
-          cotar_portas(novo, n, w, hp, gap, pl, s)
-          # tudo o que não é o projeto da porta sai da cópia
-          (m.entities.to_a - [novo]).each { |x| x.erase! if x.valid? }
-          m.pages.to_a.each { |pg| m.pages.erase(pg) }
-          m.definitions.purge_unused
-          m.materials.purge_unused
-          (m.layers.purge_unused rescue nil)
-          v = m.active_view
+          cotar_portas(novo, n, w, hp, gap, s['perfil_larg'].to_f, s)
+          # longe do projeto: 5 m abaixo do chão, alinhado com o módulo
+          base = m.bounds
+          novo.transform!(Geom::Transformation.translation([base.min.x, base.min.y, base.min.z - 5000.mm - hp.mm]))
           bb = novo.bounds
           c = bb.center
-          dist = [bb.width, bb.depth].max * 3
-          v.camera = Sketchup::Camera.new(c.offset(Geom::Vector3d.new(0, -1, 0), dist), c, Z_AXIS, false)
-          v.camera.perspective = false
-          v.zoom_extents
-          pf = m.pages.add('Frontal')
-          v.camera = Sketchup::Camera.new(c.offset(Geom::Vector3d.new(0, 1, 0), dist), c, Z_AXIS, false)
-          v.camera.perspective = false
-          v.zoom_extents
-          m.pages.add('Traseira')
-          m.pages.selected_page = pf
-          ok = m.save_copy(arq)
-        ensure
+          dist = [bb.width, bb.depth].max * 2 + 3000.mm
+          v = m.active_view
+          cam0 = v.camera
+          cam0 = Sketchup::Camera.new(cam0.eye, cam0.target, cam0.up, cam0.perspective?, cam0.fov)
+          paginas = []
+          [['Frontal', -1], ['Traseira', 1]].each do |nm, lado|
+            cam = Sketchup::Camera.new(c.offset(Geom::Vector3d.new(0, lado, 0), dist), c, Z_AXIS, false)
+            cam.height = [bb.depth * 1.35, bb.width * 0.8].max
+            v.camera = cam
+            pg = m.pages.add("#{rotulo} - #{nm}")
+            pg.use_camera = true
+            paginas << pg
+          end
+          # nas cenas da porta: só a etiqueta da porta; nas outras cenas: a etiqueta da porta oculta
+          m.pages.each do |pg|
+            if paginas.include?(pg)
+              m.layers.each { |l| pg.set_visibility(l, l == tag || l == m.layers[0]) rescue nil }
+            else
+              (pg.set_visibility(tag, false) rescue nil)
+            end
+          end
+          v.camera = cam0
+          tag.visible = false # na vista normal fica escondido; aparece só nas 2 cenas da porta
+          m.commit_operation
+        rescue StandardError
           m.abort_operation
-          @no_visib = false
-          m.active_view.camera = cam0 rescue nil
+          raise
         end
-        raise 'o SketchUp não salvou o arquivo' unless ok && File.exist?(arq)
-        arq
+        # arquivo separado (só as portas cotadas) para mandar ao serralheiro: salva o componente, sem mexer no projeto
+        arq = nil
+        begin
+          pasta = m.path.to_s.empty? ? File.join(ENV['USERPROFILE'] || Dir.home, 'Desktop') : File.dirname(m.path)
+          pasta = File.join(pasta, 'Portas de alumínio')
+          Dir.mkdir(pasta) unless Dir.exist?(pasta)
+          arq = File.join(pasta, "#{rotulo}.skp".gsub(/[\\\/:*?"<>|]/, '-'))
+          novo.definition.save_as(arq)
+        rescue StandardError => ex
+          puts "PCF porta alu arquivo: #{ex.message}"
+          arq = nil
+        end
+        "Cenas \"#{rotulo} - Frontal\" e \"- Traseira\"" + (arq ? " · arquivo: #{arq}" : '')
       end
 
       # cotas: largura e altura de cada porta (frente e verso), largura dos perfis, total
