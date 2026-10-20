@@ -1396,7 +1396,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-20.03'
+  PLUGIN_VERSAO = '2026-10-20.04'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1458,16 +1458,24 @@ module PCFLabel
         (sincronizar_icones(u, man) rescue nil) if man
         (atualizar_ferramentas(u, man) rescue nil) if man
         vt_atual = versao_arq(MODELO_TELA, /VERSAO = '([^']+)'/)
-        if man && (man['tela'].to_s > vt_atual || man['plugin'].to_s > PLUGIN_VERSAO)
+        if man && @pend_label && @pend_label[:chave] == [man['tela'], man['plugin']]
+          @online_ocupado = false # já baixada, esperando você clicar em ⬆ Atualizar
+        elsif man && (man['tela'].to_s > vt_atual || man['plugin'].to_s > PLUGIN_VERSAO)
           arqs = (man['arquivos'] || ['etiquetas.html', 'main.rb']); baixados = {}
           pega = lambda do |i|
             if i >= arqs.size
               require 'fileutils'; require 'tmpdir'
               tmp = File.join(ENV['TEMP'] || Dir.tmpdir, 'pcf_atualizacao'); FileUtils.mkdir_p(tmp)
               baixados.each { |n, b| File.binwrite(File.join(tmp, n), b) }
-              @pa_online = tmp; aplicar_atualizacao(tmp)
               info = { tela: man['tela'], telaAtual: vt_atual, plugin: man['plugin'], pluginAtual: PLUGIN_VERSAO, notas: (man['notas'] || []).first(30) }
-              UI.start_timer(4, false) { (@dlg.execute_script("mostrarAtualizado(#{JSON.generate(info).gsub('</', '<\\/')})") rescue nil) if @dlg }
+              if defined?(PCF::Ferramentas) && PCF::Ferramentas.respond_to?(:marcar_pendente)
+                # NÃO instala sozinho: acende o botão ⬆ Atualizar da barra PCF
+                @pend_label = { tmp: tmp, info: info, chave: [man['tela'], man['plugin']] }
+                PCF::Ferramentas.marcar_pendente
+              else
+                @pa_online = tmp; aplicar_atualizacao(tmp)
+                UI.start_timer(4, false) { (@dlg.execute_script("mostrarAtualizado(#{JSON.generate(info).gsub('</', '<\\/')})") rescue nil) if @dlg }
+              end
               @online_ocupado = false
             else
               baixar(u + arqs[i]) { |b| if b && b.bytesize > 50 then baixados[arqs[i]] = b; pega.call(i + 1) else @online_ocupado = false end }
@@ -1486,8 +1494,24 @@ module PCFLabel
   end
   # o PCF Label também leva o PCF Ferramentas para a versão do versao.json ("ferramentas"): assim todos os PCs
   # recebem, mesmo os que têm o atualizador antigo do Ferramentas (que o GitHub bloqueava)
+  def self.tem_pendente?
+    !@pend_label.nil?
+  end
+
+  # botão ⬆ Atualizar: instala a versão do PCF Label que já foi baixada e mostra o que mudou
+  def self.aplicar_pendente
+    pl = @pend_label; return unless pl
+    @pend_label = nil
+    @pa_online = pl[:tmp]; aplicar_atualizacao(pl[:tmp])
+    info = pl[:info]
+    UI.start_timer(4, false) { (@dlg.execute_script("mostrarAtualizado(#{JSON.generate(info).gsub('</', '<\\/')})") rescue nil) if @dlg }
+    (UI.refresh_toolbars rescue nil)
+  end
+
   def self.atualizar_ferramentas(u, man)
     alvo = man['ferramentas'].to_s
+    # Ferramentas novo tem o próprio botão ⬆ Atualizar: aqui só leva os PCs com o atualizador antigo
+    return if defined?(PCF::Ferramentas) && PCF::Ferramentas.respond_to?(:marcar_pendente)
     return if alvo.empty? || @ferr_ocupado
     atual = defined?(PCF::Ferramentas::VERSAO) ? PCF::Ferramentas::VERSAO.to_s : '0'
     return unless (alvo.split('.').map(&:to_i) <=> atual.split('.').map(&:to_i)) == 1
