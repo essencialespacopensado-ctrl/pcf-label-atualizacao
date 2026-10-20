@@ -1,7 +1,8 @@
 {
-  "versao": "2.6.1",
+  "versao": "2.6.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel › Medidas: quadro 'Espessuras' com 🔍 Inspecionar (lista peças com 6/15/18/25 em vez de 6,3/15,3/18,3/25,3, por material) e ✔ Corrigir (tamponamentos, recortes orgânicos e peças mãe vão para o padrão; Ctrl+Z desfaz)",
     "Recorte orgânico: modelagem com 6 / 15 / 18 / 25 mm vira chapa 6,3 / 15,3 / 18,3 / 25,3 (e coladas 21,6 / 30,6 …) automaticamente",
     "Botão novo 'Inverter veio' na barra PCF: gira o veio 90° das peças selecionadas sem redesenhar (na tela e no plano de corte do PCF Label). Clique de novo para voltar",
     "Cotas ligadas: ao clicar numa peça aparecem o nome e a cor dela",
