@@ -15,32 +15,32 @@ module PCF
       { 'id' => 'dominus', 'marca' => 'Rometal', 'nome' => 'Dominus (porta suspensa)', 'tipo' => 'mdf',
         'obs' => 'Porta 90 mm maior que a caixa (55 em cima, 35 embaixo); cada porta 20 mm maior que o vão. Portas de 15 a 25 mm, mín. 600 mm de largura, até 80 kg.',
         'alt_add' => 90, 'desce' => 35, 'transpasse' => 0, 'larg_add' => 20, 'prof_trilho' => 45, 'alt_trilho' => 45,
-        'trilho_sup' => 'RM-264', 'trilho_inf' => 'RM-265', 'barras' => [2000, 3000],
+        'trilho_sup' => 'RM-264', 'trilho_inf' => 'RM-265', 'barras' => [2000, 3000], 'furo_ini' => 100, 'furo_passo' => 400,
         'kit' => [['DOMINUS-KIT', 'Kit sistema Dominus (carros, guias e amortecedores)', 'kit', 1]],
         'por_porta' => [['DOMINUS-AMORT', 'Amortecedor Dominus', 'un', 2]] },
       { 'id' => 'ro65', 'marca' => 'Rometal', 'nome' => 'RO-65 (porta de correr)', 'tipo' => 'mdf',
         'obs' => 'Portas até 60 kg, 15 a 25 mm. Transpasse 20 a 30 mm. Folga de altura: CONFERIR no catálogo.',
         'alt_add' => -40, 'desce' => 0, 'transpasse' => 25, 'larg_add' => 0, 'prof_trilho' => 35, 'alt_trilho' => 20,
-        'trilho_sup' => 'RO-65 sup.', 'trilho_inf' => 'RO-65 inf.', 'barras' => [2000, 3000],
+        'trilho_sup' => 'RO-65 sup.', 'trilho_inf' => 'RO-65 inf.', 'barras' => [2000, 3000], 'furo_ini' => 100, 'furo_passo' => 400,
         'kit' => [],
         'por_porta' => [['RO65-KIT', 'Kit RO-65 por porta (2 carros, 2 freios, 2 guias)', 'kit', 1]] },
       { 'id' => 'slido40', 'marca' => 'Häfele', 'nome' => 'Slido Classic 40 (até 40 kg)', 'tipo' => 'mdf',
         'obs' => 'Porta de 16 a 25 mm. Transpasse e folga de altura: CONFERIR no catálogo Häfele.',
         'alt_add' => -38, 'desce' => 0, 'transpasse' => 30, 'larg_add' => 0, 'prof_trilho' => 40, 'alt_trilho' => 20,
-        'trilho_sup' => 'Slido trilho sup.', 'trilho_inf' => 'Slido trilho inf.', 'barras' => [2500, 3000],
+        'trilho_sup' => 'Slido trilho sup.', 'trilho_inf' => 'Slido trilho inf.', 'barras' => [2500, 3000], 'furo_ini' => 100, 'furo_passo' => 400,
         'kit' => [],
         'por_porta' => [['SLIDO40-KIT', 'Kit Slido Classic 40 por porta', 'kit', 1]] },
       { 'id' => 'slido80', 'marca' => 'Häfele', 'nome' => 'Slido Classic 80 (até 80 kg)', 'tipo' => 'mdf',
         'obs' => 'Porta de 16 a 25 mm. Transpasse e folga de altura: CONFERIR no catálogo Häfele.',
         'alt_add' => -38, 'desce' => 0, 'transpasse' => 30, 'larg_add' => 0, 'prof_trilho' => 40, 'alt_trilho' => 20,
-        'trilho_sup' => 'Slido trilho sup.', 'trilho_inf' => 'Slido trilho inf.', 'barras' => [2500, 3000],
+        'trilho_sup' => 'Slido trilho sup.', 'trilho_inf' => 'Slido trilho inf.', 'barras' => [2500, 3000], 'furo_ini' => 100, 'furo_passo' => 400,
         'kit' => [],
         'por_porta' => [['SLIDO80-KIT', 'Kit Slido Classic 80 por porta', 'kit', 1]] },
       { 'id' => 'alu_correr', 'marca' => 'Serralheria', 'nome' => 'Porta de alumínio de correr (vidro)', 'tipo' => 'aluminio',
         'obs' => 'Quadro em perfil de alumínio com vidro, no trilho RO-65 (troque os códigos abaixo se usar outro). Gera o projeto da porta (Frontal e Traseira cotadas).',
         'alt_add' => -40, 'desce' => 0, 'transpasse' => 20, 'larg_add' => 0, 'prof_trilho' => 35, 'alt_trilho' => 20,
         'perfil_larg' => 37, 'perfil_prof' => 21, 'vidro_esp' => 4, 'vidro_encaixe' => 10,
-        'trilho_sup' => 'RO-65 sup.', 'trilho_inf' => 'RO-65 inf.', 'barras' => [2000, 3000],
+        'trilho_sup' => 'RO-65 sup.', 'trilho_inf' => 'RO-65 inf.', 'barras' => [2000, 3000], 'furo_ini' => 100, 'furo_passo' => 400,
         'kit' => [],
         'por_porta' => [['RO65-KIT', 'Kit RO-65 por porta (2 carros, 2 freios, 2 guias)', 'kit', 1]] },
       { 'id' => 'alu_giro', 'marca' => 'Serralheria', 'nome' => 'Porta de alumínio de giro (vidro)', 'tipo' => 'aluminio',
@@ -351,6 +351,7 @@ module PCF
             compras << { 'cod' => 'VIDRO', 'desc' => "Vidro #{s['vidro_nome']} #{s['vidro_esp']} mm — #{n} peça(s) de #{vw.round} × #{vh.round} mm", 'qtd' => (n * vw * vh / 1e6).round(2), 'un' => 'm²' }
           end
           # itens de compra: um por linha (PCF Label) + [AR] para o relatório do Dinabox
+          marcacoes(g, s, n, larg, alt, w, hp, x0, y0, z0, passo, esp) rescue puts("PCF marcações: #{$!.message}")
           ci = g.entities.add_group; ci.name = 'Compras'
           compras.each { |c| item_dinabox(ci.entities, c['cod'], c['desc'], c['qtd'], c['un']) }
           marcar_compra(g, compras)
@@ -364,6 +365,54 @@ module PCF
         arq = (projeto_aluminio(g, a, s, n, w, hp) rescue "Erro ao gerar o projeto da porta: #{$!.message}") if aluminio && h['projeto'] != false
         mudou
         { 'nome' => a[:nome], 'sistema' => s['nome'], 'n' => n, 'w' => w, 'h' => hp, 'compras' => compras, 'arquivo' => arq, 'mdf_dinabox' => !aluminio && !tamps.empty? }
+      end
+
+      # marcações no módulo (etiqueta "PCF Marcações"): furos dos trilhos, faixas de transpasse e posição das dobradiças
+      def marcacoes(g, s, n, larg, alt, w, hp, x0, y0, z0, passo, esp)
+        m = model
+        tag = m.layers['PCF Marcações'] || m.layers.add('PCF Marcações')
+        tinta = mat_correr('PCF Marcação', [220, 38, 38])
+        mg = g.entities.add_group
+        mg.name = 'Marcações'
+        mg.layer = tag
+        e = mg.entities
+        cruz = lambda do |p, r = 12|
+          a = [[r, 0, 0], [0, 0, r]]
+          a.each { |dx, _dy, dz| e.add_line(Geom::Point3d.new((p[0] - dx).mm, p[1].mm, (p[2] - dz).mm), Geom::Point3d.new((p[0] + dx).mm, p[1].mm, (p[2] + dz).mm)) }
+        end
+        rotulo = ->(t, p) { tx = e.add_text(t, Geom::Point3d.new(*p.map(&:mm)), Geom::Vector3d.new(0, -150.mm, 150.mm)); tx.material = tinta rescue nil }
+        pt = s['prof_trilho'].to_f
+        # trilhos: furos de fixação (1º a X mm da lateral, depois a cada Y mm) em cima e embaixo
+        unless s['trilho_sup'].to_s.empty?
+          ini = (s['furo_ini'] || 100).to_f; pas = (s['furo_passo'] || 400).to_f
+          xs = []; x = ini
+          while x < larg - ini + 1; xs << x; x += pas; end
+          xs << larg - ini unless xs.last && (larg - ini - xs.last).abs < 1
+          [[z0 + alt, 'superior'], [z0, 'inferior']].each do |zz, qual|
+            yy = y0 - pt / 2.0
+            xs.each { |xx| cruz.([x0 + xx, yy, zz]) }
+            rotulo.("Trilho #{qual} #{s["trilho_#{qual == 'superior' ? 'sup' : 'inf'}"]}: furos a #{mm_txt(ini)} da lateral e a cada #{mm_txt(pas)} mm", [x0 + xs.first, yy, zz])
+          end
+          # faixas de transpasse (onde uma porta passa na frente da outra)
+          if n > 1 && s['transpasse'].to_f > 0
+            (1...n).each do |i|
+              xa = x0 + i * passo; xb = xa + (w - passo)
+              [xa, xb].each { |xx| e.add_cline(Geom::Point3d.new(xx.mm, (y0 - pt).mm, z0.mm), Geom::Point3d.new(xx.mm, (y0 - pt).mm, (z0 + alt).mm)) }
+              rotulo.("Transpasse #{mm_txt(xb - xa)} mm", [(xa + xb) / 2.0, y0 - pt, z0 + alt / 2.0])
+            end
+          end
+        end
+        # dobradiças (porta de giro): altura de cada dobradiça marcada na lateral do módulo
+        if s['dob']
+          ps = dobr_posicoes(s['dob'], hp)
+          n.times do |i|
+            lado_x = i.even? ? x0 + i * passo : x0 + i * passo + w
+            ps.each { |zz| cruz.([lado_x, y0, z0 - s['desce'].to_f + zz]) }
+            rotulo.("Dobradiças porta #{i + 1}: #{ps.reverse.map { |v| mm_txt(v) }.join(' / ')} mm da base da porta", [lado_x, y0, z0 - s['desce'].to_f + ps.first])
+          end
+        end
+        mg.entities.grep(Sketchup::Edge).each { |ed| ed.material = tinta }
+        mg
       end
 
       # porta de MDF: tamponamento Dinabox (entra no plano de corte do Dinabox), no lugar da porta
