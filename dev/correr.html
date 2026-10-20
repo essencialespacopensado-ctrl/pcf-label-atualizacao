@@ -87,6 +87,8 @@
     <div class="grid" style="margin-top:8px">
       <label class="f">Largura de cada porta<input id="w" placeholder="calculada"></label>
       <label class="f">Altura da porta<input id="h" placeholder="calculada"></label>
+      <label class="f" id="lbTrp">Transpasse entre portas (mm)<input id="trp"></label>
+      <label class="f" style="align-self:end"><span class="seg"><button id="bTrpPad" title="Usa este valor sempre (fica salvo neste PC)">★ Tornar padrão</button><button id="bTrpRest" title="Volta ao valor de fábrica">↺</button></span></label>
     </div>
     <div class="res" id="res"></div>
     <div class="obs" id="obs"></div>
@@ -118,12 +120,12 @@ let CAT = [], SIS = null, ALVO = null, N = 2, ALU = null, SEL = { perfil: null, 
 const rgb = c => `rgb(${c.join(',')})`;
 const LISTA = { perfil: 'perfis', cor: 'cores', vidro: 'vidros', pux: 'puxadores', dob: 'dobradicas' }, CAIXA = { perfil: 'swPerfil', cor: 'swCor', vidro: 'swVidro', pux: 'swPux', dob: 'swDob' };
 const CAMPOS_ITEM = {
-  perfil: [['larg', 'Largura (mm)', 37], ['prof', 'Profundidade (mm)', 21]],
+  perfil: [['larg', 'Aba frontal (mm)', 19], ['prof', 'Espessura do perfil (mm)', 25], ['desc', 'Vidro = porta − (mm)', 3], ['vidro', 'Vidro (mm)', 4]],
   pux: [['comp', 'Comprimento (mm) · 0 = sem · -1 = altura toda', 300], ['borda', 'Da borda ao centro (mm)', 40], ['centro', 'Altura do centro (mm)', 1000]],
   dob: [['topo', 'Do topo (mm)', 100], ['base', 'Da base (mm)', 100], ['qtd', 'Quantidade · 0 = automática', 0]]
 };
 const NOME_K = { perfil: 'do perfil', cor: 'da cor', vidro: 'do vidro', pux: 'do puxador', dob: 'da dobradiça' };
-const resumo = (k, x) => k === 'perfil' ? `${x.larg}×${x.prof}` : k === 'pux' ? (x.comp == 0 ? '' : x.comp < 0 ? 'altura toda' : x.comp + ' mm') : k === 'dob' ? (x.qtd > 0 ? x.qtd + ' un' : 'auto') : '';
+const resumo = (k, x) => k === 'perfil' ? `${x.larg}×${x.prof}${x.conferir ? ' ⚠' : ''}` : k === 'pux' ? (x.comp == 0 ? '' : x.comp < 0 ? 'altura toda' : x.comp + ' mm') : k === 'dob' ? (x.qtd > 0 ? x.qtd + ' un' : 'auto') : '';
 const hex = c => '#' + c.map(v => ('0' + Math.round(v).toString(16)).slice(-2)).join('');
 const dehex = h => [1, 3, 5].map(i => parseInt(h.substr(i, 2), 16));
 function montarAlu(){
@@ -150,15 +152,17 @@ function editar(k, i){
     ? CI.map((c, j) => `<label class="f">${c[1]}<input data-c="${c[0]}" value="${x[c[0]] ?? c[2]}"></label>`).join('')
     : `<label class="f">Cor<input type="color" id="eA" value="${hex(x.rgb)}"></label>` + (k === 'vidro' ? `<label class="f">Transparência (%)<input id="eB" value="${Math.round((1 - (x.alpha || .3)) * 100)}"></label>` : '<span></span>');
   $('ed').style.display = 'grid';
-  $('ed').style.gridTemplateColumns = CI && CI.length > 2 ? '2fr 1.4fr 1fr 1fr auto auto' : '2fr 1fr 1fr auto auto';
+  $('ed').style.gridTemplateColumns = '2fr ' + '1fr '.repeat(CI ? CI.length : 2) + 'auto auto';
   $('ed').innerHTML = `<label class="f">Nome ${NOME_K[k]}<input id="eN" value="${x.nome.replace(/"/g, '&quot;')}" placeholder="digite o nome"></label>${campos}` +
     `<button class="bt pri" id="eOk" style="flex:none">✓ Salvar</button>` + (i >= 0 ? `<button class="bt" id="eDel">🗑</button>` : `<button class="bt" id="eX">✕</button>`);
   $('eN').focus();
+  if (k === 'perfil' && x.conferir) msg('⚠ Medidas deste perfil não publicadas pelo fabricante: confira no catálogo e salve.', 'erro');
   const fim = () => { $('ed').style.display = 'none'; montarAlu(); calcular(); sketchup.salvar_alu(JSON.stringify(ALU)); };
   $('eOk').onclick = () => {
     const nome = $('eN').value.trim(); if (!nome) return msg('Digite o nome.', 'erro');
     if (L.some((y, j) => y.nome === nome && j !== i)) return msg('Já existe "' + nome + '".', 'erro');
-    const novo = CI ? Object.fromEntries([['nome', nome]].concat(CI.map(c => { const v = num(document.querySelector(`#ed input[data-c="${c[0]}"]`).value); return [c[0], v === null ? c[2] : v] })))
+    const base = Object.assign({}, i >= 0 ? x : {}); delete base.conferir; // editou e salvou = medida conferida
+    const novo = CI ? Object.assign(base, Object.fromEntries([['nome', nome]].concat(CI.map(c => { const v = num(document.querySelector(`#ed input[data-c="${c[0]}"]`).value); return [c[0], v === null ? c[2] : v] }))))
       : k === 'cor' ? { nome, rgb: dehex($('eA').value) } : { nome, rgb: dehex($('eA').value), alpha: Math.min(1, Math.max(0, 1 - (num($('eB').value) || 0) / 100)) };
     if (i >= 0) L[i] = novo; else L.push(novo);
     SEL[k] = nome; fim(); msg('"' + nome + '" salvo neste PC.', 'ok');
@@ -189,6 +193,10 @@ function escolher(id){
   $('obs').innerHTML = (SIS.obs || '').replace(/CONFERIR/g, '<b>CONFERIR</b>');
   $('linProj').style.display = SIS.tipo === 'aluminio' ? 'flex' : 'none';
   $('cAlu').style.display = SIS.tipo === 'aluminio' ? 'block' : 'none';
+  const giro = /giro/.test(SIS.id) || SIS.giro;
+  $('lbTrp').firstChild.textContent = giro ? 'Folga entre portas (mm)' : 'Transpasse entre portas (mm)';
+  $('trp').value = String(giro ? -(SIS.transpasse || 0) : (SIS.transpasse || 0)).replace('.', ',');
+  $('esp').disabled = SIS.tipo === 'aluminio';
   $('linDob').style.display = /giro/.test(SIS.id) ? 'block' : 'none';
   $('regras').innerHTML = CAMPOS.filter(([k]) => SIS[k] !== undefined).map(([k, t]) => `<label class="f">${t}<input data-k="${k}" value="${Array.isArray(SIS[k]) ? SIS[k].join(', ') : String(SIS[k]).replace('.', ',')}"></label>`).join('');
   document.querySelectorAll('#regras input').forEach(i => i.oninput = () => { lerRegras(); calcular(); });
@@ -223,7 +231,9 @@ function calcular(){
   let w = (L + (SIS.transpasse || 0) * (N - 1)) / N + (SIS.larg_add || 0), h = A + (SIS.alt_add || 0);
   if (num($('w').value)) w = num($('w').value);
   if (num($('h').value)) h = num($('h').value);
-  $('res').textContent = `${N} porta${N > 1 ? 's' : ''} de ${fm(w)} × ${fm(h)} mm`;
+  let extra = '';
+  if (SIS.tipo === 'aluminio' && ALU) { const pf = ALU.perfis.find(p => p.nome === SEL.perfil); if (pf) { $('esp').value = fm(pf.prof); const d = pf.desc != null ? pf.desc : 2 * pf.larg - 20; extra = ` · vidro ${fm(w - d)} × ${fm(h - d)} mm · perfil ${fm(pf.prof)} mm de espessura`; } }
+  $('res').textContent = `${N} porta${N > 1 ? 's' : ''} de ${fm(w)} × ${fm(h)} mm` + extra;
   const esc = Math.min(200 / Math.max(h, A), 520 / Math.max(L, w * N)), px = v => Math.max(4, v * esc);
   const alu = SIS.tipo === 'aluminio';
   const cP = ALU && ALU.cores.find(c => c.nome === SEL.cor), pP = ALU && ALU.perfis.find(p => p.nome === SEL.perfil), vP = ALU && ALU.vidros.find(v => v.nome === SEL.vidro);
@@ -234,6 +244,9 @@ function calcular(){
     Array.from({length: N}, (_, i) => `<div class="porta${alu ? ' alu' : ''}" style="position:absolute;left:${px(i * passo)}px;bottom:${-px(SIS.desce || 0)}px;width:${px(w)}px;height:${px(h)}px;z-index:${i % 2 ? 1 : 2};${estAlu}"><span>${i + 1}${px(w) > 70 ? '<br>' + fm(w) + '×' + fm(h) : ''}</span></div>`).join('') + '</div>';
 }
 document.querySelectorAll('#segN button').forEach(b => b.onclick = () => { N = +b.dataset.n; document.querySelectorAll('#segN button').forEach(x => x.classList.toggle('on', x === b)); calcular(); });
+$('trp').addEventListener('input', () => { const v = num($('trp').value) || 0; SIS.transpasse = (/giro/.test(SIS.id) || SIS.giro) ? -v : v; const r = document.querySelector('#regras input[data-k="transpasse"]'); if (r) r.value = String(SIS.transpasse).replace('.', ','); calcular(); });
+$('bTrpPad').onclick = () => { lerRegras(); SIS.transpasse = (/giro/.test(SIS.id) || SIS.giro) ? -(num($('trp').value) || 0) : (num($('trp').value) || 0); sketchup.salvar(JSON.stringify(SIS)); msg('Padrão salvo: ' + $('trp').value + ' mm.', 'ok'); };
+$('bTrpRest').onclick = () => { sketchup.restaurar(SIS.id); msg('Voltou ao padrão de fábrica.', 'ok'); };
 ['larg', 'alt', 'w', 'h', 'esp', 'kit', 'porPorta'].forEach(id => $(id).addEventListener('input', () => { lerRegras(); calcular(); }));
 $('bAluPad').onclick = () => { sketchup.salvar_alu(''); msg('Perfis, cores, vidros, puxadores e dobradiças voltaram ao padrão.', 'ok'); };
 $('bSalvar').onclick = () => { lerRegras(); sketchup.salvar(JSON.stringify(SIS)); msg('Regras salvas neste PC.', 'ok'); };

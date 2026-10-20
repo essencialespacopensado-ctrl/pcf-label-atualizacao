@@ -38,14 +38,14 @@ module PCF
         'por_porta' => [['SLIDO80-KIT', 'Kit Slido Classic 80 por porta', 'kit', 1]] },
       { 'id' => 'alu_correr', 'marca' => 'Serralheria', 'nome' => 'Porta de alumínio de correr (vidro)', 'tipo' => 'aluminio',
         'obs' => 'Quadro em perfil de alumínio com vidro, no trilho RO-65 (troque os códigos abaixo se usar outro). Gera o projeto da porta (Frontal e Traseira cotadas).',
-        'alt_add' => -40, 'desce' => 0, 'transpasse' => 25, 'larg_add' => 0, 'prof_trilho' => 35, 'alt_trilho' => 20,
+        'alt_add' => -40, 'desce' => 0, 'transpasse' => 20, 'larg_add' => 0, 'prof_trilho' => 35, 'alt_trilho' => 20,
         'perfil_larg' => 37, 'perfil_prof' => 21, 'vidro_esp' => 4, 'vidro_encaixe' => 10,
         'trilho_sup' => 'RO-65 sup.', 'trilho_inf' => 'RO-65 inf.', 'barras' => [2000, 3000],
         'kit' => [],
         'por_porta' => [['RO65-KIT', 'Kit RO-65 por porta (2 carros, 2 freios, 2 guias)', 'kit', 1]] },
       { 'id' => 'alu_giro', 'marca' => 'Serralheria', 'nome' => 'Porta de alumínio de giro (vidro)', 'tipo' => 'aluminio',
         'obs' => 'Quadro em perfil de alumínio com vidro, de abrir (dobradiça). Gera o projeto da porta (Frontal e Traseira cotadas).',
-        'alt_add' => -6, 'desce' => -3, 'transpasse' => -3, 'larg_add' => 0, 'prof_trilho' => 0, 'alt_trilho' => 0,
+        'alt_add' => -6, 'desce' => -3, 'transpasse' => -4, 'larg_add' => 0, 'prof_trilho' => 0, 'alt_trilho' => 0,
         'perfil_larg' => 37, 'perfil_prof' => 21, 'vidro_esp' => 4, 'vidro_encaixe' => 10,
         'trilho_sup' => '', 'trilho_inf' => '', 'barras' => [],
         'kit' => [],
@@ -55,11 +55,19 @@ module PCF
     # porta de alumínio: modelos de perfil (mm), cores e vidros. Editáveis na janela (ficam salvos neste PC).
     remove_const(:ALU_PADRAO) if const_defined?(:ALU_PADRAO, false)
     ALU_PADRAO = {
+      # perfis: larg = aba frontal (mm), prof = espessura do perfil (mm), desc = desconto do vidro (vidro = porta − desc),
+      # vidro = espessura do vidro aceito. conferir = medida não publicada pelo fabricante (confira no catálogo e ajuste)
       'perfis' => [
-        { 'nome' => 'Perfil padrão 37 mm', 'larg' => 37, 'prof' => 21 },
-        { 'nome' => 'Perfil slim 20 mm', 'larg' => 20, 'prof' => 20 },
-        { 'nome' => 'Perfil largo 45 mm', 'larg' => 45, 'prof' => 21 },
-        { 'nome' => 'Perfil puxador integrado 37 mm', 'larg' => 37, 'prof' => 25 }
+        { 'nome' => 'Rometal RM-357/358 Sírius aba zero', 'marca' => 'Rometal', 'larg' => 19.3, 'prof' => 25, 'desc' => 3, 'vidro' => 4 },
+        { 'nome' => 'Rometal RM-352/353 Sírius aba baixa', 'marca' => 'Rometal', 'larg' => 18.8, 'prof' => 25, 'desc' => 3, 'vidro' => 4 },
+        { 'nome' => 'Rometal RM-355/356 Sírius aba alta (baguete)', 'marca' => 'Rometal', 'larg' => 25, 'prof' => 25, 'desc' => 5, 'vidro' => 4 },
+        { 'nome' => 'Rometal RM-059 45 mm aba frontal alta', 'marca' => 'Rometal', 'larg' => 45, 'prof' => 25, 'desc' => 50, 'vidro' => 4, 'conferir' => true },
+        { 'nome' => 'Rometal RM-060 45 mm aba frontal baixa', 'marca' => 'Rometal', 'larg' => 45, 'prof' => 25, 'desc' => 50, 'vidro' => 4, 'conferir' => true },
+        { 'nome' => 'Rometal RM-377 45 mm aba zero', 'marca' => 'Rometal', 'larg' => 45, 'prof' => 25, 'desc' => 50, 'vidro' => 4, 'conferir' => true },
+        { 'nome' => 'Rometal RM-341 65 mm', 'marca' => 'Rometal', 'larg' => 65, 'prof' => 25, 'desc' => 90, 'vidro' => 4, 'conferir' => true },
+        { 'nome' => 'Rometal RM-342 65 mm', 'marca' => 'Rometal', 'larg' => 65, 'prof' => 25, 'desc' => 90, 'vidro' => 4, 'conferir' => true },
+        { 'nome' => 'Genérico 19 mm', 'marca' => 'Genérico', 'larg' => 19, 'prof' => 20, 'desc' => 18, 'vidro' => 4 },
+        { 'nome' => 'Genérico 37 mm', 'marca' => 'Genérico', 'larg' => 37, 'prof' => 21, 'desc' => 54, 'vidro' => 4 }
       ],
       'cores' => [
         { 'nome' => 'Natural fosco', 'rgb' => [190, 194, 200] },
@@ -283,8 +291,11 @@ module PCF
           vidro = ao['vidros'].find { |x| x['nome'] == h['vidro'] } || ao['vidros'].first
           pux = ao['puxadores'].find { |x| x['nome'] == h['puxador'] } || ao['puxadores'].first
           dob = ao['dobradicas'].find { |x| x['nome'] == h['dobradica'] } || ao['dobradicas'].first
+          esp = perfil['prof'].to_f if aluminio && perfil # porta de alumínio: espessura do PERFIL (não do MDF)
           if aluminio && perfil
             s = s.merge('perfil_larg' => perfil['larg'].to_f, 'perfil_prof' => perfil['prof'].to_f,
+                        'vidro_desc' => (perfil['desc'] || (2 * perfil['larg'].to_f - 2 * s['vidro_encaixe'].to_f)).to_f,
+                        'vidro_esp' => (perfil['vidro'] || s['vidro_esp']).to_f, 'perfil_conferir' => perfil['conferir'],
                         'perfil_nome' => perfil['nome'], 'cor_nome' => cor['nome'], 'vidro_nome' => vidro['nome'],
                         'pux' => pux, 'dob' => (s['id'].to_s.include?('giro') ? dob : nil))
           end
@@ -328,7 +339,7 @@ module PCF
           if aluminio
             pl = s['perfil_larg'].to_f; enc = s['vidro_encaixe'].to_f
             perim = n * 2 * (w + hp) / 1000.0
-            vw = w - 2 * pl + 2 * enc; vh = hp - 2 * pl + 2 * enc
+            vw = w - s['vidro_desc'].to_f; vh = hp - s['vidro_desc'].to_f
             compras << { 'cod' => 'PERFIL-ALU', 'desc' => "#{s['perfil_nome']} — cor #{s['cor_nome']} (quadro das portas)", 'qtd' => perim.round(2), 'un' => 'm' }
             px = s['pux']
             compras << { 'cod' => 'PUXADOR', 'desc' => "#{px['nome']} — cor #{s['cor_nome']}", 'qtd' => n, 'un' => 'un' } if px && px['comp'].to_f != 0
@@ -539,7 +550,7 @@ module PCF
         enc = s['vidro_encaixe'].to_f
         tinta = mat_correr('PCF Cota', [35, 38, 45])
         tot = n * w + (n - 1) * gap
-        vw = (w - 2 * pl + 2 * enc).round; vh = (hp - 2 * pl + 2 * enc).round
+        vw = mm_txt(w - s['vidro_desc'].to_f); vh = mm_txt(hp - s['vidro_desc'].to_f)
         { 'Cotas frontal' => [tag_f, -1], 'Cotas traseira' => [tag_t, 1] }.each do |nome, (tag, lado)|
           cg = grp.entities.add_group
           cg.name = nome
