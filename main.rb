@@ -140,6 +140,59 @@ module PCFLabel
     (e.to_f - n).abs < 0.15 && ESP_PADRAO[n] ? ESP_PADRAO[n] : e
   end
 
+  # direção do veio da imagem da cor: :v (riscas na vertical da imagem), :u (na horizontal) ou nil (sem veio claro)
+  def self.veio_imagem(mt)
+    return nil unless mt && mt.texture
+    @veio_img ||= {}
+    return @veio_img[mt.name] if @veio_img.key?(mt.name)
+    r = nil
+    begin
+      ir = mt.texture.image_rep
+      w = ir.width; h = ir.height
+      st = [[w, h].min / 100, 1].max
+      lum = ->(c) { c.red * 0.3 + c.green * 0.59 + c.blue * 0.11 }
+      dx = 0.0; dy = 0.0
+      (st...h - st).step(st) do |y|
+        (st...w - st).step(st) do |x|
+          c0 = lum.(ir.color_at_uv(x.to_f / w, y.to_f / h))
+          dx += (c0 - lum.(ir.color_at_uv((x + 1).to_f / w, y.to_f / h))).abs
+          dy += (c0 - lum.(ir.color_at_uv(x.to_f / w, (y + 1).to_f / h))).abs
+        end
+      end
+      r = dx > dy * 2 ? :v : (dy > dx * 2 ? :u : nil)   # muda pouco na vertical = riscas verticais = veio em V
+    rescue StandardError
+      r = nil
+    end
+    @veio_img[mt.name] = r
+  end
+
+  # direção (no mundo, no plano da face) do veio da textura nesta face; nil se a cor não tem veio claro
+  def self.dir_veio_textura(f, t, mt, n)
+    eixo = veio_imagem(mt)
+    return nil unless eixo
+    ps = f.outer_loop.vertices.map(&:position)
+    p0, p1 = ps[0], ps[1]
+    p2 = ps.find { |q| ((p1 - p0) * (q - p0)).length > 1e-6 }
+    return nil unless p2
+    uvh = f.get_UVHelper(true, false)
+    uv = [p0, p1, p2].map { |q| r = uvh.get_front_UVQ(q); [r.x / r.z, r.y / r.z] }
+    du1 = uv[1][0] - uv[0][0]; dv1 = uv[1][1] - uv[0][1]; du2 = uv[2][0] - uv[0][0]; dv2 = uv[2][1] - uv[0][1]
+    det = du1 * dv2 - du2 * dv1
+    return nil if det.abs < 1e-12
+    e1 = p1 - p0; e2 = p2 - p0
+    # derivada da posição: em U = (e1*dv2 - e2*dv1)/det ; em V = (e2*du1 - e1*du2)/det
+    a = eixo == :v ? [e2, du1, e1, du2] : [e1, dv2, e2, dv1]
+    vv = Geom::Vector3d.new((a[0].x * a[1] - a[2].x * a[3]) / det, (a[0].y * a[1] - a[2].y * a[3]) / det, (a[0].z * a[1] - a[2].z * a[3]) / det).transform(t)
+    vv = vv - Geom::Vector3d.new(n.x * (vv % n), n.y * (vv % n), n.z * (vv % n))
+    return nil if vv.length < 1e-9
+    vv.normalize!
+    # mantém o sentido "para cima / para +X" (não espelha a peça à toa)
+    vv.reverse! if vv.z < -1e-6 || (vv.z.abs <= 1e-6 && (vv.x < -1e-6 || (vv.x.abs <= 1e-6 && vv.y < 0)))
+    vv
+  rescue StandardError
+    nil
+  end
+
   def self.coletar(ents, tr, cam, pecas, pai_bb = nil, pids = [], herd = nil, origem = nil, gira = false)
     ents.each do |e|
       next unless e.is_a?(Sketchup::Group) || e.is_a?(Sketchup::ComponentInstance)
@@ -202,6 +255,13 @@ module PCFLabel
           v = n * u
         else
           v = (z - Geom::Vector3d.new(n.x * (z % n), n.y * (z % n), n.z * (z % n))).normalize
+          u = v * n
+        end
+        # veio como está NA TELA: se a cor tem veio (riscas numa direção na imagem), o "vertical" da peça no plano
+        # passa a ser a direção do veio da textura nesta face (rodapé/travessa em pé com veio deitado sai certo)
+        mobj = f.material || e.material || (herd && Sketchup.active_model.materials.find { |mm| mm.display_name == herd || mm.name == herd })
+        if (vt = dir_veio_textura(f, t, mobj, n))
+          v = vt
           u = v * n
         end
         u, v = v, u.reverse if gira_e   # veio invertido: a peça entra no plano girada 90° (sem redesenhar)
@@ -1406,7 +1466,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-20.06'
+  PLUGIN_VERSAO = '2026-10-20.07'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

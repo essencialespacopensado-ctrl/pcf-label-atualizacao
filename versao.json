@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-20.01",
- "plugin": "2026-10-20.06",
+ "plugin": "2026-10-20.07",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-20.01",
+   "plugin": "2026-10-20.07",
+   "data": "20/10 17:40",
+   "titulo": "Veio igual ao da tela",
+   "itens": [
+    "O plano de corte pega o veio direto da textura de cada peça (como aparece no SketchUp): rodapé, travessa e lateral de gaveta com veio deitado saem certos"
+   ]
+  },
   {
    "tela": "2026-10-20.01",
    "plugin": "2026-10-20.06",
