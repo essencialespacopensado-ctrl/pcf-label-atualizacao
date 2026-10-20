@@ -118,6 +118,8 @@
     </details>
     <div style="display:flex;gap:6px;margin-top:8px"><button class="bt" id="bSalvar">💾 Salvar regras</button><button class="bt" id="bRest">↺ Padrão</button><button class="bt" id="bNovoSis" title="Cria um sistema novo a partir deste (depois mude o nome e as regras)">⧉ Novo sistema</button><button class="bt" id="bDelSis" style="display:none">🗑 Excluir sistema</button></div>
   </div>
+  <div class="card" id="cReg" style="display:none"><h3>📋 Registro de portas de alumínio deste projeto</h3><div id="reg"></div>
+    <div class="obs">O arquivo de cada porta tem o nome do módulo no Dinabox + os IDs do projeto. A planilha "Registro de portas de alumínio.csv" fica na pasta "Portas de alumínio", ao lado do projeto.</div></div>
   <div class="card" id="cCompras" style="display:none"><h3>Compras deste módulo</h3><div id="compras"></div></div>
 </main>
 <div class="acoes"><button class="bt pri" id="bAplicar" disabled>⚡ Aplicar no módulo</button><button class="bt" onclick="sketchup.fechar()">Fechar</button></div>
@@ -285,6 +287,15 @@ function feito(r){
   $('cCompras').style.display = 'block';
   $('compras').innerHTML = '<table><tr><th>Código</th><th>Item</th><th>Qtd.</th></tr>' + r.compras.map(c => `<tr><td>${c.cod}</td><td>${c.desc}</td><td>${fm(c.qtd)} ${c.un}</td></tr>`).join('') + '</table>';
   msg(`✓ ${r.n} porta(s) de ${fm(r.w)} × ${fm(r.h)} mm em ${r.nome}.` + (r.mdf_dinabox ? ' Portas como peças Dinabox (vão para o plano de corte).' : '') + (r.arquivo ? `<br>Projeto da porta: ${r.arquivo}` : ''), 'ok');
+}
+function registro(l){
+  $('cReg').style.display = l && l.length ? 'block' : 'none';
+  if (!l || !l.length) return;
+  $('reg').innerHTML = '<table><tr><th>Módulo (Dinabox)</th><th>IDs</th><th>Portas</th><th>Perfil · cor · vidro</th><th>Data</th><th></th></tr>' +
+    l.slice().reverse().map((x, i) => `<tr><td><b>${x.modulo}</b></td><td>${x.ids || '—'}</td><td>${x.portas} × ${x.medida}</td><td>${x.perfil} · ${x.cor} · ${x.vidro}</td><td>${x.data}</td>` +
+      `<td style="white-space:nowrap"><button class="bt" data-cena="${encodeURIComponent(x.cena)}" style="padding:4px 8px">👁 Cena</button> ${x.arquivo ? `<button class="bt" data-arq="${encodeURIComponent(x.arquivo)}" style="padding:4px 8px">📁</button>` : ''}</td></tr>`).join('') + '</table>';
+  document.querySelectorAll('#reg button[data-cena]').forEach(b => b.onclick = () => sketchup.ver_cena(decodeURIComponent(b.dataset.cena)));
+  document.querySelectorAll('#reg button[data-arq]').forEach(b => b.onclick = () => sketchup.abrir_pasta(decodeURIComponent(b.dataset.arq)));
 }
 function falhou(t){ $('bAplicar').disabled = false; $('bAplicar').textContent = '⚡ Aplicar no módulo'; msg('Erro: ' + t, 'erro'); }
 function msg(t, c){ let m = $('msg'); if (!m) { m = document.createElement('div'); m.id = 'msg'; document.querySelector('main').appendChild(m); } m.className = c; m.innerHTML = t; }

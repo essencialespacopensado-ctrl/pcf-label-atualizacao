@@ -178,12 +178,19 @@ module PCF
           begin
             r = correr_aplicar(JSON.parse(js))
             d.execute_script("feito(#{JSON.generate(r)})")
+            reg = (JSON.parse(model.get_attribute('pcf', 'registro_portas').to_s) rescue []) || []
+            d.execute_script("window.registro&&registro(#{JSON.generate(reg)})")
           rescue StandardError => ex
             puts ex.backtrace.first(6)
             d.execute_script("falhou(#{JSON.generate(ex.message)})")
           end
         end
         d.add_action_callback('fechar') { |_c| d.close }
+        d.add_action_callback('ver_cena') do |_c, nome|
+          pg = model.pages[nome.to_s]
+          pg ? (model.pages.selected_page = pg) : aviso('Cena não encontrada (foi apagada?).')
+        end
+        d.add_action_callback('abrir_pasta') { |_c, arq| UI.openURL("file:///#{File.dirname(arq.to_s).tr('\\', '/')}") if File.exist?(arq.to_s) }
         d.center
         d.show
         @dlg_correr = d
@@ -203,6 +210,8 @@ module PCF
       def correr_enviar(sel_id = nil)
         return unless @dlg_correr && @dlg_correr.visible?
         @dlg_correr.execute_script("iniciar(#{JSON.generate(catalogo_correr)}, #{sel_id.to_json}, #{JSON.generate(alu_opcoes)})")
+        reg = (JSON.parse(model.get_attribute('pcf', 'registro_portas').to_s) rescue []) || []
+        @dlg_correr.execute_script("window.registro&&registro(#{JSON.generate(reg)})")
         correr_enviar_alvo
       end
 
@@ -527,7 +536,9 @@ module PCF
         m = model
         portas = g.entities.select { |x| x.respond_to?(:get_attribute) && x.get_attribute('pcf', 'porta_alu') }
         raise 'sem portas de alumínio' if portas.empty?
-        rotulo = "Porta alumínio #{a[:nome]}"
+        ids = ids_modulo(a[:e])
+        base_nome = "#{a[:nome]}#{ids.empty? ? '' : " - ID #{ids.join('-')}"}" # nome do módulo no Dinabox + IDs do projeto
+        rotulo = "Porta alumínio - #{base_nome}"
         tag_nome = "PCF #{rotulo}"
         m.start_operation("PCF: projeto da #{rotulo}", true)
         begin
@@ -586,7 +597,7 @@ module PCF
             pasta = m.path.to_s.empty? ? File.join(ENV['USERPROFILE'] || Dir.home, 'Desktop') : File.dirname(m.path)
             pasta = File.join(pasta, 'Portas de alumínio')
             Dir.mkdir(pasta) unless Dir.exist?(pasta)
-            arq = File.join(pasta, "#{rotulo}.skp".gsub(/[\\\/:*?"<>|]/, '-'))
+            arq = File.join(pasta, "#{base_nome}.skp".gsub(/[\\\/:*?"<>|]/, '-'))
             novo.definition.save_as(arq)
           rescue StandardError => ex
             puts "PCF porta alu arquivo: #{ex.message}"
@@ -599,7 +610,43 @@ module PCF
           m.abort_operation
           raise
         end
+        registrar_porta(a, s, n, w, hp, ids, rotulo, arq)
         "Cenas \"#{rotulo} - Frontal\" e \"- Traseira\"" + (arq ? " · arquivo: #{arq}" : '')
+      end
+
+      # IDs (nº de grupo do PCF) das peças do módulo
+      def ids_modulo(e, out = [], nivel = 0)
+        return out if nivel > 6 || !e.respond_to?(:definition)
+        k = chave_grupo(e)
+        out << k if k && !out.include?(k)
+        e.definition.entities.each { |x| ids_modulo(x, out, nivel + 1) if x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance) }
+        out.sort_by { |g| [g.to_i, g] }
+      end
+
+      # registro das portas geradas: fica no projeto (lista na janela Correr) e numa planilha (CSV) na pasta "Portas de alumínio"
+      def registrar_porta(a, s, n, w, hp, ids, rotulo, arq)
+        m = model
+        item = { 'data' => Time.now.strftime('%d/%m/%Y %H:%M'), 'modulo' => a[:nome], 'ids' => ids.join('-'), 'portas' => n,
+                 'medida' => "#{mm_txt(w)} × #{mm_txt(hp)}", 'sistema' => s['nome'], 'perfil' => s['perfil_nome'], 'cor' => s['cor_nome'],
+                 'vidro' => "#{s['vidro_nome']} #{mm_txt(s['vidro_esp'].to_f)} mm", 'puxador' => (s['pux'] && s['pux']['comp'].to_f != 0 ? s['pux']['nome'] : ''),
+                 'dobradica' => (s['dob'] ? s['dob']['nome'] : ''), 'cena' => "#{rotulo} - Frontal", 'arquivo' => arq.to_s }
+        reg = (JSON.parse(m.get_attribute('pcf', 'registro_portas').to_s) rescue []) || []
+        reg.reject! { |x| x['modulo'] == item['modulo'] }   # refez o módulo: fica o mais novo
+        reg << item
+        m.start_operation('PCF: registro da porta', true, false, true)
+        m.set_attribute('pcf', 'registro_portas', JSON.generate(reg))
+        m.commit_operation
+        if arq
+          csv = File.join(File.dirname(arq), 'Registro de portas de alumínio.csv')
+          novo = !File.exist?(csv)
+          File.open(csv, 'a:UTF-8') do |f|
+            f.write("\uFEFFData;Projeto;Módulo (Dinabox);IDs;Portas;Medida (mm);Sistema;Perfil;Cor;Vidro;Puxador;Dobradiça;Arquivo\n") if novo
+            f.write([item['data'], m.title, item['modulo'], item['ids'], n, item['medida'], item['sistema'], item['perfil'], item['cor'],
+                     item['vidro'], item['puxador'], item['dobradica'], arq].map { |v| v.to_s.tr(';', ',') }.join(';') + "\n")
+          end
+        end
+      rescue StandardError => ex
+        puts "PCF registro: #{ex.message}"
       end
 
       def mm_txt(v)
