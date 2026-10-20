@@ -1396,7 +1396,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-20.02'
+  PLUGIN_VERSAO = '2026-10-20.03'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1432,6 +1432,10 @@ module PCFLabel
     return fim.call(nil) unless defined?(Sketchup::Http::Request)
     req = Sketchup::Http::Request.new('https://api.github.com/repos/essencialespacopensado-ctrl/pcf-label-atualizacao/commits/main', Sketchup::Http::GET)
     req.headers = { 'Accept' => 'application/vnd.github.sha', 'User-Agent' => 'PCF-Label' }
+    # com a chave da nuvem (☁ Nuvem no Correr) o GitHub deixa conferir toda hora; sem ela, todos os PCs da empresa
+    # dividem 60 consultas/hora (mesma internet) e a atualização atrasa
+    k = Sketchup.read_default('PCF_Ferramentas', 'nuvem_chave', '').to_s.strip
+    req.headers = req.headers.merge('Authorization' => "Bearer #{k}") unless k.empty?
     req.start { |_r, res| sha = (res && res.status_code == 200) ? res.body.to_s.strip[/\A[0-9a-f]{40}\z/] : nil; fim.call(sha) rescue nil }
     (@reqs ||= []) << req; @reqs.shift while @reqs.size > 10
   rescue
@@ -1846,13 +1850,13 @@ unless $pcf_tm_atual
   UI.start_timer(300, true) { PCFLabel.atualizar_sozinho }
 end
 # atualização NA HORA: confere a pasta do Dropbox a cada 5 s (só lê os arquivos quando a data deles muda)
-# internet: confere a cada 2 min (troca o timer antigo de 10 min sem precisar reabrir o SketchUp)
-if $pcf_tm_online && $pcf_tm_online_int != 120
+# internet: confere a cada 1 min (troca o timer antigo sem precisar reabrir o SketchUp)
+if $pcf_tm_online && $pcf_tm_online_int != 60
   (UI.stop_timer($pcf_tm_online) rescue nil); $pcf_tm_online = nil
 end
 unless $pcf_tm_online
-  $pcf_tm_online_int = 120
-  $pcf_tm_online = UI.start_timer(120, true) { (PCFLabel.checar_online rescue nil) }
+  $pcf_tm_online_int = 60
+  $pcf_tm_online = UI.start_timer(60, true) { (PCFLabel.checar_online rescue nil) }
   UI.start_timer(15, false) { (PCFLabel.checar_online rescue nil); (PCFLabel.espalhar_versao rescue nil) }
 end
 unless $pcf_tm_rapido

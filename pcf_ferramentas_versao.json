@@ -1,7 +1,8 @@
 {
-  "versao": "2.5.5",
+  "versao": "2.5.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Atualização a cada 1 minuto em todos os PCs abertos (sem reabrir o SketchUp). Com a chave ☁ colada, vai direto ao GitHub, sem atraso de cache",
     "Correr: tudo o que você edita e salva (sistemas, perfis, cores, vidros, puxadores, dobradiças, padrões) vai para a NUVEM (GitHub privado pcf-dados) e vale para todos os PCs. Cole a chave uma vez em cada PC no ☁ Nuvem",
     "Atualizações conferidas a cada 2 minutos: chegam em todos os PCs praticamente juntas",
     "Correr: portas sempre EM PÉ na frente do módulo Dinabox (antes entravam deitadas — o Dinabox usa outro eixo para a altura)",
