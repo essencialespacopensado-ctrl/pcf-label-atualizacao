@@ -387,7 +387,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-16.10';
+const VERSAO = '2026-10-20.01';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -657,7 +657,8 @@ function tabelaMateriais(){
   const M = materiais(), e = fmt(D.espessura);
   const ch = M.chapas.map(o => `<tr><td>${miniFoto(o.cor, 18)}Chapa ${esc(o.cor)}${/mm$/i.test(o.cor) ? '' : ' ' + e + ' mm'} (${(() => { const d = chapaDe(o.cor); return Math.max(...d) + ' x ' + Math.min(...d) })()})${o.cor !== '(sem cor)' ? (cfg.veio[o.cor] ? ' · com veio' : ' · sem veio') : ''}</td><td>${o.nf ? o.nf + ' chapa' + (o.nf > 1 ? 's' : '') : '— (calcule o plano)'}</td><td>${o.pecas} peça${o.pecas>1?'s':''} · ${fmt(o.area)} m² · aprov. ${o.aprov === null ? '—' : Math.round(o.aprov) + '%'}</td></tr>`).join('');
   const fi = M.fitas.map(f => `<tr><td>Fita de borda ${esc(f.cor)} ${largFita()} mm</td><td>${f.comprar} m</td><td>${fmt(f.m)} m + ${M.perda}% de perda</td></tr>`).join('');
-  return `<table><thead><tr><th>Material</th><th>Qtd.</th><th>Detalhe</th></tr></thead><tbody>${ch}${fi || '<tr><td colspan="3">Sem fita de borda</td></tr>'}</tbody></table>`;
+  const cp = (D.compras || []).map(c => `<tr><td>${esc(c.desc)}${c.cod ? ' <span style="opacity:.6">(' + esc(c.cod) + ')</span>' : ''}</td><td>${fmt2(c.qtd)} ${esc(c.un)}</td><td>${esc((c.modulos || []).join(', '))}</td></tr>`).join('');
+  return `<table><thead><tr><th>Material</th><th>Qtd.</th><th>Detalhe</th></tr></thead><tbody>${ch}${fi || '<tr><td colspan="3">Sem fita de borda</td></tr>'}${cp ? '<tr><th colspan="3" style="text-align:left;padding-top:8px">Ferragens e compras (trilhos, kits, perfis e vidros)</th></tr>' + cp : ''}</tbody></table>`;
 }
 function renderMat(){ $('matBox').innerHTML = tabelaMateriais() + '<div class="hint" style="margin-top:6px">Chapas = folhas do Aspire usadas por cor. Considera só as peças marcadas.</div>' }
 const temVeio = p => !!(cfg.veioTudo || (p.cor && cfg.veio[p.cor]));

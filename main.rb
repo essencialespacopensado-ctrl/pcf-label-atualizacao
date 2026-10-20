@@ -1241,6 +1241,23 @@ module PCFLabel
   rescue => e
     UI.messagebox("Não consegui excluir o plano: #{e.message}") rescue nil
   end
+  # itens de compra (trilhos, kits, perfis, vidros) gravados pelo PCF Ferramentas (botão Correr): somados por código
+  def self.lista_compras
+    m = Sketchup.active_model
+    tot = {}
+    m.entities.each do |e|
+      next unless e.respond_to?(:get_attribute) && e.get_attribute('pcf', 'correr_modulo') && e.visible?
+      (JSON.parse(e.get_attribute('pcf', 'compra').to_s) rescue []).each do |c|
+        k = [c['cod'], c['desc'], c['un']].join('|')
+        tot[k] ||= { cod: c['cod'].to_s, desc: c['desc'].to_s, un: c['un'].to_s, qtd: 0.0, modulos: [] }
+        tot[k][:qtd] += c['qtd'].to_f
+        nm = e.name.to_s.split(' - ').last.to_s
+        tot[k][:modulos] << nm unless nm.empty? || tot[k][:modulos].include?(nm)
+      end
+    end
+    tot.values.map { |c| c.merge(qtd: c[:qtd].round(2)) }
+  end
+
   def self.abrir_plano(id)
     return unless @dados_vivos
     id = id_plano(id)
@@ -1377,7 +1394,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-19.05'
+  PLUGIN_VERSAO = '2026-10-20.01'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1476,7 +1493,7 @@ module PCFLabel
           File.binwrite(arq, b)
           Sketchup.install_from_archive(arq, false)
           dir = File.join(Sketchup.find_support_file('Plugins'), 'pcf_ferramentas')
-          %w[main criar giro organica paredes pontos curva corte3d interno moldura atualizar].each { |n| f = File.join(dir, "#{n}.rb"); load f if File.exist?(f) }
+          %w[main criar giro organica paredes pontos curva corte3d interno lista moldura peca_mae correr atualizar].each { |n| f = File.join(dir, "#{n}.rb"); load f if File.exist?(f) }
           (PCF::Ferramentas.recarregar_painel rescue nil)
           (log_atu("PCF Ferramentas #{atual} -> #{alvo}") rescue nil)
         end
@@ -1781,7 +1798,8 @@ module PCFLabel
       mats[cod] = { textura: (partes.last || '').sub(/\.[a-z0-9]+$/i, ''), pasta: partes[-3..-2].to_a.join(' / '), rgb: cor, foto: foto, nome: nome_conhecido(cod, mt, banco), sugestao: nome_cor(cod, mt, banco), veio: veio_auto(cod, mt, nome_cor(cod, mt, banco), banco) }
     end
     dados = { projeto: titulo, materiais: mats, espessura: esp_comum, chapa: '1850 x 2750', selecao: false,
-              data: Time.now.strftime('%d/%m/%Y %H:%M'), origem: 'sketchup', pecas: lista, planoArq: (ler_plano rescue nil), bancoCores: banco_arquivo.to_s }
+              data: Time.now.strftime('%d/%m/%Y %H:%M'), origem: 'sketchup', pecas: lista, planoArq: (ler_plano rescue nil), bancoCores: banco_arquivo.to_s,
+              compras: (lista_compras rescue []) }
     salvar_banco(banco, mats)
     unless File.exist?(MODELO_TELA)
       UI.messagebox("PCF Label: não achei a tela do PCF Label em\n#{MODELO_TELA}\nInstale o gadget PCF Label no Aspire.")

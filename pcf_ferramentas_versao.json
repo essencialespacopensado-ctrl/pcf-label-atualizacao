@@ -1,7 +1,13 @@
 {
-  "versao": "2.4.6",
+  "versao": "2.5.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Botão novo 'Correr' na barra PCF: biblioteca de trilhos e sistemas de correr (Rometal Dominus, RO-65, Häfele Slido) e portas de alumínio de correr e de giro",
+    "Portas de alumínio: perfis Rometal (Sírius RM-352/353/355/356/357/358, RM-059/060/377, RM-341/342) e genéricos; cor do perfil, vidro, puxador e dobradiça — tudo editável (✎ edita, + Novo, 🗑 apaga, ↺ volta ao padrão)",
+    "Porta de alumínio usa a espessura do PERFIL; transpasse de 20 mm nas de correr e folga de 4 mm nas de giro (editável, ★ Tornar padrão)",
+    "Portas simétricas: trilhos espelhados (2 portas F-T, 3 F-T-F, 4 F-T-T-F)",
+    "Ao aplicar: portas, trilhos, marcações no módulo (furos dos trilhos, transpasses, dobradiças) e itens de compra (aparecem na lista de materiais do PCF Label)",
+    "Projeto da porta de alumínio por módulo: cenas Frontal e Traseira em prancha (cotas externas e das ferragens) + arquivo .skp para o serralheiro",
     "Recorte orgânico / Peça Mãe: funcionam mesmo em projeto sem nenhum painel Dinabox (o molde do tamponamento vem do Dropbox da empresa, pasta PCF Label/modelos)",
     "Peça Mãe: recebe a mesma cor das frentes no SketchUp",
     "Peça Mãe: ao criar, as frentes originais ficam escondidas; apagou a peça mãe, as frentes voltam sozinhas e dá para criar de novo quantas vezes quiser",
