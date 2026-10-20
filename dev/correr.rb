@@ -497,10 +497,18 @@ module PCF
       def puxador_mdf(ents, x, y, z, w, hp, s, mat, i)
         px = s['pux']
         return unless px && px['comp'].to_f != 0
-        comp = px['comp'].to_f < 0 ? hp : px['comp'].to_f
-        cz = px['comp'].to_f < 0 ? hp / 2.0 : px['centro'].to_f
+        comp, cz = pux_pos(px, hp)
         bx = i.even? ? w - px['borda'].to_f : px['borda'].to_f
         puxador_barra(ents, x + bx, y, z + cz - comp / 2.0, comp, mat, px['comp'].to_f < 0).name = "Puxador #{px['nome']} - porta #{i + 1}"
+      end
+
+      # comprimento e centro do puxador sempre DENTRO da porta (porta baixa: centraliza e encurta se precisar)
+      def pux_pos(px, hp)
+        return [hp, hp / 2.0] if px['comp'].to_f < 0
+        comp = [px['comp'].to_f, hp - 80].min
+        cz = px['centro'].to_f
+        cz = hp / 2.0 if cz <= 0 || cz + comp / 2.0 > hp - 40 || cz - comp / 2.0 < 40
+        [comp, cz]
       end
 
       # puxador com cara de puxador: barra afastada da porta, presa por 2 pés (perfil de altura toda = perfil fino colado)
@@ -647,8 +655,7 @@ module PCF
         pux_dir = i.even?
         px = s['pux']
         if px && px['comp'].to_f != 0
-          comp = px['comp'].to_f < 0 ? hp : px['comp'].to_f
-          cz = px['comp'].to_f < 0 ? hp / 2.0 : px['centro'].to_f
+          comp, cz = pux_pos(px, hp)
           bx = pux_dir ? w - px['borda'].to_f : px['borda'].to_f
           puxador_barra(e, x + bx, y, z + cz - comp / 2.0, comp, alu, px['comp'].to_f < 0).name = "Puxador #{px['nome']}"
           info['pux'] = { 'x' => bx, 'z0' => cz - comp / 2.0, 'z1' => cz + comp / 2.0, 'nome' => px['nome'] }
