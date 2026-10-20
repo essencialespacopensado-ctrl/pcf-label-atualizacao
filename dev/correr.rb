@@ -10,6 +10,7 @@ module PCF
   module Ferramentas
     # catálogo padrão (mm). Tudo editável na janela; o que você mudar fica salvo neste PC.
     # regras: altura da porta = altura de referência + alt_add; largura = (largura de referência + transpasse*(n-1)) / n + larg_add
+    remove_const(:CATALOGO_CORRER) if const_defined?(:CATALOGO_CORRER, false) # recarregar pega o catálogo novo
     CATALOGO_CORRER = [
       { 'id' => 'dominus', 'marca' => 'Rometal', 'nome' => 'Dominus (porta suspensa)', 'tipo' => 'mdf',
         'obs' => 'Porta 90 mm maior que a caixa (55 em cima, 35 embaixo); cada porta 20 mm maior que o vão. Portas de 15 a 25 mm, mín. 600 mm de largura, até 80 kg.',
@@ -49,9 +50,10 @@ module PCF
         'trilho_sup' => '', 'trilho_inf' => '', 'barras' => [],
         'kit' => [],
         'por_porta' => [['DOBR-ALU', 'Dobradiça para perfil de alumínio', 'un', 2]] }
-    ].freeze unless defined?(CATALOGO_CORRER)
+    ].freeze
 
     # porta de alumínio: modelos de perfil (mm), cores e vidros. Editáveis na janela (ficam salvos neste PC).
+    remove_const(:ALU_PADRAO) if const_defined?(:ALU_PADRAO, false)
     ALU_PADRAO = {
       'perfis' => [
         { 'nome' => 'Perfil padrão 37 mm', 'larg' => 37, 'prof' => 21 },
@@ -89,7 +91,7 @@ module PCF
         { 'nome' => 'Dobradiça para perfil alumínio', 'topo' => 100, 'base' => 100, 'qtd' => 0 },
         { 'nome' => 'Dobradiça caneco 35 (perfil largo)', 'topo' => 100, 'base' => 100, 'qtd' => 0 }
       ]
-    }.freeze unless defined?(ALU_PADRAO)
+    }.freeze
 
     class << self
       def alu_opcoes
@@ -440,7 +442,7 @@ module PCF
           m.pages.to_a.each { |pg| m.pages.erase(pg) if pg.name.start_with?(rotulo + ' - ') }
           tag = m.layers[tag_nome] || m.layers.add(tag_nome)
           tag.visible = true
-          gap = 900.0
+          gap = 1000.0
           novo = m.entities.add_group
           novo.name = "Projeto - #{rotulo}"
           novo.layer = tag
@@ -505,6 +507,11 @@ module PCF
         "Cenas \"#{rotulo} - Frontal\" e \"- Traseira\"" + (arq ? " · arquivo: #{arq}" : '')
       end
 
+      def mm_txt(v)
+        v = v.to_f.round(1)
+        v == v.round ? v.round.to_s : v.to_s.tr('.', ',')
+      end
+
       # texto 3D (letra de verdade, cor escura) em pé, virado para quem olha (lado -1 = frente, 1 = verso)
       # al: :centro / :esq (referente ao lado de quem olha)
       def texto3d(ents, str, alt, x, z, y, lado, mat, al = :centro, negrito = false)
@@ -559,14 +566,14 @@ module PCF
               sx = -sx
             end
             dm.([x, y, 0], [x + w, y, 0], [0, 0, -160])                  # largura
-            dm.([esq, y, 0], [esq, y, hp], [160 * sx, 0, 0])             # altura
+            dm.([esq, y, 0], [esq, y, hp], [230 * sx, 0, 0])             # altura
             fe = fer[i] || {}
             if (px = fe['pux']) && lado < 0                                           # puxador (só na frente)
               lx = x + px['x']
               ext = px['x'] > w / 2.0 ? x + w : x
               fora = ext > lx ? 1 : -1
               if px['z1'] - px['z0'] < hp - 1                                       # base → início e comprimento do puxador
-                [0, px['z0'], px['z1']].each_cons(2) { |za, zb| dm.([ext, y, za], [ext, y, zb], [fora * 80, 0, 0]) if zb - za > 1 }
+                [0, px['z0'], px['z1']].each_cons(2) { |za, zb| dm.([ext, y, za], [ext, y, zb], [fora * 130, 0, 0]) if zb - za > 1 }
               end
               dm.([ext, y, hp], [lx, y, hp], [0, 0, 90])                              # da borda até o centro do puxador
             end
@@ -574,12 +581,12 @@ module PCF
               lx = x + db['x']
               ext = db['x'] < w / 2.0 ? x : x + w
               pts = [hp] + db['pos'] + [0]
-              pts.each_cons(2) { |za, zb| dm.([ext, y, za], [ext, y, zb], [(ext < lx ? -1 : 1) * 80, 0, 0]) }
+              pts.each_cons(2) { |za, zb| dm.([ext, y, za], [ext, y, zb], [(ext < lx ? -1 : 1) * 130, 0, 0]) }
             end
             texto3d(e, format('PORTA %02d', i + 1), 70, x + w / 2.0, hp + 230, y, lado, tinta, :centro, true)
           end
           # moldura da prancha e carimbo
-          u0 = -450; u1 = tot + 450; v0 = -1150; v1 = hp + 450
+          u0 = -520; u1 = tot + 520; v0 = -1150; v1 = hp + 450
           linha2d(e, [[u0, v0], [u1, v0], [u1, v1], [u0, v1], [u0, v0]], y)
           linha2d(e, [[u0, -420], [u1, -420]], y)
           col = u0 + (u1 - u0) * 0.55

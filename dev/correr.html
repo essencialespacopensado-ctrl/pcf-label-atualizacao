@@ -108,7 +108,7 @@
       <div class="f" style="font-size:10px;color:var(--mu)">Por kit (1 por módulo)</div><textarea id="kit"></textarea>
       <div class="f" style="font-size:10px;color:var(--mu);margin-top:4px">Por porta</div><textarea id="porPorta"></textarea>
     </details>
-    <div style="display:flex;gap:6px;margin-top:8px"><button class="bt" id="bSalvar">💾 Salvar regras</button><button class="bt" id="bRest">↺ Padrão</button></div>
+    <div style="display:flex;gap:6px;margin-top:8px"><button class="bt" id="bSalvar">💾 Salvar regras</button><button class="bt" id="bRest">↺ Padrão</button><button class="bt" id="bNovoSis" title="Cria um sistema novo a partir deste (depois mude o nome e as regras)">⧉ Novo sistema</button><button class="bt" id="bDelSis" style="display:none">🗑 Excluir sistema</button></div>
   </div>
   <div class="card" id="cCompras" style="display:none"><h3>Compras deste módulo</h3><div id="compras"></div></div>
 </main>
@@ -179,12 +179,13 @@ function iniciar(cat, sel, alu){
   $('lista').innerHTML = marcas.map(m => `<div class="marca">${m}</div>` + cat.filter(s => s.marca === m).map(s =>
     `<button class="sis" data-id="${s.id}">${s.nome}<small>${s.tipo === 'aluminio' ? 'Alumínio + vidro' : 'Porta MDF (vai para o Dinabox)'}</small></button>`).join('')).join('');
   document.querySelectorAll('.sis').forEach(b => b.onclick = () => escolher(b.dataset.id));
-  escolher(sel || (SIS && SIS.id) || cat[0].id);
+  escolher([sel, SIS && SIS.id].find(x => x && cat.some(c => c.id === x)) || cat[0].id);
 }
 function escolher(id){
   SIS = JSON.parse(JSON.stringify(CAT.find(s => s.id === id)));
   document.querySelectorAll('.sis').forEach(b => b.classList.toggle('on', b.dataset.id === id));
   $('sisNome').textContent = SIS.marca + ' · ' + SIS.nome;
+  $('bDelSis').style.display = /^u\d/.test(SIS.id) ? '' : 'none'; $('bRest').style.display = /^u\d/.test(SIS.id) ? 'none' : '';
   $('obs').innerHTML = (SIS.obs || '').replace(/CONFERIR/g, '<b>CONFERIR</b>');
   $('linProj').style.display = SIS.tipo === 'aluminio' ? 'flex' : 'none';
   $('cAlu').style.display = SIS.tipo === 'aluminio' ? 'block' : 'none';
@@ -236,6 +237,8 @@ document.querySelectorAll('#segN button').forEach(b => b.onclick = () => { N = +
 ['larg', 'alt', 'w', 'h', 'esp', 'kit', 'porPorta'].forEach(id => $(id).addEventListener('input', () => { lerRegras(); calcular(); }));
 $('bAluPad').onclick = () => { sketchup.salvar_alu(''); msg('Perfis, cores, vidros, puxadores e dobradiças voltaram ao padrão.', 'ok'); };
 $('bSalvar').onclick = () => { lerRegras(); sketchup.salvar(JSON.stringify(SIS)); msg('Regras salvas neste PC.', 'ok'); };
+$('bNovoSis').onclick = () => { lerRegras(); const n = JSON.parse(JSON.stringify(SIS)); n.id = 'u' + Date.now(); n.marca = 'Meus sistemas'; n.nome = SIS.nome + ' (cópia)'; sketchup.salvar(JSON.stringify(n)); msg('Sistema novo criado em "Meus sistemas": mude o nome e as regras e clique em Salvar.', 'ok'); };
+$('bDelSis').onclick = () => { sketchup.restaurar(SIS.id); SIS = null; msg('Sistema excluído.', 'ok'); };
 $('bRest').onclick = () => { sketchup.restaurar(SIS.id); msg('Voltou ao padrão.', 'ok'); };
 $('bAplicar').onclick = () => {
   lerRegras();
