@@ -1,7 +1,10 @@
 {
-  "versao": "2.5.7",
+  "versao": "2.5.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Botão Nesting em todos os PCs: se o PCF Label não estiver instalado, o PCF Ferramentas instala sozinho pelo GitHub",
+    "Correr: kits Rometal Linea Top (10–20 kg e 20–30 kg), portas de 15 a 22 mm",
+    "Dobradiça Blum CLIP top para perfil de alumínio",
     "Atualização não instala mais sozinha: o botão ⬆ Atualizar da barra PCF acende quando tem versão nova — clique quando quiser (atualiza PCF Ferramentas e PCF Label juntos)",
     "Correr: escolha no topo 🪵 Porta de MDF ou ▢ Alumínio e vidro, em qualquer trilho (RO-65, Slido, Dominus…). Em Alumínio e vidro aparecem modelo do perfil, cor e vidro",
     "Atualização a cada 1 minuto em todos os PCs abertos (sem reabrir o SketchUp). Com a chave ☁ colada, vai direto ao GitHub, sem atraso de cache",
