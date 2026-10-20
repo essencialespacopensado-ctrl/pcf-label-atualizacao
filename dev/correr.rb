@@ -387,7 +387,7 @@ module PCF
           m.pages.to_a.each { |pg| m.pages.erase(pg) if pg.name.start_with?(rotulo + ' - ') }
           tag = m.layers[tag_nome] || m.layers.add(tag_nome)
           tag.visible = true
-          gap = 600.0
+          gap = 900.0
           novo = m.entities.add_group
           novo.name = "Projeto - #{rotulo}"
           novo.layer = tag
@@ -412,7 +412,7 @@ module PCF
           paginas = []
           [['Frontal', -1], ['Traseira', 1]].each do |nm, lado|
             cam = Sketchup::Camera.new(c.offset(Geom::Vector3d.new(0, lado, 0), dist), c, Z_AXIS, false)
-            cam.height = [bb.depth * 1.35, bb.width * 0.8].max
+            cam.height = [bb.depth * 1.4, bb.width * 0.75].max
             v.camera = cam
             pg = m.pages.add("#{rotulo} - #{nm}")
             pg.use_camera = true
@@ -452,6 +452,11 @@ module PCF
       end
 
       # cotas em 2 grupos: um para a cena Frontal e outro para a Traseira (cada um na sua etiqueta, para não sobrepor)
+      def mm_txt(v)
+        v = v.to_f.round(1)
+        v == v.round ? v.round.to_s : v.to_s.tr('.', ',')
+      end
+
       def cotar_portas(grp, n, w, hp, gap, pl, s, tag_f = nil, tag_t = nil)
         pp = s['perfil_prof'].to_f
         dm = ->(e, a, b, v) { e.add_dimension_linear(a.map(&:mm), b.map(&:mm), Geom::Vector3d.new(*v.map(&:mm))) }
@@ -471,9 +476,9 @@ module PCF
             dm.(e, [esq, y, 0], [esq, y, hp], [180 * sx, 0, 0])                   # altura total
             dm.(e, [dir, y, pl], [dir, y, hp - pl], [-90 * sx, 0, 0])             # luz do vidro (altura)
             dm.(e, [esq, y, hp], [esq - pl * sx, y, hp], [0, 0, 70])              # largura do perfil
-            e.add_text("PORTA #{i + 1} — #{fmt(w)} × #{fmt(hp)} mm", Geom::Point3d.new((x + w * 0.1).mm, y.mm, (hp + 220).mm))
+            e.add_text("PORTA #{i + 1}\n#{mm_txt(w)} × #{mm_txt(hp)} mm", Geom::Point3d.new((x + w * 0.15).mm, y.mm, (hp + 330).mm))
           end
-          e.add_text("#{lado < 0 ? 'VISTA FRONTAL' : 'VISTA TRASEIRA'}  ·  #{s['perfil_nome']} (#{pl.round} × #{pp.round} mm)  ·  cor #{s['cor_nome']}  ·  vidro #{s['vidro_nome']} #{s['vidro_esp']} mm",
+          e.add_text("#{lado < 0 ? 'VISTA FRONTAL' : 'VISTA TRASEIRA'}\n#{s['perfil_nome']} (#{pl.round} × #{pp.round} mm) · cor #{s['cor_nome']}\nVidro #{s['vidro_nome']} #{mm_txt(s['vidro_esp'].to_f)} mm",
                      Geom::Point3d.new(0, y.mm, -420.mm))
         end
       end
