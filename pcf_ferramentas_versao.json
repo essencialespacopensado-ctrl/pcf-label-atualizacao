@@ -1,7 +1,9 @@
 {
-  "versao": "2.6.3",
+  "versao": "2.6.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Paredes: escolha se a medida digitada é POR DENTRO ou POR FORA da parede",
+    "Paredes separadas: lista com cada parede para ligar/desligar (o canto some junto), '🎥 Desligar as da frente' (pela câmera) e '👁 Ligar todas' — sem precisar de corte de seção",
     "Cotas e Espessuras: a cor aparece com o nome do Dinabox (o mesmo do editor e do relatório do Dinabox)",
     "Painel › Medidas: quadro 'Espessuras' com 🔍 Inspecionar (lista peças com 6/15/18/25 em vez de 6,3/15,3/18,3/25,3, por material) e ✔ Corrigir (tamponamentos, recortes orgânicos e peças mãe vão para o padrão; Ctrl+Z desfaz)",
     "Recorte orgânico: modelagem com 6 / 15 / 18 / 25 mm vira chapa 6,3 / 15,3 / 18,3 / 25,3 (e coladas 21,6 / 30,6 …) automaticamente",
