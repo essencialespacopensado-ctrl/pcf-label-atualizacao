@@ -1,11 +1,11 @@
 {
-  "versao": "2.3.0",
+  "versao": "2.3.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Hidráulica: novo ponto 'Circulação de ar' (Ø 100 mm, altura padrão 2200 mm)",
     "Elétrica e Hidráulica: caixinha 'Mostrar escrita' para ocultar/mostrar o nome e a altura dos pontos na tela (fica salvo)",
     "Elétrica e Hidráulica: Enter na Altura ou na Distância já coloca o ponto, sem clicar no botão",
     "Elétrica e Hidráulica: escolha 'Medir da Esquerda →' ou '← Direita'; a distância digitada vale a partir desse canto da parede e a cota na tela sai do mesmo canto",
-    "Construtor de paredes: a medida digitada não é mais apagada quando o mouse mexe; aceita 3000, 3.000, 3000mm, 300cm, 3m, 3,5m e contas (1500+1500); sem mexer o mouse, segue a direção da parede anterior",
-    "Construtor de paredes: cada parede fica EXATAMENTE com a medida digitada, para qualquer lado que virar; onde abriria um vão no canto entra um bloco de canto (espessura × espessura). A espessura fica do lado em que você desenha (Tab inverte), nada troca sozinho"
+    "Construtor de paredes: a medida digitada não é mais apagada quando o mouse mexe; aceita 3000, 3.000, 3000mm, 300cm, 3m, 3,5m e contas (1500+1500); sem mexer o mouse, segue a direção da parede anterior"
   ]
 }
