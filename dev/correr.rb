@@ -216,10 +216,34 @@ module PCF
       end
 
       def calc_portas(s, larg, alt, n)
-        tr = s['transpasse'].to_f
-        w = (larg + tr * (n - 1)) / n.to_f + s['larg_add'].to_f
+        w = layout_portas(s, larg, n)[:w]
         h = alt + s['alt_add'].to_f
         [w.round(1), h.round(1)]
+      end
+
+      # disposição simétrica das portas:
+      #   correr: trilho da frente/de trás espelhado (2 portas F-T, 3 F-T-F, 4 F-T-T-F...), transpasse só entre portas de trilhos
+      #   diferentes; portas vizinhas no mesmo trilho encostam (sem transpasse). Giro: todas alinhadas, com folga entre elas.
+      def layout_portas(s, larg, n, w = nil)
+        tr = s['transpasse'].to_f
+        giro = s['id'].to_s.include?('giro') || s['giro']
+        trk = if giro || n == 1 then Array.new(n, 0)
+              elsif n == 2 then [0, 1]
+              else (0...n).map { |i| [i, n - 1 - i].min.even? ? 0 : 1 }
+              end
+        dif = (0...n - 1).map { |i| trk[i] != trk[i + 1] }
+        d = dif.count(true)
+        if giro
+          folga = -tr
+          w ||= (larg - folga * (n - 1)) / n.to_f + s['larg_add'].to_f
+          xs = (0...n).map { |i| i * (w + folga) }
+        else
+          w ||= (larg + tr * d) / n.to_f + s['larg_add'].to_f
+          ov = d > 0 ? (n * w - larg) / d : 0
+          xs = [0.0]
+          (1...n).each { |i| xs << xs.last + w - (dif[i - 1] ? ov : 0) }
+        end
+        { w: w, xs: xs, trk: trk, dif: dif }
       end
 
       # caixa (grupo) em coordenadas locais do grupo pai: origem p, tamanhos em mm
@@ -321,10 +345,11 @@ module PCF
           # portas
           portas = []
           tamps = []
-          passo = n > 1 ? (larg - w) / (n - 1) : 0
+          lay = layout_portas(s, larg, n, w)
+          passo = lay
           n.times do |i|
-            xi = x0 + i * passo
-            yi = y0 - pt - (i.even? ? esp : 2 * esp + 2) # duas linhas de trilho: alternadas
+            xi = x0 + lay[:xs][i]
+            yi = y0 - pt - (lay[:trk][i].zero? ? 2 * esp + 2 : esp) # trilho da frente / de trás (espelhado)
             yi = y0 - esp - 2 if s['id'] == 'alu_giro'
             zi = z0 - s['desce'].to_f
             if aluminio
@@ -396,7 +421,8 @@ module PCF
           # faixas de transpasse (onde uma porta passa na frente da outra)
           if n > 1 && s['transpasse'].to_f > 0
             (1...n).each do |i|
-              xa = x0 + i * passo; xb = xa + (w - passo)
+              next unless passo[:dif][i - 1]
+              xa = x0 + passo[:xs][i]; xb = x0 + passo[:xs][i - 1] + w
               [xa, xb].each { |xx| e.add_cline(Geom::Point3d.new(xx.mm, (y0 - pt).mm, z0.mm), Geom::Point3d.new(xx.mm, (y0 - pt).mm, (z0 + alt).mm)) }
               rotulo.("Transpasse #{mm_txt(xb - xa)} mm", [(xa + xb) / 2.0, y0 - pt, z0 + alt / 2.0])
             end
@@ -406,7 +432,7 @@ module PCF
         if s['dob']
           ps = dobr_posicoes(s['dob'], hp)
           n.times do |i|
-            lado_x = i.even? ? x0 + i * passo : x0 + i * passo + w
+            lado_x = i.even? ? x0 + passo[:xs][i] : x0 + passo[:xs][i] + w
             ps.each { |zz| cruz.([lado_x, y0, z0 - s['desce'].to_f + zz]) }
             rotulo.("Dobradiças porta #{i + 1}: #{ps.reverse.map { |v| mm_txt(v) }.join(' / ')} mm da base da porta", [lado_x, y0, z0 - s['desce'].to_f + ps.first])
           end

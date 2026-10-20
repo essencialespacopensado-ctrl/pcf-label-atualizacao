@@ -37,7 +37,7 @@
   .seg button.on { color:#fff; border-color:var(--ac); background:linear-gradient(135deg,rgba(34,211,238,.25),rgba(124,58,237,.25)); box-shadow:0 0 10px rgba(34,211,238,.3); }
   .prev { overflow:hidden; display:flex; gap:6px; align-items:flex-end; height:250px; padding:14px 8px; border-radius:8px; background:repeating-linear-gradient(0deg,#121a26 0 19px,#16202e 19px 20px); position:relative; }
   .prev .trilho { position:absolute; left:8px; right:8px; height:4px; background:#9aa3ad; border-radius:2px; }
-  .porta { position:relative; border:1.5px solid #c9a77c; background:rgba(201,167,124,.25); border-radius:2px; transition:all .35s cubic-bezier(.4,1.4,.6,1); }
+  .porta { position:relative; border:1.5px solid #c9a77c; background:#5a4a38; border-radius:2px; transition:all .35s cubic-bezier(.4,1.4,.6,1); }
   .porta.alu { border:4px solid #b9c1ca; background:rgba(170,210,225,.25); }
   .porta span { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:10px Consolas; color:var(--tx); text-align:center; }
   .res { font:13px Consolas, monospace; color:var(--ac); margin-top:6px; }
@@ -228,6 +228,16 @@ function alvo(a){
   if (a) { $('larg').value = fm(a.larg); $('alt').value = fm(a.alt); }
   calcular();
 }
+// mesma regra do SketchUp: trilhos espelhados (F-T, F-T-F, F-T-T-F), transpasse só entre trilhos diferentes; giro com folga
+function layout(L, n, w){
+  const tr = SIS.transpasse || 0, giro = /giro/.test(SIS.id) || SIS.giro;
+  const trk = giro || n === 1 ? Array(n).fill(0) : n === 2 ? [0, 1] : Array.from({length: n}, (_, i) => Math.min(i, n - 1 - i) % 2);
+  const dif = Array.from({length: n - 1}, (_, i) => trk[i] !== trk[i + 1]), d = dif.filter(Boolean).length;
+  let xs = [0];
+  if (giro) { const f = -tr; w = w || (L - f * (n - 1)) / n + (SIS.larg_add || 0); for (let i = 1; i < n; i++) xs.push(xs[i - 1] + w + f); }
+  else { w = w || (L + tr * d) / n + (SIS.larg_add || 0); const ov = d ? (n * w - L) / d : 0; for (let i = 1; i < n; i++) xs.push(xs[i - 1] + w - (dif[i - 1] ? ov : 0)); }
+  return { w, xs, trk };
+}
 function passos(){
   const a = !!ALVO, b = !!SIS;
   $('p1').className = a ? 'ok' : 'agora'; $('p2').className = a && b ? 'ok' : (a ? 'agora' : ''); $('p3').className = a && b ? 'agora' : '';
@@ -239,8 +249,9 @@ function calcular(){
   $('bAplicar').disabled = !(ALVO && L && A);
   $('bAplicar').classList.toggle('vai', !$('bAplicar').disabled);
   if (!L || !A) { $('res').textContent = ''; $('prev').innerHTML = ''; return; }
-  let w = (L + (SIS.transpasse || 0) * (N - 1)) / N + (SIS.larg_add || 0), h = A + (SIS.alt_add || 0);
+  let w = layout(L, N).w, h = A + (SIS.alt_add || 0);
   if (num($('w').value)) w = num($('w').value);
+  const LAY = layout(L, N, w);
   if (num($('h').value)) h = num($('h').value);
   let extra = '';
   if (SIS.tipo === 'aluminio' && ALU) { const pf = ALU.perfis.find(p => p.nome === SEL.perfil); if (pf) { $('esp').value = fm(pf.prof); const d = pf.desc != null ? pf.desc : 2 * pf.larg - 20; extra = ` · vidro ${fm(w - d)} × ${fm(h - d)} mm · perfil ${fm(pf.prof)} mm de espessura`; } }
@@ -249,10 +260,10 @@ function calcular(){
   const alu = SIS.tipo === 'aluminio';
   const cP = ALU && ALU.cores.find(c => c.nome === SEL.cor), pP = ALU && ALU.perfis.find(p => p.nome === SEL.perfil), vP = ALU && ALU.vidros.find(v => v.nome === SEL.vidro);
   const estAlu = alu && cP ? `border-color:${rgb(cP.rgb)};border-width:${Math.max(2, Math.round((pP ? pP.larg : 37) * esc))}px;background:${vP ? 'rgba(' + vP.rgb.join(',') + ',' + Math.min(.9, (vP.alpha || .3) + .1) + ')' : ''};` : '';
-  const passo = N > 1 ? (L - w) / (N - 1) : 0;
+
   $('prev').innerHTML = (SIS.trilho_sup ? '<div class="trilho" style="top:8px"></div><div class="trilho" style="bottom:8px"></div>' : '') +
     `<div style="position:relative;width:${px(L)}px;height:${px(A)}px;margin:auto;border:1px dashed #445">` +
-    Array.from({length: N}, (_, i) => `<div class="porta${alu ? ' alu' : ''}" style="position:absolute;left:${px(i * passo)}px;bottom:${-px(SIS.desce || 0)}px;width:${px(w)}px;height:${px(h)}px;z-index:${i % 2 ? 1 : 2};${estAlu}"><span>${i + 1}${px(w) > 70 ? '<br>' + fm(w) + '×' + fm(h) : ''}</span></div>`).join('') + '</div>';
+    Array.from({length: N}, (_, i) => `<div class="porta${alu ? ' alu' : ''}" style="position:absolute;left:${px(LAY.xs[i])}px;bottom:${-px(SIS.desce || 0)}px;width:${px(w)}px;height:${px(h)}px;z-index:${LAY.trk[i] ? 1 : 2};${estAlu}${LAY.trk[i] ? 'filter:brightness(.8);' : 'box-shadow:0 6px 14px rgba(0,0,0,.5);'}"><span>${i + 1}${px(w) > 70 ? '<br>' + fm(w) + '×' + fm(h) : ''}</span></div>`).join('') + '</div>';
 }
 document.querySelectorAll('#segN button').forEach(b => b.onclick = () => { N = +b.dataset.n; document.querySelectorAll('#segN button').forEach(x => x.classList.toggle('on', x === b)); calcular(); });
 $('trp').addEventListener('input', () => { const v = num($('trp').value) || 0; SIS.transpasse = (/giro/.test(SIS.id) || SIS.giro) ? -v : v; const r = document.querySelector('#regras input[data-k="transpasse"]'); if (r) r.value = String(SIS.transpasse).replace('.', ','); calcular(); });
