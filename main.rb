@@ -132,7 +132,7 @@ module PCFLabel
     pts
   end
 
-  def self.coletar(ents, tr, cam, pecas, pai_bb = nil, pids = [], herd = nil, origem = nil)
+  def self.coletar(ents, tr, cam, pecas, pai_bb = nil, pids = [], herd = nil, origem = nil, gira = false)
     ents.each do |e|
       next unless e.is_a?(Sketchup::Group) || e.is_a?(Sketchup::ComponentInstance)
       next if e.hidden? || !camada_visivel?(e.layer)
@@ -146,6 +146,7 @@ module PCFLabel
       d = e.definition
       orig = origem || origem_de(e, d)
       t = tr * e.transformation
+      gira_e = gira || !!e.get_attribute('pcf', 'veio_girado')   # botão "Inverter veio" do PCF Ferramentas (na peça ou no móvel)
       filhos = d.entities.select { |x| (x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance)) && !x.get_attribute('pcf', 'nome') && x.name != 'PCF Nome' && !usinagem?(x) }
       faces = d.entities.grep(Sketchup::Face)
       nome = e.name.to_s.empty? ? d.name.to_s : e.name.to_s
@@ -195,6 +196,7 @@ module PCFLabel
           v = (z - Geom::Vector3d.new(n.x * (z % n), n.y * (z % n), n.z * (z % n))).normalize
           u = v * n
         end
+        u, v = v, u.reverse if gira_e   # veio invertido: a peça entra no plano girada 90° (sem redesenhar)
         o = pts3[0]
         # lê a peça como ela é: furos que atravessam e rebaixos (fundo em profundidade intermediária)
         dep = ->(p) { (p - o) % n }                       # 0 na face de cima, -esp na de baixo
@@ -290,7 +292,7 @@ module PCFLabel
         pecas << { sk: e.persistent_id.to_s, skpath: (pids + [e.persistent_id]).join('.'), cam: (cam + [nome]).join(' > '), nome: nome, auto: auto, mat: (mat || 'sem material').to_s, esp: esp, contorno: contorno, furos: furos, rebaixos: rebs2, virada: virar, origem: orig || 'SketchUp', topo: topo_id, topo_nome: topo_nm }
       elsif !filhos.empty?
         bb = Geom::BoundingBox.new; d.bounds.then { |b| 8.times { |k| bb.add(b.corner(k).transform(t)) } }
-        coletar(d.entities, t, cam + [nome], pecas, bb, pids + [e.persistent_id], (e.material && e.material.display_name) || herd, orig)
+        coletar(d.entities, t, cam + [nome], pecas, bb, pids + [e.persistent_id], (e.material && e.material.display_name) || herd, orig, gira_e)
       end
     end
   end
@@ -1396,7 +1398,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-20.04'
+  PLUGIN_VERSAO = '2026-10-20.05'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1523,7 +1525,7 @@ module PCFLabel
           File.binwrite(arq, b)
           Sketchup.install_from_archive(arq, false)
           dir = File.join(Sketchup.find_support_file('Plugins'), 'pcf_ferramentas')
-          %w[main criar giro organica paredes pontos curva corte3d interno lista moldura peca_mae correr atualizar].each { |n| f = File.join(dir, "#{n}.rb"); load f if File.exist?(f) }
+          %w[main criar giro organica paredes pontos curva corte3d interno lista moldura peca_mae correr veio atualizar].each { |n| f = File.join(dir, "#{n}.rb"); load f if File.exist?(f) }
           (PCF::Ferramentas.recarregar_painel rescue nil)
           (log_atu("PCF Ferramentas #{atual} -> #{alvo}") rescue nil)
         end

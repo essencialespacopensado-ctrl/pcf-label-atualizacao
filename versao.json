@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-20.01",
- "plugin": "2026-10-20.04",
+ "plugin": "2026-10-20.05",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-20.01",
+   "plugin": "2026-10-20.05",
+   "data": "20/10 16:55",
+   "titulo": "Veio invertido",
+   "itens": [
+    "Peças com 'Inverter veio' (botão do PCF Ferramentas) entram no plano de corte com o veio girado 90°"
+   ]
+  },
   {
    "tela": "2026-10-20.01",
    "plugin": "2026-10-20.04",
@@ -477,5 +486,5 @@
   "numeros.svg": "1c89e120c8b85bd5bbbbb897958e564c5b73635c",
   "detalhamento.svg": "a19aabab38d54771ede57fd22b76426981f9bbc5"
  },
- "ferramentas": "2.5.9"
+ "ferramentas": "2.6.0"
 }
