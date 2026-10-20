@@ -141,7 +141,11 @@ module PCF
         tr = Geom::Transformation.new
         cam[0...(k || cam.index(e))].each { |x| tr *= x.transformation }
         tr *= e.transformation
-        b = e.definition.bounds
+        f = frame_modulo(tr)
+        fi = f.inverse
+        db = e.definition.bounds
+        b = Geom::BoundingBox.new
+        8.times { |k| b.add(db.corner(k).transform(fi)) } # caixa do módulo no sistema "em pé" (x largura, y profundidade, z altura)
         nome = (e.get_attribute('pcf', 'nome_fixo') || e.name).to_s
         nome = e.definition.name.to_s if nome.strip.empty?
         larg = b.width.to_mm; prof = b.height.to_mm; alt = b.depth.to_mm
@@ -154,7 +158,20 @@ module PCF
           a2, l2, p2 = nums
           alt, larg, prof = a2, l2, p2 if nums.size == 3 && nums.all?(&:positive?)
         end
-        { e: e, b: b, tr: tr, nome: nome, larg: larg.round(1), prof: prof.round(1), alt: alt.round(1), dinabox: dv.start_with?('[M]') }
+        { e: e, b: b, tr: tr, f: f, nome: nome, larg: larg.round(1), prof: prof.round(1), alt: alt.round(1), dinabox: dv.start_with?('[M]') }
+      end
+
+      # sistema "em pé" dentro do módulo: o Dinabox monta o módulo com a altura no eixo Y local (e a profundidade no Z).
+      # Aqui escolhe o eixo local que aponta para CIMA no mundo como altura (z), o X local como largura e y = profundidade.
+      def frame_modulo(tr)
+        loc = [X_AXIS, Y_AXIS, Z_AXIS]
+        mund = [tr.xaxis, tr.yaxis, tr.zaxis]
+        k = (0..2).max_by { |i| mund[i].normalize.dot(Z_AXIS).abs }
+        ez = loc[k].clone
+        ez.reverse! if mund[k].dot(Z_AXIS) < 0
+        ex = (k == 0 ? Y_AXIS : X_AXIS).clone
+        ey = ez * ex
+        Geom::Transformation.axes(ORIGIN, ex, ey, ez)
       end
 
       def correr
@@ -320,9 +337,15 @@ module PCF
           m.entities.erase_entities(velhos) unless velhos.empty?
           tr = a[:tr]
           g = m.entities.add_group
-          g.transformation = tr
+          # frente do módulo: lado onde estão as portas/frentes do Dinabox (senão, o lado −Y). Se for o +Y, gira 180° no lugar.
+          bb0 = a[:b]
+          base_t = tr * a[:f] # sempre em pé: altura no eixo que aponta para cima no mundo
+          fr = frente_mais_y?(a[:e], a[:f])
+          fr = (base_t.inverse * Geom::Vector3d.new(0, -1, 0)).y > 0 if fr.nil? # sem frentes: frente = lado −Y do mundo
+          g.transformation = fr ? base_t * Geom::Transformation.rotation(Geom::Point3d.new(bb0.center.x, bb0.center.y, 0), Z_AXIS, 180.degrees) : base_t
           g.name = "PCF Correr - #{s['nome']} - #{a[:nome]}"
           g.set_attribute('pcf', 'correr_modulo', a[:e].persistent_id.to_s)
+          g.set_attribute('pcf', 'nao_cortar', true) # portas, trilhos e puxadores: só compras, nunca plano de corte
           g.set_attribute('pcf', 'correr', JSON.generate({ 'id' => s['id'], 'n' => n, 'larg' => larg, 'alt' => alt, 'w' => w, 'h' => hp, 'esp' => esp }))
           b = a[:b]
           x0 = b.center.x.to_mm - larg / 2.0; y0 = b.min.y.to_mm; z0 = b.min.z.to_mm
@@ -339,8 +362,9 @@ module PCF
                         'vidro_desc' => (perfil['desc'] || (2 * perfil['larg'].to_f - 2 * s['vidro_encaixe'].to_f)).to_f,
                         'vidro_esp' => (perfil['vidro'] || s['vidro_esp']).to_f, 'perfil_conferir' => perfil['conferir'],
                         'perfil_nome' => perfil['nome'], 'cor_nome' => cor['nome'], 'vidro_nome' => vidro['nome'],
-                        'pux' => pux, 'dob' => (s['id'].to_s.include?('giro') ? dob : nil))
+                        'dob' => (s['id'].to_s.include?('giro') ? dob : nil))
           end
+          s = s.merge('pux' => pux, 'cor_nome' => (s['cor_nome'] || cor['nome'])) # puxador vale para todas as portas (MDF também)
           alu = mat_correr("PCF Alumínio #{cor['nome']}", cor['rgb'])
           vid = mat_correr("PCF Vidro #{vidro['nome']}", vidro['rgb'], (vidro['alpha'] || 0.35).to_f)
           pt = s['prof_trilho'].to_f
@@ -365,18 +389,24 @@ module PCF
           tamps = []
           lay = layout_portas(s, larg, n, w)
           passo = lay
+          mat_mdf = nil
           n.times do |i|
             xi = x0 + lay[:xs][i]
             yi = y0 - pt - (lay[:trk][i].zero? ? 2 * esp + 2 : esp) # trilho da frente / de trás (espelhado)
             yi = y0 - esp - 2 if s['id'] == 'alu_giro'
-            zi = z0 - s['desce'].to_f
+            # na frente do módulo, seguindo a altura dele: centrada na altura (ou descendo o que o sistema pede, ex.: Dominus 35 mm)
+            zi = s['desce'].to_f.zero? ? z0 + (alt - hp) / 2.0 : z0 - s['desce'].to_f
             if aluminio
               pg = porta_aluminio(g.entities, xi, yi, zi, w, hp, s, alu, vid, i)
               pg.name = "Porta alumínio #{i + 1} - #{a[:nome]}"
               portas << pg
             else
-              t = porta_mdf(g, xi, yi, zi, w, hp, esp, "Porta correr #{i + 1} - #{a[:nome]}")
-              t ? tamps << t : portas << caixa_mm(g.entities, xi, yi, zi, w, esp, hp)
+              # porta NÃO vai para o plano de corte: é desenhada (cor da porta) e entra só na lista de compras
+              mp = mat_mdf ||= (mat_frente(a[:e]) || mat_correr('PCF Porta MDF', [150, 120, 90]))
+              pm = caixa_mm(g.entities, xi, yi, zi, w, esp, hp, mp) # na cor das frentes do módulo
+              pm.name = "Porta #{i + 1} - #{a[:nome]}"
+              portas << pm
+              puxador_mdf(g.entities, xi, yi, zi, w, hp, s, alu, i)
             end
           end
           if aluminio
@@ -384,8 +414,6 @@ module PCF
             perim = n * 2 * (w + hp) / 1000.0
             vw = w - s['vidro_desc'].to_f; vh = hp - s['vidro_desc'].to_f
             compras << { 'cod' => 'PERFIL-ALU', 'desc' => "#{s['perfil_nome']} — cor #{s['cor_nome']} (quadro das portas)", 'qtd' => perim.round(2), 'un' => 'm' }
-            px = s['pux']
-            compras << { 'cod' => 'PUXADOR', 'desc' => "#{px['nome']} — cor #{s['cor_nome']}", 'qtd' => n, 'un' => 'un' } if px && px['comp'].to_f != 0
             if s['dob']
               qd = dobr_posicoes(s['dob'], hp).size
               compras.reject! { |c| c['cod'] == 'DOBR-ALU' }
@@ -393,6 +421,12 @@ module PCF
             end
             compras << { 'cod' => 'VIDRO', 'desc' => "Vidro #{s['vidro_nome']} #{s['vidro_esp']} mm — #{n} peça(s) de #{vw.round} × #{vh.round} mm", 'qtd' => (n * vw * vh / 1e6).round(2), 'un' => 'm²' }
           end
+          unless aluminio
+            compras << { 'cod' => 'PORTA-CORRER', 'desc' => "Porta de correr #{s['nome']} — #{mm_txt(w)} × #{mm_txt(hp)} × #{mm_txt(esp)} mm", 'qtd' => n, 'un' => 'un' }
+          end
+          compras << { 'cod' => 'PORTA-ALU', 'desc' => "Porta de alumínio #{s['perfil_nome']} — #{mm_txt(w)} × #{mm_txt(hp)} mm, cor #{s['cor_nome']}, vidro #{s['vidro_nome']}", 'qtd' => n, 'un' => 'un' } if aluminio
+          px = s['pux']
+          compras << { 'cod' => 'PUXADOR', 'desc' => "#{px['nome']} — cor #{s['cor_nome']}", 'qtd' => n, 'un' => 'un' } if px && px['comp'].to_f != 0
           # itens de compra: um por linha (PCF Label) + [AR] para o relatório do Dinabox
           marcacoes(g, s, n, larg, alt, w, hp, x0, y0, z0, passo, esp) rescue puts("PCF marcações: #{$!.message}")
           ci = g.entities.add_group; ci.name = 'Compras'
@@ -459,6 +493,79 @@ module PCF
         mg
       end
 
+      # puxador na porta de MDF (na frente da porta, na borda do lado que abre)
+      def puxador_mdf(ents, x, y, z, w, hp, s, mat, i)
+        px = s['pux']
+        return unless px && px['comp'].to_f != 0
+        comp = px['comp'].to_f < 0 ? hp : px['comp'].to_f
+        cz = px['comp'].to_f < 0 ? hp / 2.0 : px['centro'].to_f
+        bx = i.even? ? w - px['borda'].to_f : px['borda'].to_f
+        puxador_barra(ents, x + bx, y, z + cz - comp / 2.0, comp, mat, px['comp'].to_f < 0).name = "Puxador #{px['nome']} - porta #{i + 1}"
+      end
+
+      # puxador com cara de puxador: barra afastada da porta, presa por 2 pés (perfil de altura toda = perfil fino colado)
+      # cx = centro do puxador (x), yf = face da frente da porta, z0 = início (de baixo), comp = comprimento
+      def puxador_barra(ents, cx, yf, z0, comp, mat, perfil = false)
+        g = ents.add_group
+        e = g.entities
+        if perfil || comp < 80
+          caixa_mm(e, cx - 9, yf - 22, z0, 18, 22, comp, mat)
+          caixa_mm(e, cx - 9, yf - 22, z0, 4, 6, comp, mat) # aba para a mão
+        else
+          caixa_mm(e, cx - 6, yf - 32, z0, 12, 12, comp, mat)          # barra
+          [z0 + 12, z0 + comp - 22].each { |zp| caixa_mm(e, cx - 4, yf - 20, zp, 8, 20, 10, mat) } # pés
+        end
+        g.material = mat
+        g
+      end
+
+      # material das frentes/portas do módulo (ou da caixa), para a porta de correr sair na mesma cor
+      def mat_frente(e)
+        achar = lambda do |ents, nv, re|
+          ents.each do |x|
+            next unless x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance)
+            nm = "#{x.name} #{x.definition.name}"
+            if re.nil? || nm =~ re
+              return x.material if x.material
+              f = x.definition.entities.grep(Sketchup::Face).find(&:material)
+              return f.material if f
+            end
+            r = achar.(x.definition.entities, nv + 1, re) if nv < 4
+            return r if r
+          end
+          nil
+        end
+        achar.(e.definition.entities, 0, /porta|frente/i) || achar.(e.definition.entities, 0, nil)
+      rescue StandardError
+        nil
+      end
+
+      # o módulo tem a frente no +Y? (portas/frentes/gavetas do Dinabox ficam do lado da frente)
+      def frente_mais_y?(e, f = Geom::Transformation.new)
+        fi = f.inverse
+        db = e.definition.bounds
+        b = Geom::BoundingBox.new
+        8.times { |k| b.add(db.corner(k).transform(fi)) }
+        ys = []
+        busca = lambda do |ents, t, nv|
+          ents.each do |x|
+            next unless x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance)
+            t2 = t * x.transformation
+            nm = "#{x.name} #{x.definition.name}"
+            if nm =~ /porta|frente|gaveta/i && nm !~ /contra/i
+              ys << x.definition.bounds.center.transform(t2).transform(fi).y
+            elsif nv < 3
+              busca.(x.definition.entities, t2, nv + 1)
+            end
+          end
+        end
+        busca.(e.definition.entities, Geom::Transformation.new, 0)
+        return nil if ys.empty?
+        ys.sum / ys.size > b.center.y
+      rescue StandardError
+        nil
+      end
+
       # porta de MDF: tamponamento Dinabox (entra no plano de corte do Dinabox), no lugar da porta
       def porta_mdf(g, x, y, z, w, hp, esp, nome)
         molde = molde_tamponamento
@@ -503,11 +610,39 @@ module PCF
         pl = s['perfil_larg'].to_f; pp = s['perfil_prof'].to_f; ve = s['vidro_esp'].to_f
         g = ents.add_group
         e = g.entities
-        caixa_mm(e, x, y, z, pl, pp, hp, alu).name = 'Perfil esquerdo'
-        caixa_mm(e, x + w - pl, y, z, pl, pp, hp, alu).name = 'Perfil direito'
-        caixa_mm(e, x + pl, y, z, w - 2 * pl, pp, pl, alu).name = 'Perfil inferior'
-        caixa_mm(e, x + pl, y, z + hp - pl, w - 2 * pl, pp, pl, alu).name = 'Perfil superior'
-        caixa_mm(e, x + pl, y + (pp - ve) / 2.0, z + pl, w - 2 * pl, ve, hp - 2 * pl, vid).name = 'Vidro'
+        # quadro com cantos a 45° (como a porta de alumínio de verdade): 4 perfis em meia-esquadria
+        o = [[0, 0], [w, 0], [w, hp], [0, hp]]
+        n = [[pl, pl], [w - pl, pl], [w - pl, hp - pl], [pl, hp - pl]]
+        %w[inferior direito superior esquerdo].each_with_index do |nome, k|
+          j = (k + 1) % 4
+          pts = [o[k], o[j], n[j], n[k]].map { |u, v| Geom::Point3d.new((x + u).mm, y.mm, (z + v).mm) }
+          pg = e.add_group
+          f = pg.entities.add_face(pts)
+          f.reverse! if f.normal.y > 0          # frente virada para fora (−Y)
+          f.pushpull(-pp.mm)
+          pg.material = alu
+          pg.name = "Perfil #{nome}"
+        end
+        # baguete (degrau interno do perfil, também em 45°): dá o acabamento de porta de alumínio de verdade
+        bg = [[pl * 0.18, 2.5].max, 5].min
+        bp = pp * 0.55
+        n2 = [[pl + bg, pl + bg], [w - pl - bg, pl + bg], [w - pl - bg, hp - pl - bg], [pl + bg, hp - pl - bg]]
+        tb = [(bp - ve) / 2.0, 1.5].max # baguete na frente e atrás do vidro (prende o vidro, sem atravessar)
+        [y + (pp - ve) / 2.0 - tb, y + (pp + ve) / 2.0].each do |yb|
+          4.times do |k|
+            j = (k + 1) % 4
+            pts = [n[k], n[j], n2[j], n2[k]].map { |u, v| Geom::Point3d.new((x + u).mm, yb.mm, (z + v).mm) }
+            bgp = e.add_group
+            f = bgp.entities.add_face(pts)
+            f.reverse! if f.normal.y > 0
+            f.pushpull(-tb.mm)
+            bgp.material = alu
+            bgp.name = 'Baguete'
+          end
+        end
+        # vidro encaixado no meio do perfil (aparece a luz do vidro + o encaixe escondido no perfil)
+        enc = [s['vidro_encaixe'].to_f, pl - 2].min
+        caixa_mm(e, x + pl - enc, y + (pp - ve) / 2.0, z + pl - enc, w - 2 * (pl - enc), ve, hp - 2 * (pl - enc), vid).name = 'Vidro'
         info = { 'w' => w, 'h' => hp, 'perfil' => s['perfil_nome'], 'cor' => s['cor_nome'], 'vidro' => s['vidro_nome'] }
         pux_dir = i.even?
         px = s['pux']
@@ -515,7 +650,7 @@ module PCF
           comp = px['comp'].to_f < 0 ? hp : px['comp'].to_f
           cz = px['comp'].to_f < 0 ? hp / 2.0 : px['centro'].to_f
           bx = pux_dir ? w - px['borda'].to_f : px['borda'].to_f
-          caixa_mm(e, x + bx - 6, y - 25, z + cz - comp / 2.0, 12, 25, comp, alu).name = "Puxador #{px['nome']}"
+          puxador_barra(e, x + bx, y, z + cz - comp / 2.0, comp, alu, px['comp'].to_f < 0).name = "Puxador #{px['nome']}"
           info['pux'] = { 'x' => bx, 'z0' => cz - comp / 2.0, 'z1' => cz + comp / 2.0, 'nome' => px['nome'] }
         end
         if s['dob']
@@ -571,6 +706,8 @@ module PCF
           v = m.active_view
           cam0 = v.camera
           cam0 = Sketchup::Camera.new(cam0.eye, cam0.target, cam0.up, cam0.perspective?, cam0.fov)
+          vis0 = m.layers.map { |l| [l, l.visible?] } # etiquetas como estavam: as cenas novas NUNCA podem esconder o projeto
+          pag0 = m.pages.selected_page
           paginas = []
           [['Frontal', -1], ['Traseira', 1]].each do |nm, lado|
             cam = Sketchup::Camera.new(c.offset(Geom::Vector3d.new(0, lado, 0), dist), c, Z_AXIS, false)
@@ -590,6 +727,8 @@ module PCF
             end
           end
           v.camera = cam0
+          (m.pages.selected_page = pag0) rescue nil if pag0
+          vis0.each { |l, vv| l.visible = vv if l.valid? && l.visible? != vv }
           # arquivo separado (só as portas, com as cotas da frente) para mandar ao serralheiro
           arq = nil
           begin
@@ -603,6 +742,7 @@ module PCF
             puts "PCF porta alu arquivo: #{ex.message}"
             arq = nil
           end
+          vis0.each { |l, vv| l.visible = vv if l.valid? && l.visible? != vv }
           tag_f.visible = tag_t.visible = false
           tag.visible = false # na vista normal fica escondido; aparece só nas 2 cenas da porta
           m.commit_operation
