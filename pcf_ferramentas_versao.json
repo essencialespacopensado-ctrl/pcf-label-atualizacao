@@ -1,7 +1,8 @@
 {
-  "versao": "2.6.0",
+  "versao": "2.6.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Recorte orgânico: modelagem com 6 / 15 / 18 / 25 mm vira chapa 6,3 / 15,3 / 18,3 / 25,3 (e coladas 21,6 / 30,6 …) automaticamente",
     "Botão novo 'Inverter veio' na barra PCF: gira o veio 90° das peças selecionadas sem redesenhar (na tela e no plano de corte do PCF Label). Clique de novo para voltar",
     "Cotas ligadas: ao clicar numa peça aparecem o nome e a cor dela",
     "Peça Mãe: o material não fica mais travado — pegue o mesmo código de material das frentes e aceita a troca de material pelo Dinabox. Peças mãe já feitas são destravadas sozinhas",

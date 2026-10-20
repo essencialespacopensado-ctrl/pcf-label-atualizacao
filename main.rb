@@ -132,6 +132,14 @@ module PCFLabel
     pts
   end
 
+  # espessura de chapa no padrão da empresa: 18 -> 18,3 (6,3 / 15,3 / 18,3 / 25,3) e chapas coladas (21,6 = 15,3 + 6,3 …).
+  # Peça desenhada com 18 ou 18,3 vira o mesmo material na lista (não sai "Freijó 18" e "Freijó 18,3" separados)
+  ESP_PADRAO = { 6 => 6.3, 15 => 15.3, 18 => 18.3, 25 => 25.3, 21 => 21.6, 24 => 24.6, 30 => 30.6, 31 => 31.6, 33 => 33.6, 36 => 36.6 }.freeze
+  def self.esp_padrao(e)
+    n = e.to_f.round
+    (e.to_f - n).abs < 0.15 && ESP_PADRAO[n] ? ESP_PADRAO[n] : e
+  end
+
   def self.coletar(ents, tr, cam, pecas, pai_bb = nil, pids = [], herd = nil, origem = nil, gira = false)
     ents.each do |e|
       next unless e.is_a?(Sketchup::Group) || e.is_a?(Sketchup::ComponentInstance)
@@ -289,7 +297,7 @@ module PCFLabel
         topo_nm = mod ? "Módulo Dinabox #{mod}" : (cam.first || nome).to_s
         pai_nome = cam.reverse.find { |c| !nome_limpo(c).empty? }
         auto = "#{auto} - #{nome_limpo(pai_nome)}" if pai_nome
-        pecas << { sk: e.persistent_id.to_s, skpath: (pids + [e.persistent_id]).join('.'), cam: (cam + [nome]).join(' > '), nome: nome, auto: auto, mat: (mat || 'sem material').to_s, esp: esp, contorno: contorno, furos: furos, rebaixos: rebs2, virada: virar, origem: orig || 'SketchUp', topo: topo_id, topo_nome: topo_nm }
+        pecas << { sk: e.persistent_id.to_s, skpath: (pids + [e.persistent_id]).join('.'), cam: (cam + [nome]).join(' > '), nome: nome, auto: auto, mat: (mat || 'sem material').to_s, esp: esp_padrao(esp), contorno: contorno, furos: furos, rebaixos: rebs2, virada: virar, origem: orig || 'SketchUp', topo: topo_id, topo_nome: topo_nm }
       elsif !filhos.empty?
         bb = Geom::BoundingBox.new; d.bounds.then { |b| 8.times { |k| bb.add(b.corner(k).transform(t)) } }
         coletar(d.entities, t, cam + [nome], pecas, bb, pids + [e.persistent_id], (e.material && e.material.display_name) || herd, orig, gira_e)
@@ -1398,7 +1406,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-20.05'
+  PLUGIN_VERSAO = '2026-10-20.06'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

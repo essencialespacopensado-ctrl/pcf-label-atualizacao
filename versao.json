@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-20.01",
- "plugin": "2026-10-20.05",
+ "plugin": "2026-10-20.06",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-20.01",
+   "plugin": "2026-10-20.06",
+   "data": "20/10 17:00",
+   "titulo": "Espessuras no padrão",
+   "itens": [
+    "Peças de 18 mm entram como 18,3 (6,3 / 15,3 / 25,3 e coladas 21,6 / 30,6 …): não sai mais o mesmo material separado em 18 e 18,3 na lista"
+   ]
+  },
   {
    "tela": "2026-10-20.01",
    "plugin": "2026-10-20.05",
@@ -486,5 +495,5 @@
   "numeros.svg": "1c89e120c8b85bd5bbbbb897958e564c5b73635c",
   "detalhamento.svg": "a19aabab38d54771ede57fd22b76426981f9bbc5"
  },
- "ferramentas": "2.6.0"
+ "ferramentas": "2.6.1"
 }
