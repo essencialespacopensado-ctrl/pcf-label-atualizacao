@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>PCF · Correr</title>
+<style>
+  :root { --bg:#0f1520; --card:#18212f; --ln:#2a3547; --tx:#e6ebf2; --mu:#8d99ab; --ac:#22d3ee; --ac2:#7c3aed; --ok:#22c55e; --rd:#f87171; }
+  * { box-sizing:border-box; }
+  body { margin:0; font:12px Segoe UI, Arial, sans-serif; background:var(--bg); color:var(--tx); display:flex; height:100vh; overflow:hidden; user-select:none; }
+  aside { width:250px; border-right:1px solid var(--ln); overflow:auto; padding:10px; background:linear-gradient(180deg,#141c29,#0f1520); }
+  main { flex:1; overflow:auto; padding:12px 14px 70px; }
+  h1 { font-size:14px; margin:0 0 10px; letter-spacing:.06em; }
+  h1 span { color:var(--ac); }
+  .marca { font-size:10px; color:var(--mu); text-transform:uppercase; letter-spacing:.08em; margin:12px 0 4px; }
+  .sis { display:block; width:100%; text-align:left; padding:8px 10px; margin:3px 0; border:1px solid var(--ln); border-radius:8px; background:var(--card); color:var(--tx); cursor:pointer; font:12px Segoe UI; position:relative; overflow:hidden; transition:transform .12s, border-color .2s, box-shadow .2s; }
+  .sis:hover { border-color:var(--ac); transform:translateX(2px); }
+  .sis.on { border-color:var(--ac); box-shadow:0 0 0 2px rgba(34,211,238,.25), 0 0 14px rgba(34,211,238,.35); }
+  .sis.on::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:linear-gradient(var(--ac),var(--ac2)); }
+  .sis small { display:block; color:var(--mu); font-size:10px; margin-top:2px; }
+  .card { background:var(--card); border:1px solid var(--ln); border-radius:10px; padding:10px 12px; margin-bottom:10px; }
+  .card h3 { margin:0 0 8px; font-size:10px; letter-spacing:.08em; text-transform:uppercase; color:var(--mu); }
+  .alvo { display:flex; align-items:center; gap:10px; }
+  .alvo .dot { width:10px; height:10px; border-radius:50%; background:var(--rd); box-shadow:0 0 8px var(--rd); flex:none; }
+  .alvo.ok .dot { background:var(--ok); box-shadow:0 0 10px var(--ok); animation:pulsa 1.6s infinite; }
+  @keyframes pulsa { 50% { box-shadow:0 0 2px var(--ok); } }
+  .grid { display:grid; grid-template-columns:repeat(4,1fr); gap:8px; }
+  label.f { display:block; font-size:10px; color:var(--mu); }
+  label.f input, label.f select { display:block; width:100%; margin-top:3px; padding:5px 7px; border:1px solid var(--ln); border-radius:6px; background:#0f1520; color:var(--tx); font:12px Consolas, monospace; }
+  label.f input:focus { outline:none; border-color:var(--ac); box-shadow:0 0 0 2px rgba(34,211,238,.2); }
+  .seg { display:flex; gap:4px; }
+  .seg button { flex:1; padding:6px 0; border:1px solid var(--ln); border-radius:6px; background:#0f1520; color:var(--mu); cursor:pointer; font-weight:600; transition:all .2s; }
+  .seg button.on { color:#fff; border-color:var(--ac); background:linear-gradient(135deg,rgba(34,211,238,.25),rgba(124,58,237,.25)); box-shadow:0 0 10px rgba(34,211,238,.3); }
+  .prev { display:flex; gap:6px; align-items:flex-end; height:250px; padding:14px 8px; border-radius:8px; background:repeating-linear-gradient(0deg,#121a26 0 19px,#16202e 19px 20px); position:relative; }
+  .prev .trilho { position:absolute; left:8px; right:8px; height:4px; background:#9aa3ad; border-radius:2px; }
+  .porta { position:relative; border:1.5px solid #c9a77c; background:rgba(201,167,124,.25); border-radius:2px; transition:all .35s cubic-bezier(.4,1.4,.6,1); }
+  .porta.alu { border:4px solid #b9c1ca; background:rgba(170,210,225,.25); }
+  .porta span { position:absolute; inset:0; display:flex; align-items:center; justify-content:center; font:10px Consolas; color:var(--tx); text-align:center; }
+  .res { font:13px Consolas, monospace; color:var(--ac); margin-top:6px; }
+  table { width:100%; border-collapse:collapse; font-size:11px; }
+  th, td { text-align:left; padding:4px 6px; border-bottom:1px solid var(--ln); }
+  th { color:var(--mu); font-weight:600; }
+  .acoes { position:fixed; left:250px; right:0; bottom:0; display:flex; gap:8px; padding:10px 14px; background:rgba(15,21,32,.95); border-top:1px solid var(--ln); }
+  .bt { padding:9px 14px; border-radius:8px; border:1px solid var(--ln); background:#18212f; color:var(--tx); cursor:pointer; font-weight:600; transition:transform .1s, box-shadow .2s; }
+  .bt:hover { border-color:var(--ac); }
+  .bt:active { transform:scale(.95); }
+  .bt.pri { flex:1; border:0; background:linear-gradient(135deg,#0891b2,#7c3aed); color:#fff; box-shadow:0 4px 14px rgba(124,58,237,.35); }
+  .bt.pri:disabled { opacity:.45; cursor:default; }
+  .bt.pri.vai { animation:brilho 1s infinite; }
+  @keyframes brilho { 50% { box-shadow:0 0 22px rgba(34,211,238,.8); } }
+  .obs { color:var(--mu); font-size:11px; margin-top:6px; line-height:1.4; }
+  .obs b { color:#fbbf24; }
+  details summary { cursor:pointer; color:var(--mu); font-size:11px; margin:4px 0; }
+  .kit textarea { width:100%; height:70px; background:#0f1520; color:var(--tx); border:1px solid var(--ln); border-radius:6px; font:11px Consolas; padding:6px; }
+  .sw { display:flex; flex-wrap:wrap; gap:6px; }
+  .sw button { display:flex; align-items:center; gap:6px; padding:5px 9px; border:1px solid var(--ln); border-radius:20px; background:#0f1520; color:var(--tx); cursor:pointer; font-size:11px; transition:all .2s; }
+  .sw button i { width:14px; height:14px; border-radius:50%; border:1px solid rgba(255,255,255,.3); display:inline-block; }
+  .sw button.on { border-color:var(--ac); box-shadow:0 0 10px rgba(34,211,238,.4); transform:translateY(-1px); }
+  .sw button.perf { border-radius:8px; }
+  .sw button.perf small { color:var(--mu); }
+  .novo { display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:6px; margin-top:6px; align-items:end; }
+  #msg { margin-top:8px; font-size:12px; }
+  #msg.ok { color:var(--ok); } #msg.erro { color:var(--rd); }
+  .chk { display:flex; align-items:center; gap:6px; margin-top:8px; color:var(--tx); }
+</style>
+</head>
+<body>
+<aside>
+  <h1>PCF · <span>CORRER</span></h1>
+  <div id="lista"></div>
+</aside>
+<main>
+  <div class="card"><h3>Módulo</h3>
+    <div class="alvo" id="alvo"><div class="dot"></div><div id="alvoTxt">Selecione o módulo no SketchUp</div></div>
+  </div>
+  <div class="card"><h3 id="sisNome">Sistema</h3>
+    <div class="grid">
+      <label class="f">Portas<div class="seg" id="segN"><button data-n="1">1</button><button data-n="2" class="on">2</button><button data-n="3">3</button><button data-n="4">4</button></div></label>
+      <label class="f">Largura de referência (mm)<input id="larg"></label>
+      <label class="f">Altura de referência (mm)<input id="alt"></label>
+      <label class="f">Espessura da porta (mm)<input id="esp" value="18,3"></label>
+    </div>
+    <div class="grid" style="margin-top:8px">
+      <label class="f">Largura de cada porta<input id="w" placeholder="calculada"></label>
+      <label class="f">Altura da porta<input id="h" placeholder="calculada"></label>
+    </div>
+    <div class="res" id="res"></div>
+    <div class="obs" id="obs"></div>
+    <label class="chk" id="linProj"><input type="checkbox" id="proj" checked> Gerar o projeto da porta (arquivo separado deste módulo, cenas Frontal e Traseira cotadas)</label>
+  </div>
+  <div class="card" id="cAlu" style="display:none"><h3>Porta de alumínio</h3>
+    <div class="f" style="font-size:10px;color:var(--mu);margin-bottom:4px">Modelo do perfil</div><div class="sw" id="swPerfil"></div>
+    <div class="novo"><label class="f">Novo perfil<input id="npNome" placeholder="ex.: Perfil RM-xxx"></label><label class="f">Largura (mm)<input id="npL"></label><label class="f">Profund. (mm)<input id="npP"></label><button class="bt" id="bNovoP">+ Adicionar</button></div>
+    <div class="f" style="font-size:10px;color:var(--mu);margin:10px 0 4px">Cor do perfil</div><div class="sw" id="swCor"></div>
+    <div class="f" style="font-size:10px;color:var(--mu);margin:10px 0 4px">Vidro</div><div class="sw" id="swVidro"></div>
+  </div>
+  <div class="card"><h3>Prévia</h3><div class="prev" id="prev"></div></div>
+  <div class="card"><h3>Regras do sistema <small style="text-transform:none;letter-spacing:0">(edite e salve: fica gravado neste PC)</small></h3>
+    <div class="grid" id="regras"></div>
+    <details class="kit"><summary>Itens de compra (código; descrição; unidade; quantidade)</summary>
+      <div class="f" style="font-size:10px;color:var(--mu)">Por kit (1 por módulo)</div><textarea id="kit"></textarea>
+      <div class="f" style="font-size:10px;color:var(--mu);margin-top:4px">Por porta</div><textarea id="porPorta"></textarea>
+    </details>
+    <div style="display:flex;gap:6px;margin-top:8px"><button class="bt" id="bSalvar">💾 Salvar regras</button><button class="bt" id="bRest">↺ Padrão</button></div>
+  </div>
+  <div class="card" id="cCompras" style="display:none"><h3>Compras deste módulo</h3><div id="compras"></div></div>
+</main>
+<div class="acoes"><button class="bt pri" id="bAplicar" disabled>⚡ Aplicar no módulo</button><button class="bt" onclick="sketchup.fechar()">Fechar</button></div>
+<script>
+let CAT = [], SIS = null, ALVO = null, N = 2, ALU = null, SEL = { perfil: null, cor: null, vidro: null };
+const rgb = c => `rgb(${c.join(',')})`;
+function montarAlu(){
+  if (!ALU) return;
+  SEL.perfil = SEL.perfil && ALU.perfis.some(p => p.nome === SEL.perfil) ? SEL.perfil : ALU.perfis[0].nome;
+  SEL.cor = SEL.cor || ALU.cores[0].nome; SEL.vidro = SEL.vidro || ALU.vidros[0].nome;
+  $('swPerfil').innerHTML = ALU.perfis.map(p => `<button class="perf${p.nome === SEL.perfil ? ' on' : ''}" data-v="${p.nome}">${p.nome}<small>${p.larg}×${p.prof}</small></button>`).join('');
+  $('swCor').innerHTML = ALU.cores.map(c => `<button class="${c.nome === SEL.cor ? 'on' : ''}" data-v="${c.nome}"><i style="background:${rgb(c.rgb)}"></i>${c.nome}</button>`).join('');
+  $('swVidro').innerHTML = ALU.vidros.map(c => `<button class="${c.nome === SEL.vidro ? 'on' : ''}" data-v="${c.nome}"><i style="background:${rgb(c.rgb)};opacity:${Math.max(.35, c.alpha || .3)}"></i>${c.nome}</button>`).join('');
+  [['swPerfil', 'perfil'], ['swCor', 'cor'], ['swVidro', 'vidro']].forEach(([id, k]) => document.querySelectorAll('#' + id + ' button').forEach(b => b.onclick = () => { SEL[k] = b.dataset.v; montarAlu(); calcular(); }));
+}
+const $ = id => document.getElementById(id);
+const num = v => { const x = parseFloat(String(v).replace(',', '.')); return isNaN(x) ? null : x; };
+const fm = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
+const CAMPOS = [['alt_add','Altura: + (mm)'],['desce','Desce abaixo da caixa (mm)'],['transpasse','Transpasse (mm)'],['larg_add','Largura: + por porta (mm)'],
+  ['prof_trilho','Profundidade do trilho (mm)'],['alt_trilho','Altura do trilho (mm)'],['trilho_sup','Código trilho superior'],['trilho_inf','Código trilho inferior'],
+  ['barras','Barras de trilho (mm, vírgula)'],['perfil_larg','Perfil alumínio: largura'],['perfil_prof','Perfil alumínio: profundidade'],['vidro_esp','Vidro (mm)'],['vidro_encaixe','Vidro: encaixe no perfil']];
+function iniciar(cat, sel, alu){
+  CAT = cat; if (alu) ALU = alu; montarAlu();
+  const marcas = [...new Set(cat.map(s => s.marca))];
+  $('lista').innerHTML = marcas.map(m => `<div class="marca">${m}</div>` + cat.filter(s => s.marca === m).map(s =>
+    `<button class="sis" data-id="${s.id}">${s.nome}<small>${s.tipo === 'aluminio' ? 'Alumínio + vidro' : 'Porta MDF (vai para o Dinabox)'}</small></button>`).join('')).join('');
+  document.querySelectorAll('.sis').forEach(b => b.onclick = () => escolher(b.dataset.id));
+  escolher(sel || (SIS && SIS.id) || cat[0].id);
+}
+function escolher(id){
+  SIS = JSON.parse(JSON.stringify(CAT.find(s => s.id === id)));
+  document.querySelectorAll('.sis').forEach(b => b.classList.toggle('on', b.dataset.id === id));
+  $('sisNome').textContent = SIS.marca + ' · ' + SIS.nome;
+  $('obs').innerHTML = (SIS.obs || '').replace(/CONFERIR/g, '<b>CONFERIR</b>');
+  $('linProj').style.display = SIS.tipo === 'aluminio' ? 'flex' : 'none';
+  $('cAlu').style.display = SIS.tipo === 'aluminio' ? 'block' : 'none';
+  $('regras').innerHTML = CAMPOS.filter(([k]) => SIS[k] !== undefined).map(([k, t]) => `<label class="f">${t}<input data-k="${k}" value="${Array.isArray(SIS[k]) ? SIS[k].join(', ') : String(SIS[k]).replace('.', ',')}"></label>`).join('');
+  document.querySelectorAll('#regras input').forEach(i => i.oninput = () => { lerRegras(); calcular(); });
+  $('kit').value = (SIS.kit || []).map(a => a.join('; ')).join('\n');
+  $('porPorta').value = (SIS.por_porta || []).map(a => a.join('; ')).join('\n');
+  $('w').value = ''; $('h').value = '';
+  calcular();
+}
+function lerRegras(){
+  document.querySelectorAll('#regras input').forEach(i => {
+    const k = i.dataset.k;
+    if (k === 'barras') SIS[k] = i.value.split(/[,;\s]+/).map(num).filter(x => x);
+    else if (/^trilho/.test(k)) SIS[k] = i.value.trim();
+    else SIS[k] = num(i.value) || 0;
+  });
+  const linhas = t => t.split('\n').map(l => l.split(';').map(x => x.trim())).filter(a => a[0]).map(a => [a[0], a[1] || a[0], a[2] || 'un', num(a[3]) || 1]);
+  SIS.kit = linhas($('kit').value); SIS.por_porta = linhas($('porPorta').value);
+}
+function alvo(a){
+  ALVO = a;
+  $('alvo').classList.toggle('ok', !!a);
+  $('alvoTxt').innerHTML = a ? `<b>${a.nome}</b> &nbsp; ${fm(a.larg)} L × ${fm(a.alt)} A × ${fm(a.prof)} P mm` : 'Selecione o módulo no SketchUp';
+  if (a) { $('larg').value = fm(a.larg); $('alt').value = fm(a.alt); }
+  calcular();
+}
+function calcular(){
+  if (!SIS) return;
+  const L = num($('larg').value), A = num($('alt').value);
+  $('bAplicar').disabled = !(ALVO && L && A);
+  $('bAplicar').classList.toggle('vai', !$('bAplicar').disabled);
+  if (!L || !A) { $('res').textContent = ''; $('prev').innerHTML = ''; return; }
+  let w = (L + (SIS.transpasse || 0) * (N - 1)) / N + (SIS.larg_add || 0), h = A + (SIS.alt_add || 0);
+  if (num($('w').value)) w = num($('w').value);
+  if (num($('h').value)) h = num($('h').value);
+  $('res').textContent = `${N} porta${N > 1 ? 's' : ''} de ${fm(w)} × ${fm(h)} mm`;
+  const esc = Math.min(200 / Math.max(h, A), 520 / Math.max(L, w * N)), px = v => Math.max(4, v * esc);
+  const alu = SIS.tipo === 'aluminio';
+  const cP = ALU && ALU.cores.find(c => c.nome === SEL.cor), pP = ALU && ALU.perfis.find(p => p.nome === SEL.perfil), vP = ALU && ALU.vidros.find(v => v.nome === SEL.vidro);
+  const estAlu = alu && cP ? `border-color:${rgb(cP.rgb)};border-width:${Math.max(2, Math.round((pP ? pP.larg : 37) * esc))}px;background:${vP ? 'rgba(' + vP.rgb.join(',') + ',' + Math.min(.9, (vP.alpha || .3) + .1) + ')' : ''};` : '';
+  const passo = N > 1 ? (L - w) / (N - 1) : 0;
+  $('prev').innerHTML = (SIS.trilho_sup ? '<div class="trilho" style="top:8px"></div><div class="trilho" style="bottom:8px"></div>' : '') +
+    `<div style="position:relative;width:${px(L)}px;height:${px(A)}px;margin:auto;border:1px dashed #445">` +
+    Array.from({length: N}, (_, i) => `<div class="porta${alu ? ' alu' : ''}" style="position:absolute;left:${px(i * passo)}px;bottom:${-px(SIS.desce || 0)}px;width:${px(w)}px;height:${px(h)}px;z-index:${i % 2 ? 1 : 2};${estAlu}"><span>${i + 1}${px(w) > 70 ? '<br>' + fm(w) + '×' + fm(h) : ''}</span></div>`).join('') + '</div>';
+}
+document.querySelectorAll('#segN button').forEach(b => b.onclick = () => { N = +b.dataset.n; document.querySelectorAll('#segN button').forEach(x => x.classList.toggle('on', x === b)); calcular(); });
+['larg', 'alt', 'w', 'h', 'esp', 'kit', 'porPorta'].forEach(id => $(id).addEventListener('input', () => { lerRegras(); calcular(); }));
+$('bNovoP').onclick = () => {
+  const nome = $('npNome').value.trim(), l = num($('npL').value), p = num($('npP').value);
+  if (!nome || !l || !p) return msg('Preencha nome, largura e profundidade do perfil.', 'erro');
+  ALU.perfis = ALU.perfis.filter(x => x.nome !== nome).concat([{ nome, larg: l, prof: p }]);
+  SEL.perfil = nome; sketchup.salvar_alu(JSON.stringify(ALU)); msg('Perfil "' + nome + '" salvo neste PC.', 'ok');
+  $('npNome').value = $('npL').value = $('npP').value = '';
+};
+$('bSalvar').onclick = () => { lerRegras(); sketchup.salvar(JSON.stringify(SIS)); msg('Regras salvas neste PC.', 'ok'); };
+$('bRest').onclick = () => { sketchup.restaurar(SIS.id); msg('Voltou ao padrão.', 'ok'); };
+$('bAplicar').onclick = () => {
+  lerRegras();
+  $('bAplicar').disabled = true; $('bAplicar').textContent = '⏳ Aplicando…';
+  sketchup.aplicar(JSON.stringify({ id: SIS.id, sistema: SIS, n: N, larg: $('larg').value, alt: $('alt').value, esp: $('esp').value, w: $('w').value, h: $('h').value, projeto: $('proj').checked, perfil: SEL.perfil, cor: SEL.cor, vidro: SEL.vidro }));
+};
+function feito(r){
+  $('bAplicar').disabled = false; $('bAplicar').textContent = '⚡ Aplicar no módulo';
+  $('cCompras').style.display = 'block';
+  $('compras').innerHTML = '<table><tr><th>Código</th><th>Item</th><th>Qtd.</th></tr>' + r.compras.map(c => `<tr><td>${c.cod}</td><td>${c.desc}</td><td>${fm(c.qtd)} ${c.un}</td></tr>`).join('') + '</table>';
+  msg(`✓ ${r.n} porta(s) de ${fm(r.w)} × ${fm(r.h)} mm em ${r.nome}.` + (r.mdf_dinabox ? ' Portas como peças Dinabox (vão para o plano de corte).' : '') + (r.arquivo ? `<br>Projeto da porta: ${r.arquivo}` : ''), 'ok');
+}
+function falhou(t){ $('bAplicar').disabled = false; $('bAplicar').textContent = '⚡ Aplicar no módulo'; msg('Erro: ' + t, 'erro'); }
+function msg(t, c){ let m = $('msg'); if (!m) { m = document.createElement('div'); m.id = 'msg'; document.querySelector('main').appendChild(m); } m.className = c; m.innerHTML = t; }
+addEventListener('load', () => sketchup.pronto());
+</script>
+</body>
+</html>
