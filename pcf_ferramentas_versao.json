@@ -1,7 +1,9 @@
 {
-  "versao": "2.6.4",
+  "versao": "2.6.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Paredes: botão '▦ Separar paredes' — cada parede vira um bloco separado com nome (Parede 1 - 3000 mm) e etiqueta própria; paredes desenhadas à mão ou importadas também (selecione antes; o original fica guardado, oculto)",
+    "Paredes: interruptor 'Paredes da frente' (igual ao Mostrar números): desligado, some com as paredes entre você e o ambiente e acompanha a câmera — sem corte de seção",
     "Paredes: escolha se a medida digitada é POR DENTRO ou POR FORA da parede",
     "Paredes separadas: lista com cada parede para ligar/desligar (o canto some junto), '🎥 Desligar as da frente' (pela câmera) e '👁 Ligar todas' — sem precisar de corte de seção",
     "Cotas e Espessuras: a cor aparece com o nome do Dinabox (o mesmo do editor e do relatório do Dinabox)",
