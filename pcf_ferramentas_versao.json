@@ -1,7 +1,8 @@
 {
-  "versao": "2.5.0",
+  "versao": "2.5.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correr: as medidas vêm do módulo que você clicar (até clicando numa peça de dentro dele): largura, altura e profundidade do próprio módulo Dinabox, em qualquer projeto aberto",
     "Botão novo 'Correr' na barra PCF: biblioteca de trilhos e sistemas de correr (Rometal Dominus, RO-65, Häfele Slido) e portas de alumínio de correr e de giro",
     "Portas de alumínio: perfis Rometal (Sírius RM-352/353/355/356/357/358, RM-059/060/377, RM-341/342) e genéricos; cor do perfil, vidro, puxador e dobradiça — tudo editável (✎ edita, + Novo, 🗑 apaga, ↺ volta ao padrão)",
     "Porta de alumínio usa a espessura do PERFIL; transpasse de 20 mm nas de correr e folga de 4 mm nas de giro (editável, ★ Tornar padrão)",
