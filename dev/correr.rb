@@ -127,23 +127,34 @@ module PCF
         Sketchup.write_default('PCF_Ferramentas', 'correr_catalogo', JSON.generate(salvo))
       end
 
-      # módulo selecionado: medidas (mm) e transformação até o mundo
+      # módulo clicado: se clicou numa peça de dentro, sobe até o módulo Dinabox ([M]) mais de fora.
+      # Medidas (mm) do próprio Dinabox (altura, largura, profundidade do [M]); sem Dinabox, pela caixa do grupo.
       def correr_alvo
         m = model
-        e = m.selection.to_a.find { |x| x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance) }
-        return nil unless e
+        sel = m.selection.to_a.find { |x| x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance) }
+        cam = (m.active_path || []).to_a
+        cam += [sel] if sel
+        return nil if cam.empty?
+        dados = ->(x) { v = x.get_attribute(DA, 'dinabox_dados').to_s; v = x.definition.get_attribute(DA, 'dinabox_dados').to_s if v.empty? && x.respond_to?(:definition); v }
+        k = cam.index { |x| dados.(x).start_with?('[M]') }
+        e = k ? cam[k] : (sel || cam.last)
+        tr = Geom::Transformation.new
+        cam[0...(k || cam.index(e))].each { |x| tr *= x.transformation }
+        tr *= e.transformation
         b = e.definition.bounds
         nome = (e.get_attribute('pcf', 'nome_fixo') || e.name).to_s
         nome = e.definition.name.to_s if nome.strip.empty?
-        dv = e.get_attribute(DA, 'dinabox_dados').to_s
-        dv = e.definition.get_attribute(DA, 'dinabox_dados').to_s if dv.empty?
+        larg = b.width.to_mm; prof = b.height.to_mm; alt = b.depth.to_mm
+        dv = dados.(e)
         if dv.start_with?('[M]')
-          pt = dv.sub('[M]', '').split('#')
+          pt = dv.sub('[M]', '').sub('[/M]', '').split('#')
           cod = pt[0].to_s[/M\d+/]
-          nome = [cod, pt[1].to_s.strip].reject { |x| x.to_s.empty? }.join(' - ') if pt[1]
+          nome = [cod, pt[1].to_s.strip].reject { |x| x.to_s.empty? }.join(' - ') unless pt[1].to_s.strip.empty?
+          nums = pt[2..].to_a.reject { |x| x.to_s.strip.empty? }.first(3).map { |x| x.to_f * 10 } # [M]cód#nome##alt#larg#prof
+          a2, l2, p2 = nums
+          alt, larg, prof = a2, l2, p2 if nums.size == 3 && nums.all?(&:positive?)
         end
-        { e: e, b: b, tr: edit_t * e.transformation, nome: nome,
-          larg: b.width.to_mm.round(1), prof: b.height.to_mm.round(1), alt: b.depth.to_mm.round(1) }
+        { e: e, b: b, tr: tr, nome: nome, larg: larg.round(1), prof: prof.round(1), alt: alt.round(1), dinabox: dv.start_with?('[M]') }
       end
 
       def correr
@@ -176,18 +187,16 @@ module PCF
         d.center
         d.show
         @dlg_correr = d
-        @obs_correr ||= begin
-          o = Class.new(Sketchup::SelectionObserver) do
-            def onSelectionBulkChange(_s)
-              PCF::Ferramentas.correr_enviar_alvo
-            end
-
-            def onSelectionCleared(_s)
-              PCF::Ferramentas.correr_enviar_alvo
-            end
-          end.new
-          model.selection.add_observer(o)
-          o
+        # acompanha o clique no SketchUp (funciona em qualquer projeto aberto, até dentro do módulo)
+        UI.stop_timer(@tm_correr) if @tm_correr
+        @sig_correr = nil
+        @tm_correr = UI.start_timer(0.4, true) do
+          if @dlg_correr && @dlg_correr.visible?
+            sig = [model.object_id, model.selection.to_a.map(&:persistent_id), (model.active_path || []).map(&:persistent_id)].hash
+            (@sig_correr = sig; correr_enviar_alvo) if sig != @sig_correr
+          else
+            UI.stop_timer(@tm_correr); @tm_correr = nil
+          end
         end
       end
 
@@ -307,7 +316,7 @@ module PCF
           g.set_attribute('pcf', 'correr_modulo', a[:e].persistent_id.to_s)
           g.set_attribute('pcf', 'correr', JSON.generate({ 'id' => s['id'], 'n' => n, 'larg' => larg, 'alt' => alt, 'w' => w, 'h' => hp, 'esp' => esp }))
           b = a[:b]
-          x0 = b.min.x.to_mm; y0 = b.min.y.to_mm; z0 = b.min.z.to_mm
+          x0 = b.center.x.to_mm - larg / 2.0; y0 = b.min.y.to_mm; z0 = b.min.z.to_mm
           compras = []
           ao = alu_opcoes
           perfil = ao['perfis'].find { |x| x['nome'] == h['perfil'] } || ao['perfis'].first
