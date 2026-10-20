@@ -75,13 +75,29 @@ module PCF
         { 'nome' => 'Canelado', 'rgb' => [210, 226, 232], 'alpha' => 0.5 },
         { 'nome' => 'Jateado', 'rgb' => [232, 236, 238], 'alpha' => 0.85 },
         { 'nome' => 'Espelho', 'rgb' => [214, 219, 224], 'alpha' => 1.0 }
+      ],
+      # puxador: comp = comprimento (0 = sem puxador; -1 = altura toda da porta), borda = do lado da porta até o centro,
+      # centro = altura do centro do puxador a partir da base da porta
+      'puxadores' => [
+        { 'nome' => 'Sem puxador', 'comp' => 0, 'borda' => 0, 'centro' => 0 },
+        { 'nome' => 'Puxador barra 300 mm', 'comp' => 300, 'borda' => 40, 'centro' => 1000 },
+        { 'nome' => 'Puxador barra 600 mm', 'comp' => 600, 'borda' => 40, 'centro' => 1000 },
+        { 'nome' => 'Puxador perfil altura toda', 'comp' => -1, 'borda' => 20, 'centro' => 0 }
+      ],
+      # dobradiça (porta de giro): do topo e da base até o centro; qtd 0 = automática pela altura
+      'dobradicas' => [
+        { 'nome' => 'Dobradiça para perfil alumínio', 'topo' => 100, 'base' => 100, 'qtd' => 0 },
+        { 'nome' => 'Dobradiça caneco 35 (perfil largo)', 'topo' => 100, 'base' => 100, 'qtd' => 0 }
       ]
     }.freeze unless defined?(ALU_PADRAO)
 
     class << self
       def alu_opcoes
         o = (JSON.parse(Sketchup.read_default('PCF_Ferramentas', 'correr_alu', '').to_s) rescue nil)
-        o.is_a?(Hash) && o['perfis'] ? o : JSON.parse(JSON.generate(ALU_PADRAO))
+        pad = JSON.parse(JSON.generate(ALU_PADRAO))
+        return pad unless o.is_a?(Hash)
+        pad.each_key { |k| o[k] = pad[k] unless o[k].is_a?(Array) && !o[k].empty? } # listas novas entram com o padrão
+        o
       end
 
       def catalogo_correr
@@ -263,9 +279,12 @@ module PCF
           perfil = ao['perfis'].find { |x| x['nome'] == h['perfil'] } || ao['perfis'].first
           cor = ao['cores'].find { |x| x['nome'] == h['cor'] } || ao['cores'].first
           vidro = ao['vidros'].find { |x| x['nome'] == h['vidro'] } || ao['vidros'].first
+          pux = ao['puxadores'].find { |x| x['nome'] == h['puxador'] } || ao['puxadores'].first
+          dob = ao['dobradicas'].find { |x| x['nome'] == h['dobradica'] } || ao['dobradicas'].first
           if aluminio && perfil
             s = s.merge('perfil_larg' => perfil['larg'].to_f, 'perfil_prof' => perfil['prof'].to_f,
-                        'perfil_nome' => perfil['nome'], 'cor_nome' => cor['nome'], 'vidro_nome' => vidro['nome'])
+                        'perfil_nome' => perfil['nome'], 'cor_nome' => cor['nome'], 'vidro_nome' => vidro['nome'],
+                        'pux' => pux, 'dob' => (s['id'].to_s.include?('giro') ? dob : nil))
           end
           alu = mat_correr("PCF Alumínio #{cor['nome']}", cor['rgb'])
           vid = mat_correr("PCF Vidro #{vidro['nome']}", vidro['rgb'], (vidro['alpha'] || 0.35).to_f)
@@ -296,7 +315,7 @@ module PCF
             yi = y0 - esp - 2 if s['id'] == 'alu_giro'
             zi = z0 - s['desce'].to_f
             if aluminio
-              pg = porta_aluminio(g.entities, xi, yi, zi, w, hp, s, alu, vid)
+              pg = porta_aluminio(g.entities, xi, yi, zi, w, hp, s, alu, vid, i)
               pg.name = "Porta alumínio #{i + 1} - #{a[:nome]}"
               portas << pg
             else
@@ -309,6 +328,13 @@ module PCF
             perim = n * 2 * (w + hp) / 1000.0
             vw = w - 2 * pl + 2 * enc; vh = hp - 2 * pl + 2 * enc
             compras << { 'cod' => 'PERFIL-ALU', 'desc' => "#{s['perfil_nome']} — cor #{s['cor_nome']} (quadro das portas)", 'qtd' => perim.round(2), 'un' => 'm' }
+            px = s['pux']
+            compras << { 'cod' => 'PUXADOR', 'desc' => "#{px['nome']} — cor #{s['cor_nome']}", 'qtd' => n, 'un' => 'un' } if px && px['comp'].to_f != 0
+            if s['dob']
+              qd = dobr_posicoes(s['dob'], hp).size
+              compras.reject! { |c| c['cod'] == 'DOBR-ALU' }
+              compras << { 'cod' => 'DOBRADICA', 'desc' => s['dob']['nome'], 'qtd' => qd * n, 'un' => 'un' }
+            end
             compras << { 'cod' => 'VIDRO', 'desc' => "Vidro #{s['vidro_nome']} #{s['vidro_esp']} mm — #{n} peça(s) de #{vw.round} × #{vh.round} mm", 'qtd' => (n * vw * vh / 1e6).round(2), 'un' => 'm²' }
           end
           # itens de compra: um por linha (PCF Label) + [AR] para o relatório do Dinabox
@@ -356,7 +382,18 @@ module PCF
       end
 
       # porta de alumínio: quadro de 4 perfis + vidro
-      def porta_aluminio(ents, x, y, z, w, hp, s, alu, vid)
+      # posições das dobradiças (do topo para baixo, em mm a partir da base da porta)
+      def dobr_posicoes(dob, hp)
+        q = dob['qtd'].to_i
+        q = hp <= 900 ? 2 : hp <= 1600 ? 3 : hp <= 2200 ? 4 : 5 if q <= 0
+        topo = hp - dob['topo'].to_f
+        base = dob['base'].to_f
+        return [topo] if q == 1
+        (0...q).map { |k| (topo - (topo - base) * k / (q - 1).to_f).round(1) }
+      end
+
+      # lado da ferragem: porta 1, 3… puxador à direita (dobradiça à esquerda); porta 2, 4… o contrário
+      def porta_aluminio(ents, x, y, z, w, hp, s, alu, vid, i = 0)
         pl = s['perfil_larg'].to_f; pp = s['perfil_prof'].to_f; ve = s['vidro_esp'].to_f
         g = ents.add_group
         e = g.entities
@@ -365,7 +402,23 @@ module PCF
         caixa_mm(e, x + pl, y, z, w - 2 * pl, pp, pl, alu).name = 'Perfil inferior'
         caixa_mm(e, x + pl, y, z + hp - pl, w - 2 * pl, pp, pl, alu).name = 'Perfil superior'
         caixa_mm(e, x + pl, y + (pp - ve) / 2.0, z + pl, w - 2 * pl, ve, hp - 2 * pl, vid).name = 'Vidro'
-        g.set_attribute('pcf', 'porta_alu', JSON.generate({ 'w' => w, 'h' => hp, 'perfil' => s['perfil_nome'], 'cor' => s['cor_nome'], 'vidro' => s['vidro_nome'] }))
+        info = { 'w' => w, 'h' => hp, 'perfil' => s['perfil_nome'], 'cor' => s['cor_nome'], 'vidro' => s['vidro_nome'] }
+        pux_dir = i.even?
+        px = s['pux']
+        if px && px['comp'].to_f != 0
+          comp = px['comp'].to_f < 0 ? hp : px['comp'].to_f
+          cz = px['comp'].to_f < 0 ? hp / 2.0 : px['centro'].to_f
+          bx = pux_dir ? w - px['borda'].to_f : px['borda'].to_f
+          caixa_mm(e, x + bx - 6, y - 25, z + cz - comp / 2.0, 12, 25, comp, alu).name = "Puxador #{px['nome']}"
+          info['pux'] = { 'x' => bx, 'z0' => cz - comp / 2.0, 'z1' => cz + comp / 2.0, 'nome' => px['nome'] }
+        end
+        if s['dob']
+          dx = pux_dir ? pl / 2.0 : w - pl / 2.0
+          ps = dobr_posicoes(s['dob'], hp)
+          ps.each_with_index { |zz, k| caixa_mm(e, x + dx - 8, y + pp, z + zz - 25, 16, 8, 50, alu).name = "Dobradiça #{k + 1}" }
+          info['dob'] = { 'x' => dx, 'pos' => ps, 'nome' => s['dob']['nome'] }
+        end
+        g.set_attribute('pcf', 'porta_alu', JSON.generate(info))
         g
       end
 
@@ -399,7 +452,8 @@ module PCF
           end
           tag_f = m.layers["#{tag_nome} - cotas frontal"] || m.layers.add("#{tag_nome} - cotas frontal")
           tag_t = m.layers["#{tag_nome} - cotas traseira"] || m.layers.add("#{tag_nome} - cotas traseira")
-          cotar_portas(novo, n, w, hp, gap, s['perfil_larg'].to_f, s, tag_f, tag_t, a[:nome])
+          fer = portas.map { |p| JSON.parse(p.get_attribute('pcf', 'porta_alu').to_s) rescue {} }
+          cotar_portas(novo, n, w, hp, gap, s['perfil_larg'].to_f, s, tag_f, tag_t, a[:nome], fer)
           # longe do projeto: 5 m abaixo do chão, alinhado com o módulo
           base = m.bounds
           novo.transform!(Geom::Transformation.translation([base.min.x, base.min.y, base.min.z - 5000.mm - hp.mm]))
@@ -473,7 +527,7 @@ module PCF
 
       # prancha da porta: moldura, títulos, cotas limpas e quadro com perfil/cor/vidro.
       # 2 grupos: um para a cena Frontal e outro para a Traseira (cada um na sua etiqueta)
-      def cotar_portas(grp, n, w, hp, gap, pl, s, tag_f = nil, tag_t = nil, titulo = '')
+      def cotar_portas(grp, n, w, hp, gap, pl, s, tag_f = nil, tag_t = nil, titulo = '', fer = [])
         pp = s['perfil_prof'].to_f
         enc = s['vidro_encaixe'].to_f
         tinta = mat_correr('PCF Cota', [35, 38, 45])
@@ -490,15 +544,38 @@ module PCF
           dm = lambda do |a, b, v|
             d = e.add_dimension_linear(a.map(&:mm), b.map(&:mm), Geom::Vector3d.new(*v.map(&:mm)))
             d.material = tinta rescue nil
+            d.text = "#{mm_txt(Geom::Point3d.new(*a).distance(Geom::Point3d.new(*b)))} mm" rescue nil # 612,5 (sem arredondar)
             d
           end
           n.times do |i|
             x = i * (w + gap)
+            # altura total do lado esquerdo de quem olha; se a ferragem estiver desse lado, vai para o outro
+            fe0 = fer[i] || {}
+            fer_esq = (lado < 0 && fe0['pux'] && fe0['pux']['x'] < w / 2.0) || (lado > 0 && fe0['dob'] && fe0['dob']['x'] > w / 2.0)
             esq = lado < 0 ? x : x + w
             sx = lado < 0 ? -1 : 1
+            if fer_esq
+              esq = lado < 0 ? x + w : x
+              sx = -sx
+            end
             dm.([x, y, 0], [x + w, y, 0], [0, 0, -160])                  # largura
             dm.([esq, y, 0], [esq, y, hp], [160 * sx, 0, 0])             # altura
-            dm.([esq, y, hp], [esq - pl * sx, y, hp], [0, 0, 90]) if i.zero? # perfil
+            fe = fer[i] || {}
+            if (px = fe['pux']) && lado < 0                                           # puxador (só na frente)
+              lx = x + px['x']
+              ext = px['x'] > w / 2.0 ? x + w : x
+              fora = ext > lx ? 1 : -1
+              if px['z1'] - px['z0'] < hp - 1                                       # base → início e comprimento do puxador
+                [0, px['z0'], px['z1']].each_cons(2) { |za, zb| dm.([ext, y, za], [ext, y, zb], [fora * 80, 0, 0]) if zb - za > 1 }
+              end
+              dm.([ext, y, hp], [lx, y, hp], [0, 0, 90])                              # da borda até o centro do puxador
+            end
+            if (db = fe['dob']) && lado > 0                                           # dobradiças (no verso)
+              lx = x + db['x']
+              ext = db['x'] < w / 2.0 ? x : x + w
+              pts = [hp] + db['pos'] + [0]
+              pts.each_cons(2) { |za, zb| dm.([ext, y, za], [ext, y, zb], [(ext < lx ? -1 : 1) * 80, 0, 0]) }
+            end
             texto3d(e, format('PORTA %02d', i + 1), 70, x + w / 2.0, hp + 230, y, lado, tinta, :centro, true)
           end
           # moldura da prancha e carimbo
@@ -506,7 +583,7 @@ module PCF
           linha2d(e, [[u0, v0], [u1, v0], [u1, v1], [u0, v1], [u0, v0]], y)
           linha2d(e, [[u0, -420], [u1, -420]], y)
           col = u0 + (u1 - u0) * 0.55
-          linha2d(e, [[col, v0], [col, -420]], y)
+          linha2d(e, [[ux.(col), v0], [ux.(col), -420]], y)
           vista = lado < 0 ? 'VISTA FRONTAL' : 'VISTA TRASEIRA (lado de dentro)'
           texto3d(e, 'PORTAS DE ALUMÍNIO', 75, ux.(u0 + 60), -560, y, lado, tinta, :esq, true)
           texto3d(e, titulo.to_s, 50, ux.(u0 + 60), -680, y, lado, tinta, :esq)
@@ -514,7 +591,10 @@ module PCF
           texto3d(e, "#{n} porta#{n > 1 ? 's' : ''} de #{mm_txt(w)} × #{mm_txt(hp)} mm", 50, ux.(u0 + 60), -920, y, lado, tinta, :esq)
           info = ["Perfil: #{s['perfil_nome']} (#{mm_txt(pl)} × #{mm_txt(pp)} mm)", "Cor do perfil: #{s['cor_nome']}",
                   "Vidro: #{s['vidro_nome']} #{mm_txt(s['vidro_esp'].to_f)} mm", "Medida do vidro: #{vw} × #{vh} mm (#{n} un.)"]
-          info.each_with_index { |t, k| texto3d(e, t, 42, ux.(col + 50), -540 - k * 120, y, lado, tinta, :esq) }
+          info << "Puxador: #{s['pux']['nome']}" if s['pux'] && s['pux']['comp'].to_f != 0
+          info << "Dobradiças: #{s['dob']['nome']} (#{dobr_posicoes(s['dob'], hp).size} por porta)" if s['dob']
+          passo_l = info.size > 4 ? 100 : 120
+          info.each_with_index { |t, k| texto3d(e, t, info.size > 4 ? 36 : 42, ux.(col + 50), -520 - k * passo_l, y, lado, tinta, :esq) }
           # no verso o texto "da esquerda" fica à direita do grupo: o ux já espelha a posição
           cg.set_attribute('pcf', 'prancha', true)
         end
