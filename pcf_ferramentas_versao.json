@@ -1,11 +1,11 @@
 {
-  "versao": "2.3.7",
+  "versao": "2.3.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Pontos editáveis: selecione um ponto já colocado e, na aba Elétrica/Hidráulica, edite Altura, Medir da (esquerda/direita), Distância e, no ralo, Da parede — Enter move o ponto e a cota atualiza",
     "Elétrica e Hidráulica: aperte Colocar (ou Enter) e depois CLIQUE NA PAREDE onde vai o ponto — funciona mesmo com a parede dentro de grupo; pode clicar em várias; Esc sai. Ralo: clique no piso ou na parede",
     "Pontos: corrigido o erro ao colocar o Registro ('reference to deleted Edge')",
     "Hidráulica: o campo Altura volta a ficar sempre como antes; o Ralo ganhou um campo próprio 'Da parede (ralo)', que só aparece quando o Ralo está escolhido",
-    "Ralo: olhando o piso DE CIMA, o ralo vai para o ponto do piso no centro da tela (olhando a parede de frente, continua medindo da parede)",
-    "Hidráulica: novo 'Ralo (no piso)' — grelha 150 × 150 no chão; o campo de cima vira 'Da parede' (distância da parede até o centro do ralo) e a distância esquerda/direita continua igual"
+    "Ralo: olhando o piso DE CIMA, o ralo vai para o ponto do piso no centro da tela (olhando a parede de frente, continua medindo da parede)"
   ]
 }
