@@ -1,7 +1,12 @@
 {
-  "versao": "2.4.4",
+  "versao": "2.4.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Peça Mãe: recebe a mesma cor das frentes no SketchUp",
+    "Peça Mãe: ao criar, as frentes originais ficam escondidas; apagou a peça mãe, as frentes voltam sozinhas e dá para criar de novo quantas vezes quiser",
+    "Peça Mãe: se o Dinabox redesenhar o móvel e devolver as frentes ao relatório, elas saem de novo sozinhas (não duplica no plano de corte)",
+    "Aba Nomear: 'Mostrar números' no topo, com interruptor animado (verde = ligado)",
+    "Aba Nomear: Ambas / Só Dinabox / Só modelagens no topo, com destaque animado no botão ativo",
     "Pontos selecionados ganham um anel azul em volta da bolinha (antes não dava para ver que estavam selecionados)",
     "Pontos: 'Selecionar todos' agora pega TODOS (os que estavam dentro de grupos vêm para fora, no mesmo lugar); pontos novos ficam sempre fora dos grupos",
     "Elétrica e Hidráulica: botão '👁 Esconder pontos' — esconde/mostra todos os pontos daquela aba (com cotas e escrita); clique de novo para mostrar",
