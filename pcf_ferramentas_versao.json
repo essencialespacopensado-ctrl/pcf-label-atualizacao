@@ -1,7 +1,8 @@
 {
-  "versao": "2.4.5",
+  "versao": "2.4.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Recorte orgânico / Peça Mãe: funcionam mesmo em projeto sem nenhum painel Dinabox (o molde do tamponamento vem do Dropbox da empresa, pasta PCF Label/modelos)",
     "Peça Mãe: recebe a mesma cor das frentes no SketchUp",
     "Peça Mãe: ao criar, as frentes originais ficam escondidas; apagou a peça mãe, as frentes voltam sozinhas e dá para criar de novo quantas vezes quiser",
     "Peça Mãe: se o Dinabox redesenhar o móvel e devolver as frentes ao relatório, elas saem de novo sozinhas (não duplica no plano de corte)",
