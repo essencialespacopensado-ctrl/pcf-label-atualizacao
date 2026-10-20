@@ -1,7 +1,11 @@
 {
-  "versao": "2.5.3",
+  "versao": "2.5.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correr: portas sempre EM PÉ na frente do módulo Dinabox (antes entravam deitadas — o Dinabox usa outro eixo para a altura)",
+    "Porta de alumínio mais bonita: quadro em 45° com degrau interno (baguete) dos dois lados do vidro",
+    "Puxador de verdade: barra afastada da porta com 2 pés (ou perfil de altura toda), sempre dentro da porta",
+    "Porta de correr de MDF sai na cor das frentes do módulo",
     "Correr: as portas (MDF e alumínio), trilhos e puxadores NÃO vão para o plano de corte — aparecem só na lista de compras",
     "Peça Mãe: ao criar, as frentes originais SAEM do projeto (não vão mais para o plano de corte); ficam guardadas e voltam no mesmo lugar só se a peça mãe for apagada. Peças mãe já feitas também passam a funcionar assim",
     "Porta de alumínio: arquivo e cenas com o nome do módulo no Dinabox + IDs do projeto (ex.: 'M7 - Roupeiro - ID 12-13'); registro das portas na janela Correr (👁 cena, 📁 pasta) e na planilha 'Registro de portas de alumínio.csv'",
