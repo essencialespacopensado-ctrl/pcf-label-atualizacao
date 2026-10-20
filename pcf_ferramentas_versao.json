@@ -2,6 +2,7 @@
   "versao": "2.5.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correr: as portas (MDF e alumínio), trilhos e puxadores NÃO vão para o plano de corte — aparecem só na lista de compras",
     "Peça Mãe: ao criar, as frentes originais SAEM do projeto (não vão mais para o plano de corte); ficam guardadas e voltam no mesmo lugar só se a peça mãe for apagada. Peças mãe já feitas também passam a funcionar assim",
     "Porta de alumínio: arquivo e cenas com o nome do módulo no Dinabox + IDs do projeto (ex.: 'M7 - Roupeiro - ID 12-13'); registro das portas na janela Correr (👁 cena, 📁 pasta) e na planilha 'Registro de portas de alumínio.csv'",
     "Portas de alumínio com cantos a 45° (meia-esquadria) e vidro encaixado",

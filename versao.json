@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-20.01",
- "plugin": "2026-10-20.01",
+ "plugin": "2026-10-20.02",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-20.01",
+   "plugin": "2026-10-20.02",
+   "data": "20/10 14:10",
+   "titulo": "Portas de correr fora do corte",
+   "itens": [
+    "Portas, trilhos e puxadores do botão Correr e as frentes guardadas da Peça Mãe não entram no plano de corte (só na lista de compras)"
+   ]
+  },
   {
    "tela": "2026-10-20.01",
    "plugin": "2026-10-20.01",

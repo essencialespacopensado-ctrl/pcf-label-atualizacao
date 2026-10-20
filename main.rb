@@ -138,6 +138,8 @@ module PCFLabel
       next if e.hidden? || !camada_visivel?(e.layer)
       next if e.get_attribute('pcf', 'nome') || e.name == 'PCF Nome'    # texto 3D do nome não é peça
       next if usinagem?(e)                                             # linha de fresa / linha de conferência não é peça
+      # portas/trilhos do botão Correr, projeto da porta de alumínio e frentes guardadas da peça mãe: não são corte (só compras)
+      next if e.get_attribute('pcf', 'nao_cortar') || e.get_attribute('pcf', 'correr_modulo') || e.get_attribute('pcf', 'projeto_alu') || e.get_attribute('pcf', 'cofre_mae')
       # modelagem que o PCF Ferramentas já transformou em tamponamento/chapa aberta: corta só o tamponamento
       vid = e.get_attribute('pcf', 'virou')
       next if vid && (Sketchup.active_model.find_entity_by_persistent_id(vid.to_i) rescue nil)
@@ -1394,7 +1396,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-20.01'
+  PLUGIN_VERSAO = '2026-10-20.02'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
