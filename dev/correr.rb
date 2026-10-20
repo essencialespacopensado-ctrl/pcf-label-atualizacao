@@ -387,7 +387,7 @@ module PCF
           m.pages.to_a.each { |pg| m.pages.erase(pg) if pg.name.start_with?(rotulo + ' - ') }
           tag = m.layers[tag_nome] || m.layers.add(tag_nome)
           tag.visible = true
-          gap = 300.0
+          gap = 600.0
           novo = m.entities.add_group
           novo.name = "Projeto - #{rotulo}"
           novo.layer = tag
@@ -397,7 +397,9 @@ module PCF
             pb = p.bounds
             c.transform!(Geom::Transformation.translation([-pb.min.x + i * (w + gap).mm, -pb.min.y, -pb.min.z]))
           end
-          cotar_portas(novo, n, w, hp, gap, s['perfil_larg'].to_f, s)
+          tag_f = m.layers["#{tag_nome} - cotas frontal"] || m.layers.add("#{tag_nome} - cotas frontal")
+          tag_t = m.layers["#{tag_nome} - cotas traseira"] || m.layers.add("#{tag_nome} - cotas traseira")
+          cotar_portas(novo, n, w, hp, gap, s['perfil_larg'].to_f, s, tag_f, tag_t)
           # longe do projeto: 5 m abaixo do chão, alinhado com o módulo
           base = m.bounds
           novo.transform!(Geom::Transformation.translation([base.min.x, base.min.y, base.min.z - 5000.mm - hp.mm]))
@@ -419,51 +421,60 @@ module PCF
           # nas cenas da porta: só a etiqueta da porta; nas outras cenas: a etiqueta da porta oculta
           m.pages.each do |pg|
             if paginas.include?(pg)
-              m.layers.each { |l| pg.set_visibility(l, l == tag || l == m.layers[0]) rescue nil }
+              cota = pg == paginas[0] ? tag_f : tag_t
+              m.layers.each { |l| pg.set_visibility(l, l == tag || l == cota || l == m.layers[0]) rescue nil }
             else
-              (pg.set_visibility(tag, false) rescue nil)
+              [tag, tag_f, tag_t].each { |l| pg.set_visibility(l, false) rescue nil }
             end
           end
           v.camera = cam0
+          # arquivo separado (só as portas, com as cotas da frente) para mandar ao serralheiro
+          arq = nil
+          begin
+            tag_f.visible = true; tag_t.visible = false
+            pasta = m.path.to_s.empty? ? File.join(ENV['USERPROFILE'] || Dir.home, 'Desktop') : File.dirname(m.path)
+            pasta = File.join(pasta, 'Portas de alumínio')
+            Dir.mkdir(pasta) unless Dir.exist?(pasta)
+            arq = File.join(pasta, "#{rotulo}.skp".gsub(/[\\\/:*?"<>|]/, '-'))
+            novo.definition.save_as(arq)
+          rescue StandardError => ex
+            puts "PCF porta alu arquivo: #{ex.message}"
+            arq = nil
+          end
+          tag_f.visible = tag_t.visible = false
           tag.visible = false # na vista normal fica escondido; aparece só nas 2 cenas da porta
           m.commit_operation
         rescue StandardError
           m.abort_operation
           raise
         end
-        # arquivo separado (só as portas cotadas) para mandar ao serralheiro: salva o componente, sem mexer no projeto
-        arq = nil
-        begin
-          pasta = m.path.to_s.empty? ? File.join(ENV['USERPROFILE'] || Dir.home, 'Desktop') : File.dirname(m.path)
-          pasta = File.join(pasta, 'Portas de alumínio')
-          Dir.mkdir(pasta) unless Dir.exist?(pasta)
-          arq = File.join(pasta, "#{rotulo}.skp".gsub(/[\\\/:*?"<>|]/, '-'))
-          novo.definition.save_as(arq)
-        rescue StandardError => ex
-          puts "PCF porta alu arquivo: #{ex.message}"
-          arq = nil
-        end
         "Cenas \"#{rotulo} - Frontal\" e \"- Traseira\"" + (arq ? " · arquivo: #{arq}" : '')
       end
 
-      # cotas: largura e altura de cada porta (frente e verso), largura dos perfis, total
-      def cotar_portas(grp, n, w, hp, gap, pl, s)
-        e = grp.entities
-        off = 120.mm
-        n.times do |i|
-          x = i * (w + gap)
-          [-1, 1].each do |lado|
-            y = lado < 0 ? 0 : s['perfil_prof'].to_f
-            # largura (embaixo) e altura (à esquerda / direita no verso)
-            e.add_dimension_linear([x.mm, y.mm, 0], [(x + w).mm, y.mm, 0], Geom::Vector3d.new(0, 0, -off))
-            e.add_dimension_linear([x.mm, y.mm, 0], [x.mm, y.mm, hp.mm], Geom::Vector3d.new(-off * lado, 0, 0))
-            # largura do perfil (em cima)
-            e.add_dimension_linear([x.mm, y.mm, hp.mm], [(x + pl).mm, y.mm, hp.mm], Geom::Vector3d.new(0, 0, off / 2))
-            # vão do vidro (luz)
-            e.add_dimension_linear([(x + pl).mm, y.mm, (hp / 2).mm], [(x + w - pl).mm, y.mm, (hp / 2).mm], Geom::Vector3d.new(0, 0, off / 3))
-            e.add_dimension_linear([(x + w / 2).mm, y.mm, pl.mm], [(x + w / 2).mm, y.mm, (hp - pl).mm], Geom::Vector3d.new(off / 3, 0, 0))
+      # cotas em 2 grupos: um para a cena Frontal e outro para a Traseira (cada um na sua etiqueta, para não sobrepor)
+      def cotar_portas(grp, n, w, hp, gap, pl, s, tag_f = nil, tag_t = nil)
+        pp = s['perfil_prof'].to_f
+        dm = ->(e, a, b, v) { e.add_dimension_linear(a.map(&:mm), b.map(&:mm), Geom::Vector3d.new(*v.map(&:mm))) }
+        { 'Cotas frontal' => [tag_f, -1], 'Cotas traseira' => [tag_t, 1] }.each do |nome, (tag, lado)|
+          cg = grp.entities.add_group
+          cg.name = nome
+          cg.layer = tag if tag
+          e = cg.entities
+          y = lado < 0 ? -1.0 : pp + 1.0
+          n.times do |i|
+            x = i * (w + gap)
+            esq = lado < 0 ? x : x + w        # lado esquerdo de quem olha
+            dir = lado < 0 ? x + w : x
+            sx = lado < 0 ? -1 : 1            # "para fora" do lado esquerdo de quem olha
+            dm.(e, [x, y, 0], [x + w, y, 0], [0, 0, -180])                        # largura total
+            dm.(e, [x + pl, y, 0], [x + w - pl, y, 0], [0, 0, -90])               # luz do vidro (largura)
+            dm.(e, [esq, y, 0], [esq, y, hp], [180 * sx, 0, 0])                   # altura total
+            dm.(e, [dir, y, pl], [dir, y, hp - pl], [-90 * sx, 0, 0])             # luz do vidro (altura)
+            dm.(e, [esq, y, hp], [esq - pl * sx, y, hp], [0, 0, 70])              # largura do perfil
+            e.add_text("PORTA #{i + 1} — #{fmt(w)} × #{fmt(hp)} mm", Geom::Point3d.new((x + w * 0.1).mm, y.mm, (hp + 220).mm))
           end
-          e.add_text("Porta #{i + 1}: #{w.round} × #{hp.round} mm\n#{s['perfil_nome']} · cor #{s['cor_nome']} · vidro #{s['vidro_nome']} #{s['vidro_esp']} mm", [(x + w / 2).mm, 0, (hp + 60).mm])
+          e.add_text("#{lado < 0 ? 'VISTA FRONTAL' : 'VISTA TRASEIRA'}  ·  #{s['perfil_nome']} (#{pl.round} × #{pp.round} mm)  ·  cor #{s['cor_nome']}  ·  vidro #{s['vidro_nome']} #{s['vidro_esp']} mm",
+                     Geom::Point3d.new(0, y.mm, -420.mm))
         end
       end
     end
