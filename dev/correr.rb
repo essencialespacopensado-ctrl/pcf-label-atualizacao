@@ -399,7 +399,7 @@ module PCF
           end
           tag_f = m.layers["#{tag_nome} - cotas frontal"] || m.layers.add("#{tag_nome} - cotas frontal")
           tag_t = m.layers["#{tag_nome} - cotas traseira"] || m.layers.add("#{tag_nome} - cotas traseira")
-          cotar_portas(novo, n, w, hp, gap, s['perfil_larg'].to_f, s, tag_f, tag_t)
+          cotar_portas(novo, n, w, hp, gap, s['perfil_larg'].to_f, s, tag_f, tag_t, a[:nome])
           # longe do projeto: 5 m abaixo do chão, alinhado com o módulo
           base = m.bounds
           novo.transform!(Geom::Transformation.translation([base.min.x, base.min.y, base.min.z - 5000.mm - hp.mm]))
@@ -412,7 +412,7 @@ module PCF
           paginas = []
           [['Frontal', -1], ['Traseira', 1]].each do |nm, lado|
             cam = Sketchup::Camera.new(c.offset(Geom::Vector3d.new(0, lado, 0), dist), c, Z_AXIS, false)
-            cam.height = [bb.depth * 1.4, bb.width * 0.75].max
+            cam.height = [bb.depth * 1.08, bb.width * 0.6].max
             v.camera = cam
             pg = m.pages.add("#{rotulo} - #{nm}")
             pg.use_camera = true
@@ -451,35 +451,72 @@ module PCF
         "Cenas \"#{rotulo} - Frontal\" e \"- Traseira\"" + (arq ? " · arquivo: #{arq}" : '')
       end
 
-      # cotas em 2 grupos: um para a cena Frontal e outro para a Traseira (cada um na sua etiqueta, para não sobrepor)
-      def mm_txt(v)
-        v = v.to_f.round(1)
-        v == v.round ? v.round.to_s : v.to_s.tr('.', ',')
+      # texto 3D (letra de verdade, cor escura) em pé, virado para quem olha (lado -1 = frente, 1 = verso)
+      # al: :centro / :esq (referente ao lado de quem olha)
+      def texto3d(ents, str, alt, x, z, y, lado, mat, al = :centro, negrito = false)
+        g = ents.add_group
+        g.entities.add_3d_text(str, TextAlignLeft, 'Arial', negrito, false, alt.mm, 0.0, 0.0, true, 0.0)
+        g.material = mat
+        b = g.bounds
+        larg = b.width
+        dx = al == :centro ? -larg / 2.0 : 0
+        t = Geom::Transformation.rotation(ORIGIN, X_AXIS, 90.degrees)
+        t = Geom::Transformation.rotation(ORIGIN, Z_AXIS, 180.degrees) * t if lado > 0
+        g.transform!(Geom::Transformation.translation([lado > 0 ? -dx : dx, 0, 0]) * t)
+        g.transform!(Geom::Transformation.translation([x.mm, y.mm, z.mm]))
+        g
       end
 
-      def cotar_portas(grp, n, w, hp, gap, pl, s, tag_f = nil, tag_t = nil)
+      def linha2d(ents, pts, y)
+        ents.add_edges(pts.map { |u, v| Geom::Point3d.new(u.mm, y.mm, v.mm) })
+      end
+
+      # prancha da porta: moldura, títulos, cotas limpas e quadro com perfil/cor/vidro.
+      # 2 grupos: um para a cena Frontal e outro para a Traseira (cada um na sua etiqueta)
+      def cotar_portas(grp, n, w, hp, gap, pl, s, tag_f = nil, tag_t = nil, titulo = '')
         pp = s['perfil_prof'].to_f
-        dm = ->(e, a, b, v) { e.add_dimension_linear(a.map(&:mm), b.map(&:mm), Geom::Vector3d.new(*v.map(&:mm))) }
+        enc = s['vidro_encaixe'].to_f
+        tinta = mat_correr('PCF Cota', [35, 38, 45])
+        tot = n * w + (n - 1) * gap
+        vw = (w - 2 * pl + 2 * enc).round; vh = (hp - 2 * pl + 2 * enc).round
         { 'Cotas frontal' => [tag_f, -1], 'Cotas traseira' => [tag_t, 1] }.each do |nome, (tag, lado)|
           cg = grp.entities.add_group
           cg.name = nome
           cg.layer = tag if tag
           e = cg.entities
-          y = lado < 0 ? -1.0 : pp + 1.0
+          y = lado < 0 ? -2.0 : pp + 2.0
+          # esquerda/direita de quem olha (no verso o X inverte)
+          ux = ->(u) { lado < 0 ? u : tot - u }
+          dm = lambda do |a, b, v|
+            d = e.add_dimension_linear(a.map(&:mm), b.map(&:mm), Geom::Vector3d.new(*v.map(&:mm)))
+            d.material = tinta rescue nil
+            d
+          end
           n.times do |i|
             x = i * (w + gap)
-            esq = lado < 0 ? x : x + w        # lado esquerdo de quem olha
-            dir = lado < 0 ? x + w : x
-            sx = lado < 0 ? -1 : 1            # "para fora" do lado esquerdo de quem olha
-            dm.(e, [x, y, 0], [x + w, y, 0], [0, 0, -180])                        # largura total
-            dm.(e, [x + pl, y, 0], [x + w - pl, y, 0], [0, 0, -90])               # luz do vidro (largura)
-            dm.(e, [esq, y, 0], [esq, y, hp], [180 * sx, 0, 0])                   # altura total
-            dm.(e, [dir, y, pl], [dir, y, hp - pl], [-90 * sx, 0, 0])             # luz do vidro (altura)
-            dm.(e, [esq, y, hp], [esq - pl * sx, y, hp], [0, 0, 70])              # largura do perfil
-            e.add_text("PORTA #{i + 1}\n#{mm_txt(w)} × #{mm_txt(hp)} mm", Geom::Point3d.new((x + w * 0.15).mm, y.mm, (hp + 330).mm))
+            esq = lado < 0 ? x : x + w
+            sx = lado < 0 ? -1 : 1
+            dm.([x, y, 0], [x + w, y, 0], [0, 0, -160])                  # largura
+            dm.([esq, y, 0], [esq, y, hp], [160 * sx, 0, 0])             # altura
+            dm.([esq, y, hp], [esq - pl * sx, y, hp], [0, 0, 90]) if i.zero? # perfil
+            texto3d(e, format('PORTA %02d', i + 1), 70, x + w / 2.0, hp + 230, y, lado, tinta, :centro, true)
           end
-          e.add_text("#{lado < 0 ? 'VISTA FRONTAL' : 'VISTA TRASEIRA'}\n#{s['perfil_nome']} (#{pl.round} × #{pp.round} mm) · cor #{s['cor_nome']}\nVidro #{s['vidro_nome']} #{mm_txt(s['vidro_esp'].to_f)} mm",
-                     Geom::Point3d.new(0, y.mm, -420.mm))
+          # moldura da prancha e carimbo
+          u0 = -450; u1 = tot + 450; v0 = -1150; v1 = hp + 450
+          linha2d(e, [[u0, v0], [u1, v0], [u1, v1], [u0, v1], [u0, v0]], y)
+          linha2d(e, [[u0, -420], [u1, -420]], y)
+          col = u0 + (u1 - u0) * 0.55
+          linha2d(e, [[col, v0], [col, -420]], y)
+          vista = lado < 0 ? 'VISTA FRONTAL' : 'VISTA TRASEIRA (lado de dentro)'
+          texto3d(e, 'PORTAS DE ALUMÍNIO', 75, ux.(u0 + 60), -560, y, lado, tinta, :esq, true)
+          texto3d(e, titulo.to_s, 50, ux.(u0 + 60), -680, y, lado, tinta, :esq)
+          texto3d(e, vista, 50, ux.(u0 + 60), -800, y, lado, tinta, :esq)
+          texto3d(e, "#{n} porta#{n > 1 ? 's' : ''} de #{mm_txt(w)} × #{mm_txt(hp)} mm", 50, ux.(u0 + 60), -920, y, lado, tinta, :esq)
+          info = ["Perfil: #{s['perfil_nome']} (#{mm_txt(pl)} × #{mm_txt(pp)} mm)", "Cor do perfil: #{s['cor_nome']}",
+                  "Vidro: #{s['vidro_nome']} #{mm_txt(s['vidro_esp'].to_f)} mm", "Medida do vidro: #{vw} × #{vh} mm (#{n} un.)"]
+          info.each_with_index { |t, k| texto3d(e, t, 42, ux.(col + 50), -540 - k * 120, y, lado, tinta, :esq) }
+          # no verso o texto "da esquerda" fica à direita do grupo: o ux já espelha a posição
+          cg.set_attribute('pcf', 'prancha', true)
         end
       end
     end
