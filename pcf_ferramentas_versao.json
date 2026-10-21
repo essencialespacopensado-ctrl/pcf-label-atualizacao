@@ -1,7 +1,8 @@
 {
-  "versao": "2.7.1",
+  "versao": "2.7.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Interno › Frentes: marque as frentes (portas e gavetas) que quer iguais e escolha '⇔ Igualar larguras' (move as divisórias em pé; as colunas não marcadas não mudam de largura) ou '⇕ Igualar alturas' (gavetas do mesmo gaveteiro ou frentes empilhadas). Sem marcar = todas",
     "Interno › Frentes: mostra largura × altura de cada frente e o botão '⇔⇕ Igualar frentes (larguras e alturas)' iguala as duas coisas de uma vez (move as divisórias em pé e iguala as gavetas/portas de cada coluna)",
     "Gavetas novas já vêm no padrão: caixa com pelo menos 150 mm e corpo de 15 mm (só nas que estão com a altura de caixa no automático do Dinabox)",
     "Rodapé (aba Interno): muda também o cadastro do Dinabox e redesenha; se a caixa não acompanhar, volta sozinho o valor antigo (a divisória/gaveta nunca fica solta da base)",
