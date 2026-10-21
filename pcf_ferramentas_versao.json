@@ -1,7 +1,8 @@
 {
-  "versao": "2.7.9",
+  "versao": "2.8.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Junta tudo numa versão só: medidas da peça na chapa (Comprimento × Largura × Espessura) e o Painel Auto continua funcionando onde já estava instalado",
     "Medidas da peça como na chapa: Comprimento (lado 2750, o do veio) × Largura (lado 1850) × Espessura — na bandeja (quadro 'Peça na chapa') e junto do nome nas cotas",
     "Pasta do Dropbox 'PCF Label/Plugin': fica só o instalador da última versão (os antigos são apagados)",
     "A pasta do Dropbox 'PCF Label/Plugin' sempre recebe o instalador da última versão ('PCF Ferramentas 2.7.7.rbz' etc.) — para instalar num PC novo",
