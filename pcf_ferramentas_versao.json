@@ -1,7 +1,8 @@
 {
-  "versao": "2.7.4",
+  "versao": "2.7.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Igualar frentes: entre no móvel e selecione os VÃOS — as portas/gavetas desses vãos ficam do mesmo tamanho, mesmo sendo vãos diferentes (as divisórias andam sozinhas)",
     "Igualar frentes: entre no móvel e selecione as portas/gavetas — elas ficam do mesmo tamanho mesmo estando em vãos diferentes (move as divisórias em pé e deitadas, só daquele móvel). As medidas saem certas com o móvel aberto",
     "Igualar frentes pela SELEÇÃO do SketchUp: selecione um ou vários móveis (ou entre no móvel e selecione portas/gavetas) e clique '⇔⇕ Mesmo tamanho', '⇔ Só larguras' ou '⇕ Só alturas'",
     "Interno › Frentes: marque as frentes (portas e gavetas) que quer iguais e escolha '⇔ Igualar larguras' (move as divisórias em pé; as colunas não marcadas não mudam de largura) ou '⇕ Igualar alturas' (gavetas do mesmo gaveteiro ou frentes empilhadas). Sem marcar = todas",
