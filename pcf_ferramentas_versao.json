@@ -1,9 +1,13 @@
 {
-  "versao": "2.8.0",
+  "versao": "2.7.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Junta tudo numa versão só: medidas da peça na chapa (Comprimento × Largura × Espessura) e o Painel Auto continua funcionando onde já estava instalado",
-    "Medidas da peça como na chapa: Comprimento (lado 2750, o do veio) × Largura (lado 1850) × Espessura — na bandeja (quadro 'Peça na chapa') e junto do nome nas cotas",
+    "Botão novo 'Painel Auto' na barra PCF: escolha Vertical, Horizontal, Engrossado ou Duplado e passe o mouse — a peça aparece no tamanho do vão ou da face; clique para criar (teclas 1–4 trocam o tipo)",
+    "Painel Auto: Horizontal dentro do módulo vira prateleira DO DINABOX na coluna clicada; Vertical dentro do módulo vira divisória avulsa com a profundidade e espessura da divisória do Dinabox",
+    "Painel Auto: Engrossado copia a configuração do engrossado do Dinabox que você já usa (camadas, sarrafos, sobra); Duplado = 2 chapas; cor padrão Branco TX",
+    "Painel Auto: corte 45° (esquerda, direita, em cima/atrás, embaixo/frente) — no projeto a peça cresce a espessura em cada lado 45° e no plano de corte sai com a sobra que você escolher em cada lado 45°",
+    "Painel Auto: 'Salvar como padrão' guarda na nuvem (pcf-dados) e vale para todos os PCs",
+    "Colocar prateleira (Interno): a prateleira nova fica na coluna certa (antes podia ir para a coluna da esquerda) e o vão novo fica na etiqueta do Dinabox",
     "Pasta do Dropbox 'PCF Label/Plugin': fica só o instalador da última versão (os antigos são apagados)",
     "A pasta do Dropbox 'PCF Label/Plugin' sempre recebe o instalador da última versão ('PCF Ferramentas 2.7.7.rbz' etc.) — para instalar num PC novo",
     "Igualar frentes: porta dupla do Dinabox (2 folhas num componente só) conta como 2 portas — selecione o móvel e em 1 clique todas as folhas ficam do mesmo tamanho (a divisória anda sozinha)",
