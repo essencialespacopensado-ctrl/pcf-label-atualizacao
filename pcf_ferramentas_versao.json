@@ -1,7 +1,9 @@
 {
-  "versao": "2.6.7",
+  "versao": "2.6.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Interno: '⇔ Igualar larguras' — portas e gavetas lado a lado ficam com a mesma largura: o botão move as divisórias em pé (as peças continuam do Dinabox)",
+    "Interno: '⇕ Igualar alturas' (antes 'Igualar frentes') agora também vale para PORTAS em vãos empilhados, junto com as gavetas — move as divisórias deitadas",
     "Paredes: a chave 'Paredes' na bandeja liga e desliga TODAS as paredes na hora (não depende mais da câmera); cada parede também liga/desliga pela lista",
     "Separar paredes: corrigido o erro que não deixava separar paredes feitas num bloco só (ex.: 'Painel 1'); os pedaços de canto viram 'Pedaços de parede' (desligam junto) e o piso fica num bloco 'Piso (das paredes)'",
     "Separar paredes: acha sozinho o bloco das paredes (nome/etiqueta 'parede' ou bloco alto com faces em pé) quando nada está selecionado; parede nova cresce para o lado certo; se não conseguir, mostra o que encontrou",
