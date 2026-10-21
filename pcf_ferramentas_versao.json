@@ -1,7 +1,11 @@
 {
-  "versao": "2.8.1",
+  "versao": "2.8.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Inspetor de colisão (sempre ligado): quando uma peça entra em outra (mais de 1 mm), a sobra aparece em VERMELHO na tela e chega um aviso com o nome das duas peças. Fica em Medidas › Colisões",
+    "Colisões: '🔍 Inspecionar tudo' confere o projeto inteiro; '👁 Ver' seleciona e mostra as duas peças; '✔ Conferido' desliga o aviso daquela colisão (fica gravado). Chave liga/desliga o inspetor",
+    "Colisões: só peças do móvel contam (Dinabox, PCF e paredes) — cuba, torneira, perfis, etiquetas e fundo encaixado no canal não dão aviso",
+    "Igualar frentes: nunca aumenta o tamanho do módulo — se fosse mudar, cancela e não altera nada",
     "Junta tudo: Painel Auto completo (incluído no pacote) + medidas da peça na chapa da 2.8.0",
     "Botão 'Painel Auto' na barra PCF: Vertical, Horizontal, Engrossado ou Duplado — passe o mouse e a peça aparece no tamanho do vão ou da face; clique para criar (teclas 1–4)",
     "Painel Auto: Horizontal dentro do módulo vira prateleira DO DINABOX na coluna clicada; Vertical dentro do módulo vira divisória avulsa com a profundidade e espessura da divisória do Dinabox",
