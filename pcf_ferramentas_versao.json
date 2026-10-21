@@ -1,7 +1,8 @@
 {
-  "versao": "2.7.7",
+  "versao": "2.7.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Pasta do Dropbox 'PCF Label/Plugin': fica só o instalador da última versão (os antigos são apagados)",
     "A pasta do Dropbox 'PCF Label/Plugin' sempre recebe o instalador da última versão ('PCF Ferramentas 2.7.7.rbz' etc.) — para instalar num PC novo",
     "Igualar frentes: porta dupla do Dinabox (2 folhas num componente só) conta como 2 portas — selecione o móvel e em 1 clique todas as folhas ficam do mesmo tamanho (a divisória anda sozinha)",
     "Igualar frentes: entre no móvel e selecione os VÃOS — as portas/gavetas desses vãos ficam do mesmo tamanho, mesmo sendo vãos diferentes (as divisórias andam sozinhas)",
