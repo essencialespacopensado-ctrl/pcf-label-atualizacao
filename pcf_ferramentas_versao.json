@@ -1,7 +1,8 @@
 {
-  "versao": "2.6.8",
+  "versao": "2.6.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Igualar larguras: anda a divisória pelo deslocamento do próprio Dinabox — a 'Posição H' da divisória continua no padrão (divisória nova não sai mais fora do padrão)",
     "Interno: '⇔ Igualar larguras' — portas e gavetas lado a lado ficam com a mesma largura: o botão move as divisórias em pé (as peças continuam do Dinabox)",
     "Interno: '⇕ Igualar alturas' (antes 'Igualar frentes') agora também vale para PORTAS em vãos empilhados, junto com as gavetas — move as divisórias deitadas",
     "Paredes: a chave 'Paredes' na bandeja liga e desliga TODAS as paredes na hora (não depende mais da câmera); cada parede também liga/desliga pela lista",
