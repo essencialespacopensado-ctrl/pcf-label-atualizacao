@@ -1,7 +1,8 @@
 {
-  "versao": "2.8.3",
+  "versao": "2.8.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: a peça não entra mais em outras peças — confere a peça inteira (não só na altura do mouse) e para no primeiro obstáculo",
     "Painel Auto: a peça nunca passa do tamanho da chapa (2730 × 1830 — campos na janela, salvos no padrão); se passar, corta do lado mais longe do mouse",
     "Painel Auto: a peça se molda na linha mais próxima da face onde você clicou (bordas da face e linhas desenhadas nela), antes do próximo obstáculo",
     "Inspetor de colisão (sempre ligado): quando uma peça entra em outra (mais de 1 mm), a sobra aparece em VERMELHO na tela e chega um aviso com o nome das duas peças. Fica em Medidas › Colisões",
