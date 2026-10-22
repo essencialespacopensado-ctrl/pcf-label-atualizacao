@@ -1,7 +1,8 @@
 {
-  "versao": "2.8.4",
+  "versao": "2.8.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: peça Vertical dá prioridade à altura (o comprimento da chapa vai em pé e a altura é a última a encolher); peça Horizontal dá prioridade ao comprimento na horizontal",
     "Painel Auto: a peça não entra mais em outras peças — confere a peça inteira (não só na altura do mouse) e para no primeiro obstáculo",
     "Painel Auto: a peça nunca passa do tamanho da chapa (2730 × 1830 — campos na janela, salvos no padrão); se passar, corta do lado mais longe do mouse",
     "Painel Auto: a peça se molda na linha mais próxima da face onde você clicou (bordas da face e linhas desenhadas nela), antes do próximo obstáculo",
