@@ -1,7 +1,9 @@
 {
-  "versao": "2.8.7",
+  "versao": "2.8.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Botão novo 'Paramétrico' na barra PCF: modele a forma (poltrona, banco, painel ondulado), selecione e clique — ela é cortada em fatias de chapa (6,3 / 15,3 / 18,3 / 25,3) com o vão que você escolher, numeradas (Fatia 01, 02…) para cortar e montar",
+    "Paramétrico: furos para barra roscada só se você ligar (mesmo lugar em todas as fatias); barras, porcas, arruelas e espaçadores vão só para compras. A forma original fica guardada: selecione o resultado e clique 'Refazer' com outros valores",
     "Painel Auto: tipos novos 'Horizontal em pé' (prioridade no comprimento deitado) e 'Vertical deitada' (prioridade na altura) — os dois ficam EM PÉ, de frente para a câmera, ocupando o vão que você vê (teclas 1–6)",
     "Painel Auto: ao clicar, confere obstáculos a cada 10 mm (chapa fina no caminho não escapa); passando o mouse continua rápido",
     "Medidas da bandeja: peça do Dinabox feita pelo PCF (Painel Auto, tamponamento…) acompanha a medida digitada mesmo passando de 1850 mm — a peça gira no próprio plano (veio no lado maior) em vez de ficar cortada no tamanho da chapa",
