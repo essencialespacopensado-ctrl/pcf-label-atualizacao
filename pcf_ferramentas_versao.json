@@ -1,7 +1,9 @@
 {
-  "versao": "2.8.6",
+  "versao": "2.8.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: tipos novos 'Horizontal em pé' (prioridade no comprimento deitado) e 'Vertical deitada' (prioridade na altura) — os dois ficam EM PÉ, de frente para a câmera, ocupando o vão que você vê (teclas 1–6)",
+    "Painel Auto: ao clicar, confere obstáculos a cada 10 mm (chapa fina no caminho não escapa); passando o mouse continua rápido",
     "Medidas da bandeja: peça do Dinabox feita pelo PCF (Painel Auto, tamponamento…) acompanha a medida digitada mesmo passando de 1850 mm — a peça gira no próprio plano (veio no lado maior) em vez de ficar cortada no tamanho da chapa",
     "Painel Auto: peça Vertical dá prioridade à altura (o comprimento da chapa vai em pé e a altura é a última a encolher); peça Horizontal dá prioridade ao comprimento na horizontal",
     "Painel Auto: a peça não entra mais em outras peças — confere a peça inteira (não só na altura do mouse) e para no primeiro obstáculo",
