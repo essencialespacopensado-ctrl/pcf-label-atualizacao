@@ -1,7 +1,9 @@
 {
-  "versao": "2.8.2",
+  "versao": "2.8.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: a peça nunca passa do tamanho da chapa (2730 × 1830 — campos na janela, salvos no padrão); se passar, corta do lado mais longe do mouse",
+    "Painel Auto: a peça se molda na linha mais próxima da face onde você clicou (bordas da face e linhas desenhadas nela), antes do próximo obstáculo",
     "Inspetor de colisão (sempre ligado): quando uma peça entra em outra (mais de 1 mm), a sobra aparece em VERMELHO na tela e chega um aviso com o nome das duas peças. Fica em Medidas › Colisões",
     "Colisões: '🔍 Inspecionar tudo' confere o projeto inteiro; '👁 Ver' seleciona e mostra as duas peças; '✔ Conferido' desliga o aviso daquela colisão (fica gravado). Chave liga/desliga o inspetor",
     "Colisões: só peças do móvel contam (Dinabox, PCF e paredes) — cuba, torneira, perfis, etiquetas e fundo encaixado no canal não dão aviso",
