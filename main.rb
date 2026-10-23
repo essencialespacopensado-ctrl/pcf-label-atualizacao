@@ -1466,7 +1466,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-23.03'
+  PLUGIN_VERSAO = '2026-10-23.04'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1835,7 +1835,8 @@ module PCFLabel
       end
     end   # deixa a tela de carregamento aparecer antes do trabalho pesado
   end
-  # peça "na tela": alguma parte da caixa dela aparece na vista atual (cena/câmera de agora) — dentro da janela e na frente da câmera
+  # peça "na tela": o olhar da câmera realmente a atinge em algum ponto da janela (raio de visão do próprio SketchUp,
+  # já respeitando corte de seção, objetos ocultos da cena e o que está na frente). Só enquadrar não basta.
   def self.na_tela?(m, skpath)
     view = m.active_view
     cam = view.camera
@@ -1857,8 +1858,24 @@ module PCFLabel
       xs << s.x; ys << s.y
     end
     return false if xs.empty?
-    # o retângulo dos cantos projetados cruza a janela (vale também para peça maior que a tela)
-    xs.min <= w && xs.max >= 0 && ys.min <= h && ys.max >= 0
+    # corte de seção ativo (do modelo): o que fica do lado cortado (oposto à seta do plano) não aparece
+    m.entities.grep(Sketchup::SectionPlane).select(&:active?).each do |sp|
+      a, bb, c, d = sp.get_plane
+      cortada = (0..7).all? { |k| q = b.corner(k).transform(t); a * q.x + bb * q.y + c * q.z + d < 0 }
+      return false if cortada
+    end
+    x0 = [xs.min, 0.0].max; x1 = [xs.max, w].min; y0 = [ys.min, 0.0].max; y1 = [ys.max, h].min
+    return false if x0 > x1 || y0 > y1          # fora da janela
+    # grade de raios dentro do retângulo projetado: basta um atingir a peça
+    n = 9
+    pts = []
+    (0..n).each { |i| (0..n).each { |j| pts << [x0 + (x1 - x0) * i / n.to_f, y0 + (y1 - y0) * j / n.to_f] } }
+    pts.each do |x, y|
+      hit = m.raytest(view.pickray(x, y), true)
+      next unless hit && hit[1]
+      return true if hit[1].include?(ent)
+    end
+    false
   rescue StandardError
     true
   end
