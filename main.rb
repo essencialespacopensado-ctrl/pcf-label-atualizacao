@@ -485,7 +485,7 @@ module PCFLabel
       @dlg = UI::HtmlDialog.new(dialog_title: 'PCF Label - plano de corte', preferences_key: 'PCFLabel.tela', scrollable: true,
                                 resizable: true, width: 1400, height: 900, style: UI::HtmlDialog::STYLE_DIALOG)
       callbacks(@dlg)
-      @dlg.set_on_closed { restaurar_vista rescue nil }
+      @dlg.set_on_closed { (restaurar_vista rescue nil); @projeto_externo = nil }   # fechou: volta a valer o projeto aberto
       @dlg.set_html(html)
       @dlg.show
     end
@@ -499,7 +499,7 @@ module PCFLabel
     @dlg = UI::HtmlDialog.new(dialog_title: 'PCF Label - plano de corte', preferences_key: 'PCFLabel.tela', scrollable: true,
                               resizable: true, width: 1400, height: 900, style: UI::HtmlDialog::STYLE_DIALOG)
     callbacks(@dlg)
-    @dlg.set_on_closed { restaurar_vista rescue nil }
+    @dlg.set_on_closed { (restaurar_vista rescue nil); @projeto_externo = nil }   # fechou: volta a valer o projeto aberto
     @dlg.set_file(arquivo)
     @dlg.show
   end
@@ -1120,12 +1120,16 @@ module PCFLabel
     FileUtils.mkdir_p(File.join(d, 'historico')) rescue nil
     d
   end
+  # projeto cujo plano está aberto: o do SketchUp, ou outro (aberto pela página inicial, sem o .skp aberto)
+  def self.caminho_projeto
+    (@projeto_externo || Sketchup.active_model.path).to_s
+  end
   def self.nome_plano
     m = Sketchup.active_model
-    t = (m.title.to_s.empty? ? 'sem nome' : m.title.to_s).gsub(/[\\\/:*?"<>|]/, '_')
+    t = (@projeto_externo ? File.basename(@projeto_externo, '.*') : (m.title.to_s.empty? ? 'sem nome' : m.title.to_s)).gsub(/[\\\/:*?"<>|]/, '_')
     # dois projetos com o MESMO nome em pastas diferentes (ex.: "Projeto Técnico 01.skp" de clientes diferentes) não podem
     # dividir o mesmo arquivo de plano: o nome leva um código da pasta do projeto
-    pth = m.path.to_s
+    pth = caminho_projeto
     return t if pth.empty?
     require 'digest/md5'
     "#{t} ##{Digest::MD5.hexdigest(pth.downcase.tr('\\', '/'))[0, 6]}"
@@ -1134,7 +1138,7 @@ module PCFLabel
   def self.id_plano(id) t = id.to_s.strip; (t.empty? || t == 'principal') ? 'principal' : t.gsub(/[^\w\-]/, '_') end
   def self.sufixo_plano(id) id_plano(id) == 'principal' ? '' : ".#{id_plano(id)}" end
   def self.arq_plano_modelo(id = 'principal')
-    pth = Sketchup.active_model.path.to_s
+    pth = caminho_projeto
     pth.empty? ? nil : File.join(File.dirname(pth), File.basename(pth, '.*') + '.pcfplano' + sufixo_plano(id) + '.json')
   end
   def self.salvar_plano(txt)
@@ -1168,6 +1172,7 @@ module PCFLabel
     File.binwrite(File.join(pd, nome_plano + suf + '.json'), txt.b)
     a = arq_plano_modelo(id)
     (File.binwrite(a, txt.b) rescue nil) if a
+    (indice_atualizar_projeto(caminho_projeto) rescue nil)
     # histórico: uma cópia a cada 5 min, guarda as 40 últimas
     h = File.join(pd, 'historico')
     ult = Dir.glob(File.join(h, '*.json')).select { |x| File.basename(x).start_with?(nome_plano + suf + ' ') }.max_by { |x| File.mtime(x) }
@@ -1184,7 +1189,7 @@ module PCFLabel
     JSON.parse(File.read(cands.max_by { |x| File.mtime(x) }, encoding: 'UTF-8')) rescue nil
   end
   def self.listar_planos
-    pth = Sketchup.active_model.path.to_s
+    pth = caminho_projeto
     ids = []
     unless pth.empty?
       base = File.basename(pth, '.*') + '.pcfplano'
@@ -1224,7 +1229,7 @@ module PCFLabel
   # cliente / OS / ambiente tirados da pasta do projeto: "...\\- 18. Fabrício e Aline\\26.146 - ESCADA\\Projeto Tecnico\\x.skp"
   def self.info_pasta(caminho)
     partes = caminho.to_s.tr('\\', '/').split('/')
-    i = partes.rindex { |x| x =~ /^\s*\d{2}\.\d{3}\s*-\s*\S/ }
+    i = partes.rindex { |x| x =~ /^\s*\d{2}\.\d{2,3}\s*-\s*\S/ }   # OS 26.84 ou 26.146
     return {} unless i
     os, amb = partes[i].split(/\s*-\s*/, 2).map(&:strip)
     cli = i > 0 ? partes[i - 1].sub(/^[\s\-]*\d+\s*[.\-]\s*/, '').strip : ''
@@ -1233,7 +1238,8 @@ module PCFLabel
     {}
   end
   def self.mostrar(dados)
-    dados[:pastaInfo] ||= info_pasta(Sketchup.active_model.path)
+    dados[:pastaInfo] ||= info_pasta(caminho_projeto)
+    dados[:externo] = true if @projeto_externo
     dados[:projetoChave] = (nome_plano rescue nil)
     dados[:cfgComum] = (JSON.parse(File.read(File.join(pasta_comum, 'config.json'), encoding: 'UTF-8')) rescue nil)
     (checar_atualizacao(true) rescue nil)   # se tiver versão nova, instala sozinho
@@ -1281,7 +1287,7 @@ module PCFLabel
     carimbo = Time.now.strftime('%Y-%m-%d %H-%M-%S')
     re = /\A#{Regexp.escape(nome_plano)}(\.[\w\-]+)?\.json\z/
     arqs = Dir.children(pd).select { |n| n =~ re }.map { |n| File.join(pd, n) }
-    pth = Sketchup.active_model.path.to_s
+    pth = caminho_projeto
     unless pth.empty?
       base = File.basename(pth, '.*') + '.pcfplano'
       re2 = /\A#{Regexp.escape(base)}(\.[\w\-]+)?\.json\z/
@@ -1466,7 +1472,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-23.04'
+  PLUGIN_VERSAO = '2026-10-23.05'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1826,6 +1832,7 @@ module PCFLabel
   end
 
   def self.enviar
+    @projeto_externo = nil
     splash
     UI.start_timer(0.35, false) do
       begin
@@ -1971,6 +1978,7 @@ module PCFLabel
     end
     @dados_vivos = copia(dados)          # o que está visível AGORA (para plano novo)
     if @pedido_novo then @pedido_novo = false; novo_plano; return "#{lista.size} peças no plano novo" end
+    if @pedido_plano then id = @pedido_plano; @pedido_plano = nil; abrir_plano(id); return "plano #{id} aberto" end
     planos = listar_planos
     dados[:planos] = planos
     # já tem plano salvo: PERGUNTA se quer fazer um plano de corte novo ou abrir um plano já feito (✕ = abre o último)
@@ -1986,13 +1994,207 @@ module PCFLabel
     "#{lista.size} peças enviadas"
   end
 
+  # ===================== PÁGINA INICIAL: todas as OSs com plano de corte =====================
+  # Índice compartilhado (Dropbox > PCF Label > planos_indice.json): uma entrada por projeto (.skp), com cliente/OS/ambiente
+  # (da pasta), data do último plano e a lista de planos. Atualizado a cada plano salvo; 🔄 Reindexar varre tudo.
+  def self.indice_arquivo
+    File.join(pasta_comum, 'planos_indice.json')
+  end
+  def self.indice_ler
+    JSON.parse(File.read(indice_arquivo, encoding: 'UTF-8')) rescue {}
+  end
+  def self.indice_gravar(h)
+    File.write(indice_arquivo, JSON.pretty_generate(h), mode: 'w:UTF-8')
+  rescue StandardError => e
+    puts "PCF Label índice: #{e.message}"
+  end
+  def self.chave_projeto(caminho)
+    caminho.to_s.tr('\\', '/').sub(/\A[a-z]:/i) { |x| x.upcase }
+  end
+  # planos de um projeto lidos da pasta dele (sem abrir o .skp)
+  def self.planos_do_projeto(caminho)
+    pth = caminho.to_s
+    return [] if pth.empty? || !File.exist?(pth) && !Dir.exist?(File.dirname(pth))
+    base = File.basename(pth, '.*') + '.pcfplano'
+    dir = File.dirname(pth)
+    (Dir.children(dir) rescue []).select { |n| n.start_with?(base) && n.end_with?('.json') }.map do |n|
+      meio = n[base.size...-5]; id = meio.empty? ? 'principal' : meio.sub(/^\./, '')
+      f = File.join(dir, n)
+      o = (JSON.parse(File.read(f, encoding: 'UTF-8')) rescue nil)
+      next nil unless o.is_a?(Hash)
+      { 'id' => id, 'nome' => o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), 'data' => o['data'].to_s,
+        'n' => o['n'], 'pecas' => (o['pecas'] ? o['pecas'].count { |p| !p['dentro'] } : nil), 'mtime' => File.mtime(f).to_i }
+    end.compact.sort_by { |x| x['id'] == 'principal' ? 0 : x['id'].to_i }
+  end
+  def self.indice_entrada(caminho)
+    planos = planos_do_projeto(caminho)
+    return nil if planos.empty?
+    info = info_pasta(caminho)
+    # sem pasta de OS (ex.: 2026/Peças Aspire/Outubro/Allan Eccel): o nome da pasta vira o cliente
+    cli = info[:cliente].to_s
+    cli = File.basename(File.dirname(caminho.to_s)) if cli.empty? && info[:os].to_s.empty?
+    { 'projeto' => File.basename(caminho, '.*'), 'skp' => caminho.to_s, 'pasta' => File.dirname(caminho.to_s),
+      'cliente' => cli, 'os' => info[:os].to_s, 'amb' => info[:amb].to_s,
+      'planos' => planos, 'mtime' => planos.map { |p| p['mtime'].to_i }.max,
+      'data' => Time.at(planos.map { |p| p['mtime'].to_i }.max).strftime('%d/%m/%Y %H:%M') }
+  end
+  def self.indice_atualizar_projeto(caminho)
+    return if caminho.to_s.empty?
+    h = indice_ler
+    e = indice_entrada(caminho)
+    k = chave_projeto(caminho)
+    e ? h[k] = e : h.delete(k)
+    indice_gravar(h)
+  end
+  # varredura completa da pasta da empresa (demora alguns segundos)
+  def self.reindexar
+    raiz = pasta_comum.to_s.sub(/[\\\/]PCF Label\z/, '')
+    arqs = Dir.glob(File.join(raiz, '**', '*.pcfplano*.json'))
+    h = {}
+    arqs.map { |f| File.join(File.dirname(f), File.basename(f).sub(/\.pcfplano(\.[\w\-]+)?\.json\z/, '')) }.uniq.each do |base|
+      skp = Dir.glob(base + '.skp').first || (base + '.skp')
+      e = indice_entrada(skp)
+      h[chave_projeto(skp)] = e if e
+    end
+    indice_gravar(h)
+    h
+  end
+  # ---------- a página ----------
+  def self.inicio
+    h = indice_ler
+    if h.empty?
+      h = (reindexar rescue {})
+    end
+    atual = chave_projeto(Sketchup.active_model.path)
+    linhas = h.values.map { |e| e.merge('atual' => chave_projeto(e['skp']) == atual) }.sort_by { |e| [-(e['mtime'].to_i)] }
+    dados = { linhas: linhas, atual: atual, projetoAberto: (Sketchup.active_model.title.to_s.empty? ? 'sem nome' : Sketchup.active_model.title.to_s),
+              temPath: !Sketchup.active_model.path.to_s.empty?, indice: indice_arquivo }
+    html = inicio_html.sub('__DADOS__') { JSON.generate(dados).gsub('</', '<\\/') }
+    arq = File.join(ENV['TEMP'] || Dir.tmpdir, 'PCF Label - inicio.html')
+    File.write(arq, html, mode: 'w:UTF-8')
+    if @dlg_inicio && @dlg_inicio.visible?
+      @dlg_inicio.set_file(arq); @dlg_inicio.bring_to_front; return
+    end
+    @dlg_inicio = UI::HtmlDialog.new(dialog_title: 'PCF Label - Início', preferences_key: 'PCFLabel.inicio', scrollable: true,
+                                     resizable: true, width: 1100, height: 700, style: UI::HtmlDialog::STYLE_DIALOG)
+    d = @dlg_inicio
+    d.add_action_callback('novo') { |_c| (d.close rescue nil); enviar }
+    d.add_action_callback('abrir') do |_c, skp, id|
+      begin
+        (d.close rescue nil)
+        if chave_projeto(skp) == chave_projeto(Sketchup.active_model.path)
+          @projeto_externo = nil; @pedido_plano = id; enviar
+        else
+          abrir_plano_externo(skp, id)
+        end
+      rescue => e
+        UI.messagebox("PCF Label: não consegui abrir — #{e.message}")
+      end
+    end
+    d.add_action_callback('pasta') { |_c, pasta| UI.openURL('file:///' + pasta.to_s.tr('\\', '/')) rescue nil }
+    d.add_action_callback('reindexar') { |_c| (reindexar rescue nil); inicio }
+    d.set_file(arq)
+    d.show
+  end
+  # abre o plano de OUTRA OS sem abrir o .skp dela: o plano guarda as próprias peças; o que você salvar vai para a pasta daquela OS
+  def self.abrir_plano_externo(skp, id)
+    @projeto_externo = skp.to_s
+    id = id_plano(id)
+    pl = ler_plano(id)
+    unless pl
+      @projeto_externo = nil
+      return UI.messagebox("Não achei o plano #{id} de #{File.basename(skp)}.")
+    end
+    pecas = (pl['pecas'] || []).map { |p| p.transform_keys(&:to_sym) }
+    banco = banco_cores
+    mats = {}
+    pecas.map { |p| p[:mat] }.compact.uniq.each do |cod|
+      nm = (nome_cor(cod, nil, banco) rescue '')
+      mats[cod] = { textura: '', pasta: '', rgb: [200, 200, 200], foto: nil, nome: (nome_conhecido(cod, nil, banco) rescue ''), sugestao: nm,
+                    veio: (veio_auto(cod, nil, nm, banco) rescue nil) }
+    end
+    esp_comum = pecas.map { |p| p[:esp] }.compact.group_by(&:itself).max_by { |_, v| v.size }&.first || 18.3
+    dados = { projeto: File.basename(skp, '.*'), materiais: mats, espessura: esp_comum, chapa: '1850 x 2750', selecao: false,
+              data: Time.now.strftime('%d/%m/%Y %H:%M'), origem: 'sketchup', pecas: pecas, planoArq: pl, bancoCores: banco_arquivo.to_s,
+              compras: (pl['compras'] || []), externo: true }
+    @dados_vivos = copia(dados)
+    splash
+    UI.start_timer(0.3, false) do
+      begin
+        abrir_plano(id)
+      rescue => e
+        (@dlg.close rescue nil); UI.messagebox("PCF Label: erro ao abrir o plano — #{e.message}")
+      end
+    end
+  end
+  def self.inicio_html
+    <<~'HTML'
+      <!doctype html><html><head><meta charset="utf-8"><style>
+      body{font:13px Segoe UI,Arial,sans-serif;margin:0;background:#f4f5f7;color:#1d2330}
+      .topo{display:flex;gap:8px;align-items:center;padding:10px 14px;background:#fff;border-bottom:1px solid #dde1e7;position:sticky;top:0}
+      .topo h2{margin:0;font-size:16px;flex:1}
+      button{padding:7px 12px;border:1px solid #c5cad3;border-radius:6px;background:#fff;cursor:pointer;font-size:13px}
+      button.p{background:#e8590c;color:#fff;border-color:#c74e0a;font-weight:600}
+      button:active{transform:scale(.97)}
+      input{padding:7px 10px;border:1px solid #c5cad3;border-radius:6px;width:260px}
+      table{width:100%;border-collapse:collapse;background:#fff}
+      th{position:sticky;top:52px;background:#f0f1f4;text-align:left;padding:8px 10px;font-size:12px;color:#555;border-bottom:1px solid #dde1e7;cursor:pointer}
+      td{padding:8px 10px;border-bottom:1px solid #eceef2;vertical-align:middle}
+      tr.atual td{background:#fff7ed}
+      .badge{display:inline-block;padding:2px 8px;border-radius:10px;background:#e5e7eb;font-size:12px}
+      .badge.m{background:#e8590c;color:#fff;font-weight:600}
+      .sub{color:#6b7280;font-size:12px}
+      .planos{display:flex;gap:4px;flex-wrap:wrap}
+      .planos button{padding:4px 8px;font-size:12px}
+      #vazio{padding:30px;text-align:center;color:#6b7280}
+      </style></head><body>
+      <div class="topo"><h2>PCF Label — Início</h2>
+        <input id="busca" placeholder="Buscar cliente, OS, ambiente, projeto…">
+        <button class="p" id="novo">➕ Plano do projeto aberto</button>
+        <button id="reindexar" title="Varre todas as pastas da empresa (demora alguns segundos)">🔄 Reindexar</button>
+      </div>
+      <table><thead><tr>
+        <th data-k="mtime">Data</th><th data-k="cliente">Cliente</th><th data-k="os">OS</th><th data-k="amb">Ambiente</th><th data-k="projeto">Projeto</th><th>Planos</th><th></th>
+      </tr></thead><tbody id="corpo"></tbody></table>
+      <div id="vazio" style="display:none">Nenhum plano de corte encontrado. Clique em 🔄 Reindexar.</div>
+      <script>
+      var D=__DADOS__; var ord='mtime', asc=false;
+      function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+      function render(){
+        var q=(document.getElementById('busca').value||'').toLowerCase();
+        var L=D.linhas.filter(function(e){return !q||[e.cliente,e.os,e.amb,e.projeto,e.data].join(' ').toLowerCase().indexOf(q)>=0;});
+        L.sort(function(a,b){var x=a[ord],y=b[ord];if(ord=='mtime'){x=+x;y=+y;}else{x=String(x).toLowerCase();y=String(y).toLowerCase();}return (x<y?-1:x>y?1:0)*(asc?1:-1);});
+        var tb=document.getElementById('corpo');tb.innerHTML='';
+        document.getElementById('vazio').style.display=L.length?'none':'block';
+        L.forEach(function(e){
+          var tr=document.createElement('tr'); if(e.atual)tr.className='atual';
+          var n=e.planos.length;
+          var pls=e.planos.map(function(p){return '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>';}).join('');
+          tr.innerHTML='<td>'+esc(e.data)+'</td><td><b>'+esc(e.cliente||'—')+'</b></td><td>'+esc(e.os||'—')+'</td><td>'+esc(e.amb||'—')+'</td>'+
+            '<td>'+esc(e.projeto)+(e.atual?' <span class="badge">aberto</span>':'')+'<div class="sub">'+esc(e.pasta)+'</div></td>'+
+            '<td><span class="badge'+(n>1?' m':'')+'">'+n+(n>1?' planos':' plano')+'</span></td>'+
+            '<td><div class="planos">'+pls+' <button data-pasta="'+esc(e.pasta)+'" title="Abrir a pasta do projeto">📁</button></div></td>';
+          tb.appendChild(tr);
+        });
+      }
+      document.getElementById('busca').oninput=render;
+      document.querySelectorAll('th[data-k]').forEach(function(th){th.onclick=function(){var k=th.dataset.k; if(ord==k)asc=!asc; else {ord=k;asc=(k!='mtime');} render();};});
+      document.getElementById('corpo').onclick=function(ev){var b=ev.target.closest('button');if(!b)return; if(b.dataset.pasta)sketchup.pasta(b.dataset.pasta); else if(b.dataset.skp)sketchup.abrir(b.dataset.skp,b.dataset.id);};
+      document.getElementById('novo').onclick=function(){sketchup.novo();};
+      document.getElementById('reindexar').onclick=function(){this.textContent='⏳ Varrendo…';this.disabled=true;sketchup.reindexar();};
+      render();
+      </script></body></html>
+    HTML
+  end
+
   unless file_loaded?(__FILE__)
-    cmd = UI::Command.new('PCF · Nesting') { PCFLabel.enviar }
+    cmd = UI::Command.new('PCF · Nesting') { PCFLabel.inicio }
     cmd.tooltip = 'PCF · Nesting'
     cmd.status_bar_text = 'Plano de corte · etiquetas · G-code'
     PCFLabel.por_icone(cmd, 'nesting', 'pcf.png')
     tb = UI.toolbar(PCFLabel::BARRA); tb.add_item(cmd); tb.show
     ObjectSpace.each_object(UI::Toolbar) { |t| t.hide if t.name == 'PCF Label' && t.visible? }   # barra antiga separada: tudo fica na barra PCF
+    UI.menu('Extensions').add_item('PCF · Início (todas as OSs)') { PCFLabel.inicio }
     UI.menu('Extensions').add_item('PCF · Plano de corte') { PCFLabel.enviar }
     UI.menu('Extensions').add_item('PCF · Numerar peças') { UI.messagebox(PCFLabel.numerar) }
     file_loaded(__FILE__)

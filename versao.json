@@ -1,12 +1,25 @@
 {
  "tela": "2026-10-23.01",
- "plugin": "2026-10-23.04",
+ "plugin": "2026-10-23.05",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-23.01",
+   "plugin": "2026-10-23.05",
+   "data": "23/10 16:12",
+   "titulo": "Página inicial: todas as OSs com plano de corte",
+   "itens": [
+    "O botão PCF · Nesting agora abre a página INÍCIO: lista de todas as OSs com plano de corte — data, cliente, OS, ambiente, projeto e quantos planos (destaque quando tem mais de um). Busca e ordenação por coluna.",
+    "Abra o plano de qualquer OS mesmo com outro projeto aberto no SketchUp: o plano carrega as próprias peças, e o que você salvar vai para a pasta daquela OS (nunca para o projeto aberto).",
+    "➕ Plano do projeto aberto = o fluxo de sempre (plano novo ou abrir um já feito). 📁 abre a pasta do projeto. Menu Extensões › PCF · Início (todas as OSs).",
+    "Índice compartilhado em Dropbox › PCF Label › planos_indice.json: atualiza sozinho a cada plano salvo; 🔄 Reindexar varre todas as pastas da empresa.",
+    "Cliente/OS da pasta: agora reconhece OS com 2 dígitos (ex.: 26.84); projeto sem pasta de OS mostra o nome da pasta como cliente."
+   ]
+  },
   {
    "tela": "2026-10-23.01",
    "plugin": "2026-10-23.04",
