@@ -1,7 +1,8 @@
 {
-  "versao": "2.9.9",
+  "versao": "3.0.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: as peças agora respeitam as linhas guia — a peça para na linha guia do mesmo jeito que para numa parede ou em outra peça (guias infinitas e guias com começo e fim; guias ocultas ou em etiqueta desligada não contam).",
     "Bordas do projeto: o que você escolher de arestas e perfis fica guardado no projeto. Quando o Dinabox reinicia (ou ao abrir o projeto) e troca o estilo, as suas bordas voltam sozinhas — o resto do estilo dele continua.",
     "Painel Auto: aplicar cor pelo Dinabox não muda mais nada da peça. Se o Dinabox trocar a espessura (ex.: 25,3 → 18,3), as medidas ou o nome ao aplicar a cor, a peça volta na hora para as medidas e o nome que tinha, e fica só a cor nova. Medidas que você mesmo muda continuam valendo. (Vale para as peças colocadas a partir desta versão.)",
     "Painel de medidas: na seção 'Peça na chapa', Comprimento, Largura e Espessura agora são editáveis — digite a medida e aperte Enter, a peça muda (antes esses campos só mostravam a medida).",
