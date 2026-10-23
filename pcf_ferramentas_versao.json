@@ -1,7 +1,8 @@
 {
-  "versao": "2.9.6",
+  "versao": "2.9.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel de medidas: na seção 'Peça na chapa', Comprimento, Largura e Espessura agora são editáveis — digite a medida e aperte Enter, a peça muda (antes esses campos só mostravam a medida).",
     "Painel Auto: as medidas da peça agora são editáveis. Clique (ou selecione) uma peça do Painel Auto e a janela dele mostra Comprimento, Largura e Espessura em campos — mude e clique ✔ Aplicar (ou Enter). Também dá para digitar na caixa Medidas do SketchUp logo depois de colocar a peça: comprimento;largura;espessura (ex.: 800;400;25,3 — deixe vazio o que não quer mudar). A medida vai para a peça do Dinabox (ficha e tela).",
     "Painel Auto: o Dinabox agora lê a espessura certa (ex.: 25,3 mm). Antes a medida ia só para a cópia da peça na tela, e a ficha da peça — de onde o Dinabox lê — ficava com a do molde (18,3). As peças do Painel Auto já feitas são corrigidas sozinhas, com as mesmas medidas, na próxima peça que você colocar no projeto.",
     "Paramétrico: botão '⚪ Criar esfera' — digite o diâmetro e a esfera aparece no meio da tela, no chão, já selecionada para fatiar",
