@@ -1,7 +1,8 @@
 {
-  "versao": "3.1.2",
+  "versao": "3.1.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel PCF com visual novo, escuro e tecnológico (todas as abas). A aba Medidas ficou compacta: Medidas em cima (largura, altura, profundidade e peça na chapa), depois Rotação, Espelhar, Posição, Afastamentos (em cruz, em volta do móvel) e Ações. Nenhuma função saiu.",
     "Painel Auto: peça colocada DENTRO da caixa de um módulo Dinabox agora entra no próprio módulo (como se você abrisse o módulo e colocasse à mão). Peças nas faces de fora (tamponamento) continuam fora do módulo.",
     "Correção: no SketchUp 2026, configurações com aspas voltavam vazias (os modelos do Correr e das portas de passagem, os padrões do Painel Auto e outras escolhas não ficavam guardados no PC). Agora ficam guardadas certinho.",
     "Correr › Portas de passagem (aba nova): monte o modelo pelas FOTOS — folha da porta, caixilho (batente), guarnição e trilho são peças separadas da biblioteca (⧉ Copiar peça selecionada guarda a peça que você desenhou, com foto). Defina abertura (giro ou correr), folgas, caixilho, guarnição e salve o modelo.",
