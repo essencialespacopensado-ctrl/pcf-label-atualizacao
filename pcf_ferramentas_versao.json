@@ -1,7 +1,8 @@
 {
-  "versao": "2.9.3",
+  "versao": "2.9.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Paramétrico: botão '⚪ Criar esfera' — digite o diâmetro e a esfera aparece no meio da tela, no chão, já selecionada para fatiar",
     "Painel Auto: a peça agora recebe a cor que você escolher pelo Dinabox. Ela continua saindo branca (Branco TX), mas pela regra de cor do próprio Dinabox — antes o branco ficava gravado fixo e travava a peça. As peças do Painel Auto já feitas passam para a regra do Dinabox sozinhas (mesma cor) na próxima peça que você colocar no projeto.",
     "Painel Auto: o Dinabox agora reconhece as peças. Cada peça nova sai com os seus próprios códigos do Dinabox — antes ela herdava os códigos do molde (repetidos ou vazios) e o Dinabox não distinguia as peças. As peças do Painel Auto já feitas que estiverem sem código ou com código repetido são consertadas sozinhas na próxima peça que você colocar no projeto.",
     "Painel Auto: depois de atualizar, a janela do Painel Auto já mostra a versão nova na hora (os 6 tipos — Vertical, Horizontal, Horizontal em pé, Vertical deitada, Engrossado, Duplado — e os campos da chapa 2730 × 1830), sem precisar fechar o SketchUp.",
