@@ -1,7 +1,10 @@
 {
-  "versao": "2.8.8",
+  "versao": "2.8.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correr: a janela agora mostra só os SEUS modelos de porta. '⧉ Copiar modelo': selecione a porta que você desenhou e clique — ela vira um modelo com nome, imagem e especificações",
+    "Correr › Modelo: tipo (correr ou giro), espessura, transpasse/folga, altura +, largura + por porta, desce, afastamento, nº de portas, ferragem (ou 'Sem nenhuma ferragem'), links do fabricante (⤓ Ler preenche transpasse/espessura/peso da página) e normas técnicas",
+    "Correr › Aplicar: escolha o modelo, o nº de portas e o transpasse (opções rápidas 0 a 50 mm); as portas saem com o desenho do modelo no tamanho calculado. Modelos vão para a nuvem (com a chave)",
     "Botão novo 'Paramétrico' na barra PCF: modele a forma (poltrona, banco, painel ondulado), selecione e clique — ela é cortada em fatias de chapa (6,3 / 15,3 / 18,3 / 25,3) com o vão que você escolher, numeradas (Fatia 01, 02…) para cortar e montar",
     "Paramétrico: furos para barra roscada só se você ligar (mesmo lugar em todas as fatias); barras, porcas, arruelas e espaçadores vão só para compras. A forma original fica guardada: selecione o resultado e clique 'Refazer' com outros valores",
     "Painel Auto: tipos novos 'Horizontal em pé' (prioridade no comprimento deitado) e 'Vertical deitada' (prioridade na altura) — os dois ficam EM PÉ, de frente para a câmera, ocupando o vão que você vê (teclas 1–6)",
