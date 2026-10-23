@@ -1384,7 +1384,7 @@ module PCFLabel
 
   def self.vigiar
     @n_vigia = (@n_vigia || 0) + 1
-    PCFLabel.garantir_botao if @n_vigia % 8 == 1
+    PCFLabel.garantir_botao if @n_vigia % 75 == 1 # confere o botão do Aspire a cada ~5 min (a consulta ao Windows travava o SketchUp ~0,1 s a cada 32 s)
     mp = (File.mtime(ARQ_PLUGIN) rescue nil)
     if mp && @mt_plugin && mp != @mt_plugin
       @mt_plugin = mp
@@ -1466,7 +1466,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-20.07'
+  PLUGIN_VERSAO = '2026-10-23.01'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

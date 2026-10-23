@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-20.01",
- "plugin": "2026-10-20.07",
+ "plugin": "2026-10-23.01",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-20.01",
+   "plugin": "2026-10-23.01",
+   "data": "23/10",
+   "titulo": "Mais leve",
+   "itens": [
+    "O PCF Label deixou de travar o SketchUp de tempos em tempos: a conferência do botão do Aspire (uma consulta ao Windows que parava o SketchUp por ~0,1 s a cada 32 s) agora é feita a cada 5 minutos"
+   ]
+  },
   {
    "tela": "2026-10-20.01",
    "plugin": "2026-10-20.07",
