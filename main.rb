@@ -1006,8 +1006,8 @@ module PCFLabel
     if ref.start_with?('PLANO_EXCLUIR:') then UI.start_timer(0.1, false) { excluir_plano(ref.sub('PLANO_EXCLUIR:', '')) }; return true end
     if ref.start_with?('PLANO_ABRIR:') then UI.start_timer(0.1, false) { abrir_plano(ref.sub('PLANO_ABRIR:', '')) }; return true end
     # plano novo e lista de planos: lê de novo o que está visível AGORA (não o da hora que abriu a tela)
-    if ref == 'PLANO_NOVO' then UI.start_timer(0.1, false) { @pedido_novo = true; enviar }; return true end
-    if ref == 'PLANO_LISTA' then UI.start_timer(0.1, false) { enviar }; return true end
+    if ref == 'PLANO_NOVO' then UI.start_timer(0.1, false) { @pedido_novo = true; enviar(true) }; return true end
+    if ref == 'PLANO_LISTA' then UI.start_timer(0.1, false) { enviar(true) }; return true end
     if ref == 'HIST'
       h = File.join(pasta_planos, 'historico')
       arqs = Dir.glob(File.join(h, '*.json').tr('\\', '/')).select { |x| File.basename(x).start_with?(nome_plano + sufixo_plano(@plano_id) + ' ') }.sort_by { |x| File.mtime(x) }.last(60)
@@ -1297,7 +1297,7 @@ module PCFLabel
       FileUtils.mv(f, File.join(h, nome_plano + ' ' + carimbo + " (reiniciado do zero #{i + 1})" + '.json')) rescue (File.delete(f) rescue nil)
     end
     @excluidos = []; @plano_id = 'principal'
-    enviar
+    enviar(true)
   rescue => e
     UI.messagebox("Não consegui reiniciar: #{e.message}") rescue nil
   end
@@ -1312,7 +1312,7 @@ module PCFLabel
       FileUtils.mv(f, File.join(h, nome_plano + suf + ' ' + carimbo + (i > 0 ? " (excluído, cópia #{i})" : ' (excluído)') + '.json')) rescue (File.delete(f) rescue nil)
     end
     if id == @plano_id
-      @dados_vivos ? (planos = listar_planos; planos.empty? ? enviar : abrir_plano(planos.max_by { |x| x[:t].to_i }[:id])) : enviar
+      @dados_vivos ? (planos = listar_planos; planos.empty? ? enviar(true) : abrir_plano(planos.max_by { |x| x[:t].to_i }[:id])) : enviar(true)
     else
       @dlg.execute_script("planosAtualizados(#{JSON.generate(listar_planos).gsub('</', '<\\/')})") rescue nil
     end
@@ -1472,7 +1472,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-23.05'
+  PLUGIN_VERSAO = '2026-10-23.06'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1831,7 +1831,13 @@ module PCFLabel
     nil
   end
 
-  def self.enviar
+  # enviar = botão PCF · Nesting / menu: abre a página INÍCIO (todas as OSs). enviar(true) = fluxo direto do projeto aberto
+  # (chamado pela própria página e pelos botões da tela do plano).
+  def self.enviar(direto = false)
+    unless direto
+      inicio
+      return
+    end
     @projeto_externo = nil
     splash
     UI.start_timer(0.35, false) do
@@ -2078,12 +2084,12 @@ module PCFLabel
     @dlg_inicio = UI::HtmlDialog.new(dialog_title: 'PCF Label - Início', preferences_key: 'PCFLabel.inicio', scrollable: true,
                                      resizable: true, width: 1100, height: 700, style: UI::HtmlDialog::STYLE_DIALOG)
     d = @dlg_inicio
-    d.add_action_callback('novo') { |_c| (d.close rescue nil); enviar }
+    d.add_action_callback('novo') { |_c| (d.close rescue nil); enviar(true) }
     d.add_action_callback('abrir') do |_c, skp, id|
       begin
         (d.close rescue nil)
         if chave_projeto(skp) == chave_projeto(Sketchup.active_model.path)
-          @projeto_externo = nil; @pedido_plano = id; enviar
+          @projeto_externo = nil; @pedido_plano = id; enviar(true)
         else
           abrir_plano_externo(skp, id)
         end
@@ -2195,7 +2201,7 @@ module PCFLabel
     tb = UI.toolbar(PCFLabel::BARRA); tb.add_item(cmd); tb.show
     ObjectSpace.each_object(UI::Toolbar) { |t| t.hide if t.name == 'PCF Label' && t.visible? }   # barra antiga separada: tudo fica na barra PCF
     UI.menu('Extensions').add_item('PCF · Início (todas as OSs)') { PCFLabel.inicio }
-    UI.menu('Extensions').add_item('PCF · Plano de corte') { PCFLabel.enviar }
+    UI.menu('Extensions').add_item('PCF · Plano de corte') { PCFLabel.enviar(true) }
     UI.menu('Extensions').add_item('PCF · Numerar peças') { UI.messagebox(PCFLabel.numerar) }
     file_loaded(__FILE__)
   end
