@@ -1,7 +1,10 @@
 {
-  "versao": "3.1.5",
+  "versao": "3.1.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: a lista de espessuras que aparece no editor do Dinabox (Propriedades > Espessura) agora vem da configuração ATUAL do componente no Dinabox (a mesma que você salva na galeria), e não mais da peça usada como molde. Vale para o tamponamento simples e o com 45°.",
+    "Painel Auto / Corrigir: mudou a lista na galeria do Dinabox? As peças que já estão no projeto recebem a lista nova sem reinserir — ao abrir o Painel Auto, ao criar uma peça, ao clicar numa peça ou no botão Corrigir (bandeja de medidas).",
+    "Numeração: em projeto novo os grupos e os nomes começam no 1. A peça criada pelo Painel Auto não herda mais nome/número do molde (ex.: 'Painel 53'), e o contador de grupos só conta o que está de fato no projeto (cópias que ficavam em definições sem uso não contam mais).",
     "Painel PCF, aba Medidas: novo bloco '➕ Aumentar todas as selecionadas'. Digite quanto somar em Comprimento, Largura e Espessura (mm; negativo diminui) e clique ➕ Aplicar (ou Enter): todas as peças selecionadas mudam de uma vez. Um Ctrl+Z desfaz tudo. Os valores ficam guardados para a próxima vez.",
     "Painel PCF com visual novo, escuro e tecnológico (todas as abas). A aba Medidas ficou compacta: Medidas em cima (largura, altura, profundidade e peça na chapa), depois Rotação, Espelhar, Posição, Afastamentos (em cruz, em volta do móvel) e Ações. Nenhuma função saiu.",
     "Painel Auto: peça colocada DENTRO da caixa de um módulo Dinabox agora entra no próprio módulo (como se você abrisse o módulo e colocasse à mão). Peças nas faces de fora (tamponamento) continuam fora do módulo.",
