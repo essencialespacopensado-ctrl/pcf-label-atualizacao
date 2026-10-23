@@ -1,7 +1,8 @@
 {
-  "versao": "3.1.1",
+  "versao": "3.1.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: peça colocada DENTRO da caixa de um módulo Dinabox agora entra no próprio módulo (como se você abrisse o módulo e colocasse à mão). Peças nas faces de fora (tamponamento) continuam fora do módulo.",
     "Correção: no SketchUp 2026, configurações com aspas voltavam vazias (os modelos do Correr e das portas de passagem, os padrões do Painel Auto e outras escolhas não ficavam guardados no PC). Agora ficam guardadas certinho.",
     "Correr › Portas de passagem (aba nova): monte o modelo pelas FOTOS — folha da porta, caixilho (batente), guarnição e trilho são peças separadas da biblioteca (⧉ Copiar peça selecionada guarda a peça que você desenhou, com foto). Defina abertura (giro ou correr), folgas, caixilho, guarnição e salve o modelo.",
     "Correr › Portas de passagem: ▶ Aplicar no vão e clique no vão da parede (Medidas › Vão) — cada peça entra como um BLOCO SEPARADO (edita uma sem mexer nas outras), já no tamanho do vão com as folgas e distâncias do modelo. Sem foto escolhida, a peça sai lisa. Compras (folha, dobradiças/fechadura ou trilho/kit) vão para a lista de compras. Os modelos e peças vão para a nuvem (todos os PCs).",
