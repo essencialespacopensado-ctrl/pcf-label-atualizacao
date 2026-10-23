@@ -1,7 +1,8 @@
 {
-  "versao": "2.9.2",
+  "versao": "2.9.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: a peça agora recebe a cor que você escolher pelo Dinabox. Ela continua saindo branca (Branco TX), mas pela regra de cor do próprio Dinabox — antes o branco ficava gravado fixo e travava a peça. As peças do Painel Auto já feitas passam para a regra do Dinabox sozinhas (mesma cor) na próxima peça que você colocar no projeto.",
     "Painel Auto: o Dinabox agora reconhece as peças. Cada peça nova sai com os seus próprios códigos do Dinabox — antes ela herdava os códigos do molde (repetidos ou vazios) e o Dinabox não distinguia as peças. As peças do Painel Auto já feitas que estiverem sem código ou com código repetido são consertadas sozinhas na próxima peça que você colocar no projeto.",
     "Painel Auto: depois de atualizar, a janela do Painel Auto já mostra a versão nova na hora (os 6 tipos — Vertical, Horizontal, Horizontal em pé, Vertical deitada, Engrossado, Duplado — e os campos da chapa 2730 × 1830), sem precisar fechar o SketchUp.",
     "Paramétrico: o corte foi refeito para móveis de várias partes (sofá com almofadas, braços, estrutura e pés). Cada fatia agora sai como UMA peça inteira na silhueta do móvel naquela posição — antes as fatias saíam picadas e deformadas quando a forma não era um sólido fechado. Frestas pequenas entre as partes fecham sozinhas e pedaços menores que 50×50 mm (ponta de pé, sobra) não viram peça.",
