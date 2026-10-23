@@ -1,7 +1,9 @@
 {
-  "versao": "3.0.0",
+  "versao": "3.1.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correr › Portas de passagem (aba nova): monte o modelo pelas FOTOS — folha da porta, caixilho (batente), guarnição e trilho são peças separadas da biblioteca (⧉ Copiar peça selecionada guarda a peça que você desenhou, com foto). Defina abertura (giro ou correr), folgas, caixilho, guarnição e salve o modelo.",
+    "Correr › Portas de passagem: ▶ Aplicar no vão e clique no vão da parede (Medidas › Vão) — cada peça entra como um BLOCO SEPARADO (edita uma sem mexer nas outras), já no tamanho do vão com as folgas e distâncias do modelo. Sem foto escolhida, a peça sai lisa. Compras (folha, dobradiças/fechadura ou trilho/kit) vão para a lista de compras. Os modelos e peças vão para a nuvem (todos os PCs).",
     "Painel Auto: as peças agora respeitam as linhas guia — a peça para na linha guia do mesmo jeito que para numa parede ou em outra peça (guias infinitas e guias com começo e fim; guias ocultas ou em etiqueta desligada não contam).",
     "Bordas do projeto: o que você escolher de arestas e perfis fica guardado no projeto. Quando o Dinabox reinicia (ou ao abrir o projeto) e troca o estilo, as suas bordas voltam sozinhas — o resto do estilo dele continua.",
     "Painel Auto: aplicar cor pelo Dinabox não muda mais nada da peça. Se o Dinabox trocar a espessura (ex.: 25,3 → 18,3), as medidas ou o nome ao aplicar a cor, a peça volta na hora para as medidas e o nome que tinha, e fica só a cor nova. Medidas que você mesmo muda continuam valendo. (Vale para as peças colocadas a partir desta versão.)",
