@@ -1466,7 +1466,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-23.01'
+  PLUGIN_VERSAO = '2026-10-23.02'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1909,11 +1909,11 @@ module PCFLabel
     if @pedido_novo then @pedido_novo = false; novo_plano; return "#{lista.size} peças no plano novo" end
     planos = listar_planos
     dados[:planos] = planos
-    # já tem plano salvo: abre direto o último que você usou (sem tela de escolha). Outro plano / plano novo: botão 🗂 Planos
+    # já tem plano salvo: PERGUNTA se quer fazer um plano de corte novo ou abrir um plano já feito (✕ = abre o último)
     unless planos.empty?
-      ult = planos.max_by { |x| x[:t].to_i }
-      abrir_plano(ult[:id])
-      return "#{ult[:nome]} aberto"
+      dados[:planoEscolhido] = false
+      mostrar(dados)
+      return "#{planos.size} plano(s) salvo(s): escolha novo ou abrir"
     end
     (@excluidos ||= []).delete(nome_plano)
     dados[:planoId] = 'principal'; dados[:planoNome] = 'Plano principal'

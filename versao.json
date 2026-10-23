@@ -1,12 +1,23 @@
 {
- "tela": "2026-10-20.01",
- "plugin": "2026-10-23.01",
+ "tela": "2026-10-23.01",
+ "plugin": "2026-10-23.02",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-23.01",
+   "plugin": "2026-10-23.02",
+   "data": "23/10",
+   "titulo": "Abrir: plano novo ou já feito · ferramenta e passadas por plano",
+   "itens": [
+    "Ao abrir o PCF Label (com planos já salvos) ele pergunta: ➕ Fazer plano de corte novo, ou 📂 abrir um plano já feito. O ✕ abre o último plano",
+    "Novo quadro ⚙ Só neste plano: escolha a ferramenta de corte e quantas passadas — fica gravado só naquele plano e vai para o G-code",
+    "Peça com passadas próprias (mais de 1) continua com as dela"
+   ]
+  },
   {
    "tela": "2026-10-20.01",
    "plugin": "2026-10-23.01",
@@ -513,5 +524,5 @@
   "numeros.svg": "1c89e120c8b85bd5bbbbb897958e564c5b73635c",
   "detalhamento.svg": "a19aabab38d54771ede57fd22b76426981f9bbc5"
  },
- "ferramentas": "3.1.1"
+ "ferramentas": "3.1.0"
 }

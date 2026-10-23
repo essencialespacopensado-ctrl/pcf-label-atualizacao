@@ -233,6 +233,12 @@ td.fita input{width:auto;margin:0}
       <button id="btnIncluirFora" style="display:none" title="Peças que estão no projeto mas não estão no plano: vão para chapas novas no fim, sem mexer nas chapas que você já ajustou">➕ Encaixar peças fora do plano</button>
       <div class="row"><button class="pri" id="btnCortes" style="background:#1f5fbf;border-color:#1f5fbf">⚙ Gerar cortes</button><button id="btnApagarCortes" style="flex:0 0 auto;color:#c8102e;border-color:#c8102e" title="Apaga os percursos do PCF Label no Aspire">🗑 Eliminar cortes</button></div>
       <div class="row"><button id="btnMel">▦ Fazer melamina</button><button id="btnGcode" title="G-code feito pelo Aspire (precisa do Aspire aberto)">⤓ G-code (Aspire)</button></div>
+      <div id="pfBar" style="display:none;margin:8px 0;padding:8px 10px;border:1px solid #b8860b;border-radius:8px;background:#fffaf0;font-size:13px">
+        <b>⚙ Só neste plano:</b>
+        Ferramenta <select id="pfFer" style="width:auto"></select>
+        &nbsp;Passadas <input id="pfPas" type="number" min="1" max="20" step="1" style="width:56px" placeholder="1">
+        <span class="hint" id="pfInfo" style="margin-left:6px"></span>
+      </div>
       <div id="cncMsg" class="hint"></div>
     </div>
   </div>
@@ -387,7 +393,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-20.01';
+const VERSAO = '2026-10-23.01';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -679,19 +685,23 @@ const MAGAZINE = [
 ];
 if (!cfg.mag) cfg.mag = MAGAZINE.map(x => ({...x}));
 const ferr = t => cfg.mag.find(x => +x.t === +t) || cfg.mag[0];
+// ferramenta e passadas escolhidas SÓ PARA ESTE PLANO (ficam gravadas no plano; vazio = usa a configuração geral)
+const lerPF = o => { const s0 = o && o.pf; return s0 && typeof s0 === 'object' ? {t: s0.t || '', pas: Math.max(0, Math.min(20, Math.round(+s0.pas || 0)))} : {t: '', pas: 0} };
+let PF = lerPF(D.planoArq);
 const ferrTxt = t => { const x = ferr(t); return [x.t, String(x.nome).replace(/;/g, ','), x.d, x.f, x.p, x.s, x.pd, x.so].join(';') };
 const profCorte = () => +(D.espessura) + (+cfg.transp || 0);
 const espP = p => (p && +p.esp) || +D.espessura;   // espessura da peça (do SketchUp) ou a do projeto
 // espessura usada no CORTE: a cheia, sem os décimos (6,3 → 6 · 15,3 → 15 · 18,3 → 18 · 25,3 → 25); a lista de materiais continua com 6,3 etc.
 const espCorte = p => Math.floor(espP(p) + 0.001);
 // ferramenta do corte: a escolhida (padrão 6 mm); peça de 25 mm ou mais usa a de 'Corte de peça 25 mm ou mais' (padrão 6 mm também)
-const ferrCorte = p => espCorte(p) >= 25 ? ferr(cfg.t25 || cfg.tCorte) : ferr(cfg.tCorte);
+const ferrCorte = p => PF.t ? ferr(PF.t) : (espCorte(p) >= 25 ? ferr(cfg.t25 || cfg.tCorte) : ferr(cfg.tCorte));
 const pequena = p => (p.c * p.l / 1e6) < (+cfg.pqArea || 0);
 const TIPOS = {peca:'Peça', usinagem:'Usinagem', rebaixo:'Rebaixo', furo:'Furo / recorte'};
 // lado da fresa e passadas de cada contorno (iguais ao Aspire)
 const LADOS = {fora: 'por fora', dentro: 'por dentro', linha: 'na linha', bolsao: 'esvaziar (rebaixo)'};
 function ladoDe(p){ if (p.lado) return p.lado; if (!p.dentro || p.tipo === 'peca') return 'fora'; return p.tipo === 'furo' ? 'dentro' : p.tipo === 'usinagem' ? 'linha' : p.tipo === 'rebaixo' ? 'bolsao' : 'dentro' }
-const passesDe = p => Math.max(1, Math.min(20, Math.round(+p.pas || 1)));
+// passadas: a peça com passadas próprias (mais de 1) mantém a dela; as outras seguem as passadas DESTE plano
+const passesDe = p => Math.max(1, Math.min(20, Math.round((+p.pas > 1 ? +p.pas : 0) || +PF.pas || +p.pas || 1)));
 
 // usinagens/rebaixos/furos que ficam dentro de uma peça
 function internos(p){
@@ -3072,7 +3082,7 @@ function salvarPlanoLocal(mapa){
   let foto = fotoP();
   if (mapa) Object.entries(mapa).forEach(([a, b]) => { foto = foto.split('"' + a + '"').join('"' + b + '"') });
   const agora = new Date(), d2 = n => String(n).padStart(2, '0');
-  const obj = {data: `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`, n: PLANO.folhas.length, foto, t: Date.now(), projeto: D.projeto, conf: {proj, cfg, cores}, id: D.planoId || 'principal', nome: D.planoNome || 'Plano principal', gc: PLANO.gc || null, numBase: +D.numBase || 0, numMax: (+D.numBase || 0) + PLANO.folhas.reduce((s, f) => s + f.pos.length, 0)};
+  const obj = {data: `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`, n: PLANO.folhas.length, foto, t: Date.now(), projeto: D.projeto, conf: {proj, cfg, cores}, pf: PF, id: D.planoId || 'principal', nome: D.planoNome || 'Plano principal', gc: PLANO.gc || null, numBase: +D.numBase || 0, numMax: (+D.numBase || 0) + PLANO.folhas.reduce((s, f) => s + f.pos.length, 0)};
   ls.set(KPL, obj); D.planoArq = obj;
   // também em ARQUIVO (ao lado do projeto .skp e em %APPDATA%\PCF Label\planos, com histórico) — não se perde ao fechar
   clearTimeout(salvarPlanoLocal.tm);
@@ -3110,6 +3120,7 @@ function mostrarBotaoPlano(){
 }
 function abrirPlanoSalvo(sx){
   const s = sx || planoSalvo(); if (!s) return;
+  PF = lerPF(s); try { mostrarPF() } catch (e) {}
   if (PLANO && !sx && !confirm('Trocar o plano que está na tela pelo último plano salvo?')) return;
   PLANO_FILHOS = new Map();
   D.pecas.filter(q => q.dentro && q.tipo !== 'peca').forEach(q => { const pa = paiDe(q); if (pa) { if (!PLANO_FILHOS.has(pa)) PLANO_FILHOS.set(pa, []); PLANO_FILHOS.get(pa).push(q) } });
@@ -3294,25 +3305,31 @@ if (!(window.sketchup && window.sketchup.pcf_selecionar) || D.origem !== 'sketch
 $('btnPlanos').onclick = () => { if (D.planos) mostrarEscolhaPlano(); else if (window.sketchup && window.sketchup.pcf_selecionar) window.sketchup.pcf_selecionar('PLANO_LISTA') };
 if (!(window.sketchup && window.sketchup.pcf_selecionar) || D.origem !== 'sketchup') $('btnPlanos').style.display = 'none';
 // escolher qual plano abrir (cada um com as próprias peças) ou fazer um novo com o que está visível agora
-function mostrarEscolhaPlano(){
+function mostrarEscolhaPlano(inicio){
+  inicio = inicio === true;
+  const ultimo = (D.planos || []).slice().sort((a, b) => (+b.t || 0) - (+a.t || 0))[0];
   const bx = document.createElement('div'); bx.style.cssText = 'position:fixed;inset:0;z-index:10000;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center';
   const nVis = D.pecas.filter(p => !p.dentro).length;
   bx.innerHTML = `<div style="background:#fff;border-radius:12px;padding:20px 24px;max-width:640px;width:94%;box-shadow:0 10px 40px rgba(0,0,0,.3)">
-    <h2 style="margin:0 0 4px;font-size:19px;display:flex;justify-content:space-between">🗂 Planos de corte deste projeto <button class="pFechar" title="Fechar">✕</button></h2>
-    <div class="hint" style="margin-bottom:12px">${esc(osCli ? osCli() : D.projeto)} · escolha qual abrir. Cada plano tem as próprias peças e fica salvo separado.</div>
+    <h2 style="margin:0 0 4px;font-size:19px;display:flex;justify-content:space-between">${inicio ? '✂ PCF Label · o que você quer fazer?' : '🗂 Planos de corte deste projeto'} <button class="pFechar" title="${inicio && ultimo ? 'Fechar e abrir o último plano' : 'Fechar'}">✕</button></h2>
+    <div class="hint" style="margin-bottom:12px">${esc(osCli ? osCli() : D.projeto)} · ${inicio ? 'faça um plano de corte novo ou abra um plano que já foi feito.' : 'escolha qual abrir.'} Cada plano tem as próprias peças, ferramenta e passadas, e fica salvo separado.</div>
+    ${inicio ? `<button class="pNovo pNovoTopo" style="width:100%;padding:14px;font-size:16px;font-weight:700;background:#1d7a46;color:#fff;border-color:#1d7a46;border-radius:10px">➕ Fazer plano de corte novo (${nVis} peças visíveis agora)</button>
+    <div style="margin:16px 0 4px;font-weight:700">📂 Ou abrir um plano já feito:</div>` : ''}
     ${D.planos.map(p => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee"><div style="flex:1"><b>${esc(p.nome)}</b><div class="hint">${p.n || 0} chapa(s)${p.pecas ? ' · ' + p.pecas + ' peças' : ''} · salvo ${esc(p.data || '')}</div></div>
-      ${p.id === (D.planoId || 'principal') ? '<span class="hint" style="color:#1d7a46">● aberto</span>' : ''}
+      ${!inicio && p.id === (D.planoId || 'principal') ? '<span class="hint" style="color:#1d7a46">● aberto</span>' : ''}
       <button class="pri pAbrir" data-id="${esc(p.id)}">📂 Abrir</button>
       <button class="pExcluir" data-id="${esc(p.id)}" data-nome="${esc(p.nome)}" style="color:#c8102e;border-color:#c8102e">🗑 Excluir</button></div>`).join('') || '<div class="hint">Nenhum plano salvo.</div>'}
-    <div style="margin-top:14px;display:flex;gap:10px;align-items:center"><button class="pNovo" style="background:#1d7a46;color:#fff;border-color:#1d7a46">➕ Novo plano com o que está visível agora (${nVis} peças)</button>
+    <div style="margin-top:14px;display:${inicio ? 'none' : 'flex'};gap:10px;align-items:center"><button class="pNovo" style="background:#1d7a46;color:#fff;border-color:#1d7a46">➕ Novo plano com o que está visível agora (${nVis} peças)</button>
     <span class="hint">os planos acima não mudam</span></div>
     <div style="margin-top:10px;text-align:right"><button class="pZerar" style="color:#c8102e;border-color:#c8102e">♻ Reiniciar do zero (exclui todos)</button></div></div>`;
+  if (inicio) bx.dataset.inicio = '1';
   document.body.appendChild(bx);
   bx.querySelectorAll('.pAbrir').forEach(b => b.onclick = () => { b.textContent = 'abrindo…'; window.sketchup.pcf_selecionar('PLANO_ABRIR:' + b.dataset.id) });
-  bx.querySelector('.pNovo').onclick = e => { e.target.textContent = 'criando…'; window.sketchup.pcf_selecionar('PLANO_NOVO') };
-  bx.querySelector('.pFechar').onclick = () => bx.remove();
+  bx.querySelectorAll('.pNovo').forEach(b => b.onclick = e => { e.target.textContent = 'criando…'; window.sketchup.pcf_selecionar('PLANO_NOVO') });
+  // na abertura, fechar = abre o último plano usado (a tela não fica vazia)
+  bx.querySelector('.pFechar').onclick = () => { if (inicio && ultimo) { bx.querySelector('.pFechar').textContent = '…'; window.sketchup.pcf_selecionar('PLANO_ABRIR:' + ultimo.id) } else bx.remove() };
   bx.querySelector('.pZerar').onclick = () => reiniciarDoZero();
-  bx.onclick = e => { if (e.target === bx) bx.remove() };
+  bx.onclick = e => { if (e.target === bx && !inicio) bx.remove() };
   bx.querySelectorAll('.pExcluir').forEach(b => b.onclick = () => {
     const id = b.dataset.id, atual = id === (D.planoId || 'principal');
     if (!confirm(`Excluir o "${b.dataset.nome}"?\n\n${atual ? 'É o plano que está aberto agora: depois de excluir, abre o último plano que sobrar.\n\n' : ''}O arquivo vai para o histórico (dá para recuperar em Versões).`)) return;
@@ -3324,6 +3341,22 @@ function mostrarEscolhaPlano(){
   });
 }
 var PLANO_EXCLUIDO = false;
+// ⚙ ferramenta e passadas SÓ DESTE plano de corte (gravadas junto do plano; os outros planos não mudam)
+function mostrarPF(){
+  const bar = $('pfBar'), sel = $('pfFer'), pas = $('pfPas'); if (!bar || !sel) return;
+  bar.style.display = '';
+  sel.innerHTML = '<option value="">Padrão da configuração</option>' + (cfg.mag || []).map(x => `<option value="${x.t}">T${x.t} · ${esc(x.nome)}${x.d ? ' Ø' + x.d : ''}</option>`).join('');
+  sel.value = PF.t ? String(PF.t) : ''; if (PF.t && sel.value !== String(PF.t)) sel.value = '';
+  pas.value = PF.pas || '';
+  const fe = PF.t ? ferr(PF.t) : null;
+  $('pfInfo').textContent = (fe ? `corta com T${fe.t} (${fe.nome})` : 'ferramenta da configuração geral') + ' · ' + (PF.pas ? `${PF.pas} passada(s)` : 'passadas de cada peça') + ' · fica salvo só neste plano';
+}
+function mudouPF(){
+  PF = {t: $('pfFer').value || '', pas: Math.max(0, Math.min(20, Math.round(+$('pfPas').value || 0)))};
+  mostrarPF(); try { renderTabela() } catch (e) {} try { salvarPlanoLocal() } catch (e) {}
+  if ($('cncMsg')) { $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `⚙ Este plano agora: ${$('pfInfo').textContent}. Gere o G-code de novo para usar.` }
+}
+if ($('pfFer')) { $('pfFer').onchange = mudouPF; $('pfPas').onchange = mudouPF; setTimeout(() => { try { mostrarPF() } catch (e) {} }, 500) }
 // diagnóstico: manda para o SketchUp (que grava num arquivo no Dropbox) o que acontece ao arrastar peças e qualquer erro da tela
 function logTela(o){ try { if (window.sketchup && window.sketchup.pcf_selecionar) window.sketchup.pcf_selecionar('LOG:' + JSON.stringify(Object.assign({v: VERSAO, t: new Date().toLocaleTimeString()}, o)).slice(0, 1500)) } catch (e) {} }
 window.addEventListener('error', e => logTela({erro: String(e.message), linha: e.lineno}));
@@ -3386,7 +3419,7 @@ function reiniciarDoZero(){
   window.sketchup.pcf_selecionar('PLANO_ZERAR');
 }
 // o SketchUp manda a lista nova depois de excluir
-function planosAtualizados(l){ D.planos = l || []; const v = [...document.querySelectorAll('div')].find(d => d.style.zIndex === '10000' && d.querySelector('.pExcluir, .pNovo')); if (v) { v.remove(); mostrarEscolhaPlano() } }
+function planosAtualizados(l){ D.planos = l || []; const v = [...document.querySelectorAll('div')].find(d => d.style.zIndex === '10000' && d.querySelector('.pExcluir, .pNovo')); if (v) { const ini = v.dataset.inicio === '1'; v.remove(); mostrarEscolhaPlano(ini) } }
 { const rp0 = renderPlano; renderPlano = function(){ const r = rp0.apply(this, arguments); try { atualizarFora() } catch (e) {} return r } } mostrarBotaoPlano();
 // 🎨 materiais e cores numa janela só (não fica tudo aberto na lateral)
 function abrirPainelMat(){
@@ -3822,7 +3855,7 @@ if (D.origem === 'sketchup') {
   ['btnCortes', 'btnMel', 'btnAtu'].forEach(id => { const e = $(id); if (e) (e.closest('.row') || e).style.display = 'none' });
   if ($('btnGcodeDireto')) { $('btnGcodeDireto').textContent = '⚡ Gerar G-code para a máquina'; $('btnOtim').after($('btnGcodeDireto')) }
   $('cncMsg').className = 'hint'; $('cncMsg').textContent = 'Calculando o plano de corte…';
-  setTimeout(async () => { try { if (D.planos && D.planos.length && !D.planoEscolhido) { mostrarEscolhaPlano(); return }
+  setTimeout(async () => { try { if (D.planos && D.planos.length && !D.planoEscolhido) { $('cncMsg').textContent = 'Escolha: plano de corte novo ou abrir um plano já feito.'; mostrarEscolhaPlano(true); return }
     const novasOrig = perguntarOrigens(); await perguntarMateriais(ZERADO);   // reiniciou do zero: confere TODOS os materiais de novo
     if (planoSalvo()) { abrirPlanoSalvo(); if (PLANO && PLANO.retalhos && PLANO.retalhos.length) { PLANO.retalhos = []; await incluirForaDoPlano() }   // plano antigo com peças 'de retalho' sem chapa: ganham chapa no fim
     // tudo o que está visível tem que estar no plano: peça fora do plano ganha chapa nova no fim (as chapas que você ajustou não mudam)
