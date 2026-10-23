@@ -1466,7 +1466,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-23.02'
+  PLUGIN_VERSAO = '2026-10-23.03'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1835,6 +1835,47 @@ module PCFLabel
       end
     end   # deixa a tela de carregamento aparecer antes do trabalho pesado
   end
+  # peça "na tela": alguma parte da caixa dela aparece na vista atual (cena/câmera de agora) — dentro da janela e na frente da câmera
+  def self.na_tela?(m, skpath)
+    view = m.active_view
+    cam = view.camera
+    t = Geom::Transformation.new
+    ent = nil
+    skpath.to_s.split('.').each do |id|
+      ent = (m.find_entity_by_persistent_id(id.to_i) rescue nil)
+      return true unless ent && ent.respond_to?(:transformation)   # não achou: não arrisca tirar
+      t = t * ent.transformation
+    end
+    b = ent.definition.bounds
+    w = view.vpwidth.to_f; h = view.vpheight.to_f
+    eye = cam.eye; dir = cam.direction
+    xs = []; ys = []
+    8.times do |k|
+      p = b.corner(k).transform(t)
+      next if (p - eye) % dir <= 0            # atrás da câmera
+      s = view.screen_coords(p)
+      xs << s.x; ys << s.y
+    end
+    return false if xs.empty?
+    # o retângulo dos cantos projetados cruza a janela (vale também para peça maior que a tela)
+    xs.min <= w && xs.max >= 0 && ys.min <= h && ys.max >= 0
+  rescue StandardError
+    true
+  end
+
+  # o que NÃO está na tela agora não entra no plano — ou você escolhe (Sim = só as da tela; Não = todas; Cancelar = nada)
+  def self.filtrar_na_tela(m, pecas)
+    fora = pecas.reject { |p| na_tela?(m, p[:skpath]) }
+    return pecas if fora.empty?
+    dentro = pecas.size - fora.size
+    nomes = fora.map { |p| nome_limpo(p[:nome]).then { |x| x.empty? ? p[:nome].to_s : x } }.uniq.first(6).join(', ')
+    msg = "#{fora.size} peça(s) não estão na tela agora (fora da vista ou de outra cena):\n#{nomes}#{fora.size > 6 ? '…' : ''}\n\n" \
+          "Sim = plano só com as #{dentro} peça(s) que estão na tela\nNão = plano com todas as #{pecas.size}\nCancelar = não fazer o plano"
+    r = UI.messagebox(msg, MB_YESNOCANCEL)
+    return nil if r == IDCANCEL
+    r == IDYES ? pecas - fora : pecas
+  end
+
   def self.enviar_ja
     m = Sketchup.active_model
     pecas = []
@@ -1842,6 +1883,12 @@ module PCFLabel
     if pecas.empty?
       (@dlg.close rescue nil)
       UI.messagebox('PCF Label: nenhuma peça encontrada.')
+      return
+    end
+    # só o que está na tela agora (cena/vista atual) — ou você escolhe
+    pecas = filtrar_na_tela(m, pecas)
+    if pecas.nil? || pecas.empty?
+      (@dlg.close rescue nil)
       return
     end
     pecas = pecas.select { |p| p[:origem] == 'SketchUp' } + pecas.reject { |p| p[:origem] == 'SketchUp' }
