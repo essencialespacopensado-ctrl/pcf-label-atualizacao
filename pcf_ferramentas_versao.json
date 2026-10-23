@@ -1,7 +1,8 @@
 {
-  "versao": "2.9.0",
+  "versao": "2.9.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Painel Auto: depois de atualizar, a janela do Painel Auto já mostra a versão nova na hora (os 6 tipos — Vertical, Horizontal, Horizontal em pé, Vertical deitada, Engrossado, Duplado — e os campos da chapa 2730 × 1830), sem precisar fechar o SketchUp.",
     "Paramétrico: o corte foi refeito para móveis de várias partes (sofá com almofadas, braços, estrutura e pés). Cada fatia agora sai como UMA peça inteira na silhueta do móvel naquela posição — antes as fatias saíam picadas e deformadas quando a forma não era um sólido fechado. Frestas pequenas entre as partes fecham sozinhas e pedaços menores que 50×50 mm (ponta de pé, sobra) não viram peça.",
     "Paramétrico: o contorno das fatias sai liso — curvas redondas, sem degraus, e cantos vivos continuam retos; as laterais curvas ficam suavizadas no SketchUp. Para corrigir um já feito: selecione o paramétrico e clique em Refazer.",
     "Correr: a janela agora mostra só os SEUS modelos de porta. '⧉ Copiar modelo': selecione a porta que você desenhou e clique — ela vira um modelo com nome, imagem e especificações",
