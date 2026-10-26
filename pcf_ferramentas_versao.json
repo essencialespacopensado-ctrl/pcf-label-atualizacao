@@ -1,21 +1,7 @@
 {
-  "versao": "3.2.4",
+  "versao": "3.2.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Correção: as linhas de corte do Dinabox (recorte orgânico, moldura, Peça Mãe, chapa curva) agora fecham de verdade — antes o começo e o fim ficavam soltos no mesmo ponto, o que podia bloquear o corte. Os trechos das pontes também não se quebram mais.",
-    "Pontes no Dinabox: no recorte orgânico (e na moldura que vira orgânico) o corte de dentro sai em 4 trechos com 5 mm sem corte entre eles, no meio dos lados retos. Menu Extensões › PCF - Pontes do recorte (Dinabox)… para mudar quantidade, tamanho ou desligar.",
-    "Peça Mãe: escolha entre ✂ CORTAR ou ✎ SÓ MARCAR as divisões entre as frentes (o contorno de fora continua cortado). Fresa de 4 mm (editável) — o vão entre as frentes fica do tamanho da fresa. Cortar: 4 passadas (editável). Marcar: profundidade editável (padrão 1 mm). A escolha fica guardada.",
-    "💡 Luz do PCF na barra: verde acesa = ligado; cinza apagada = desligado. Clicar na luz desliga tudo.",
-    "Desligado, os botões PCF não abrem mais nada (Painel, Mover, Painel Auto, Correr, Peça Mãe, Paramétrico, Moldura, Veio, Calc Pró, Cotas e também Nesting, Números e Detalhamento do PCF Label): aparece 'O PCF está DESLIGADO. Ligar agora?' — Sim liga e abre; Não, nada acontece.",
-    "Interruptor geral: o botão da barra saiu (o SketchUp não deixa o desenho dele mudar). O interruptor fica no topo do painel PCF — a luz acende verde quando ligado — e também no menu Extensões > PCF ligado / desligado.",
-    "⏻ Interruptor geral do PCF (na barra e no topo do painel, com luz verde quando ligado). Desligado, nada roda sozinho: cotas e colisão na tela, números, vigias de seleção, bordas e busca de atualização param. Os botões continuam funcionando quando você clica. A escolha fica guardada.",
-    "Painel Auto: seletor de espessura com um clique — 6,3 · 15,3 · 18,3 · 25,3 (o campo de digitar continua).",
-    "Painel Auto: não duplica mais peças. Um clique = uma peça (o 2º clique do duplo clique e cliques enquanto a peça está sendo criada são ignorados) e, se já existe uma peça igual no mesmo lugar, ele avisa e não cria outra.",
-    "Aba Interno: quando o módulo tem gavetas em vãos separados (divisão invisível / prateleira), cada vão aparece aberto e separado, como um módulo próprio (Vão 1 · de cima, Vão 2 · de baixo…), com todos os campos dele. Antes ficavam escondidos em 'Ajustar cada gaveteiro separado'. As Frentes empilhadas continuam em cima.",
-    "Painel PCF, aba Medidas: '➕ Aumentar todas as selecionadas' — some (ou tire) Comprimento, Largura e Espessura de todas as peças selecionadas de uma vez. Um Ctrl+Z desfaz tudo.",
-    "Painel PCF com visual escuro e tecnológico (todas as abas) e aba Medidas compacta: Medidas, Rotação, Espelhar, Posição, Afastamentos (em cruz) e Ações. Nenhuma função saiu.",
-    "Painel Auto: a lista de espessuras que aparece no editor do Dinabox (Propriedades > Espessura) agora vem da configuração ATUAL do componente no Dinabox (a mesma que você salva na galeria), e não mais da peça usada como molde. Vale para o tamponamento simples e o com 45°.",
-    "Painel Auto / Corrigir: mudou a lista na galeria do Dinabox? As peças que já estão no projeto recebem a lista nova sem reinserir — ao abrir o Painel Auto, ao criar uma peça, ao clicar numa peça ou no botão Corrigir (bandeja de medidas).",
-    "Numeração: em projeto novo os grupos e os nomes começam no 1. A peça criada pelo Painel Auto não herda mais nome/número do molde (ex.: 'Painel 53'), e o contador de grupos só conta o que está de fato no projeto (cópias que ficavam em definições sem uso não contam mais)."
+    "Correção: janelas do Dinabox que não abriam ou fechavam sozinhas. O PCF não grava mais nada por conta própria no modelo enquanto uma janela do Dinabox (editor, gavetas, portas…) estiver aberta — espera ela fechar. E as listas de espessura só são gravadas quando mudaram de verdade (antes regravava toda vez que você clicava numa peça)."
   ]
 }
