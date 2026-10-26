@@ -1,7 +1,8 @@
 {
-  "versao": "3.2.2",
+  "versao": "3.2.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correção: o contorno do recorte orgânico fecha certinho (antes podia ficar com o começo e o fim soltos no mesmo ponto) e os trechos das pontes não se quebram mais.",
     "Pontes no Dinabox: no recorte orgânico (e na moldura que vira orgânico) o corte de dentro sai em 4 trechos com 5 mm sem corte entre eles, no meio dos lados retos. Menu Extensões › PCF - Pontes do recorte (Dinabox)… para mudar quantidade, tamanho ou desligar.",
     "Peça Mãe: escolha entre ✂ CORTAR ou ✎ SÓ MARCAR as divisões entre as frentes (o contorno de fora continua cortado). Fresa de 4 mm (editável) — o vão entre as frentes fica do tamanho da fresa. Cortar: 4 passadas (editável). Marcar: profundidade editável (padrão 1 mm). A escolha fica guardada.",
     "💡 Luz do PCF na barra: verde acesa = ligado; cinza apagada = desligado. Clicar na luz desliga tudo.",
