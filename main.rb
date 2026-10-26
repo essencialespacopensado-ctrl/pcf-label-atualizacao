@@ -278,6 +278,7 @@ module PCFLabel
         end
         # usinagens da fresa do Dinabox (orgânico, ranhuras): contorno por fora, furos e rebaixos por dentro
         pl_cont = nil; pl_furos = []; pl_rebs = []; pl_linhas = []
+        pl_pontes = {} # trechos do corte de dentro com pontes (PCF Ferramentas): juntam de volta num furo só
         d.entities.each do |pl|
           next unless pl.respond_to?(:definition) && pl.get_attribute('dinabox', 'polyline').is_a?(String)
           dados = (JSON.parse(pl.get_attribute('dinabox', 'polyline')) rescue nil)
@@ -290,6 +291,10 @@ module PCFLabel
             w = lp.map { |p| p.transform(tp) }
             prof_plano = dep.(w[0])                       # em que face está desenhada
             uv2 = w.map { |p| q = p - o; [q % u, q % v] }
+            if dados['pcf'].to_s == 'ponte' && !fechado
+              (pl_pontes[dados['grp'].to_s] ||= []) << { ord: dados['ord'].to_i, uv: uv2, pp: prof_plano, raio: raio, pz: pz }
+              next
+            end
             if fechado && uv2.size >= 3
               final = afastar2(uv2, dados['align'].to_s == '1' ? -raio : raio)
             elsif uv2.size == 2                           # linha reta aberta: ranhura da largura da fresa
@@ -322,6 +327,14 @@ module PCFLabel
               pl_rebs << { pts3: p3, prof: pz.round(2), lado: lado, pl: true }
             end
           end
+        end
+        pl_pontes.each_value do |tr|
+          tr = tr.sort_by { |x| x[:ord] }
+          uv = tr.flat_map { |x| x[:uv] }
+          next if uv.size < 3
+          final = afastar2(uv, tr[0][:raio])
+          next unless tr[0][:pz] >= esp_mm - 0.3
+          pl_furos << final.map { |x, y| o.offset(u, x).offset(v, y).offset(n, tr[0][:pp]) } # o PCF Label faz as pontes dele no G-code
         end
         rebs.concat(pl_rebs)
         # se a maioria dos rebaixos é do outro lado, vira a peça (a máquina só usina por cima)
@@ -1482,7 +1495,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-26.01'
+  PLUGIN_VERSAO = '2026-10-26.02'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

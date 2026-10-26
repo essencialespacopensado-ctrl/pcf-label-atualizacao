@@ -1,6 +1,17 @@
 [
  {
   "tela": "2026-10-26.03",
+  "plugin": "2026-10-26.02",
+  "data": "26/10",
+  "titulo": "Pontes também no Dinabox",
+  "itens": [
+   "Recorte orgânico (e moldura transformada em orgânico): o corte de dentro agora sai DESENHADO na peça do Dinabox em 4 trechos, com 5 mm sem corte entre eles — a peça do Dinabox também segura o miolo.",
+   "As pontes ficam no meio dos lados retos, longe dos cantos.",
+   "O PCF Label junta os trechos de volta e faz as pontes dele no G-code (não fica ponte em dobro)."
+  ]
+ },
+ {
+  "tela": "2026-10-26.03",
   "plugin": "2026-10-26.01",
   "data": "26/10",
   "titulo": "Pontes: 5 mm sem corte",
