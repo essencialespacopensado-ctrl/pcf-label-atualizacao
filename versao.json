@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-23.01",
+ "tela": "2026-10-26.01",
  "plugin": "2026-10-23.06",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,17 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-26.01",
+   "plugin": "2026-10-23.06",
+   "data": "26/10",
+   "titulo": "Pontes no miolo (molduras vazadas)",
+   "itens": [
+    "No corte de dentro dos vazados e furos que atravessam (ex.: moldura vazada), a fresa deixa PONTES: trechos curtos sem cortar até o fim, com uma lâmina fina que segura o miolo na chapa para ele não trabalhar. Depois é só cortar as pontes.",
+    "Tudo editável em ⚙ Ferramentas e usinagem → Pontes no miolo: liga/desliga, quantidade, comprimento da ponte (mm), altura que fica (mm) e a partir de qual tamanho de recorte (contorno em mm).",
+    "A conferência dos cortes mostra quais recortes saíram com pontes e a simulação desenha a fresa subindo nelas."
+   ]
+  },
   {
    "tela": "2026-10-23.01",
    "plugin": "2026-10-23.06",

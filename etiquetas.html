@@ -305,6 +305,20 @@ td.fita input{width:auto;margin:0}
       <div><label>Peça pequena: área &lt; (m²)</label><input id="pqArea" type="number" step="0.01"></div>
       <div><label>1ª passada das pequenas (%)</label><input id="p1" type="number" step="1"></div>
     </div>
+    <h3 class="sub">Pontes no miolo (vazados e furos que atravessam)</h3>
+    <div class="hint" style="margin:-2px 0 4px">Trechos curtos que a fresa não corta até o fim: seguram o miolo na chapa para ele não trabalhar. Depois corte as pontes no estilete/tupia.</div>
+    <div class="row">
+      <div><label><input type="checkbox" id="ponteOn"> Fazer pontes</label></div>
+      <div><label>Quantidade</label><input id="ponteQtd" type="number" step="1" min="1" max="20"></div>
+    </div>
+    <div class="row">
+      <div><label>Comprimento da ponte (mm)</label><input id="ponteComp" type="number" step="0.5" min="1"></div>
+      <div><label>Altura que fica (mm)</label><input id="ponteAlt" type="number" step="0.1" min="0.2"></div>
+    </div>
+    <div class="row">
+      <div><label>Só em recortes com contorno de pelo menos (mm)</label><input id="ponteMin" type="number" step="10" min="0"></div>
+      <div></div>
+    </div>
     <label>Ferramenta de rebaixo / usinagem</label><select id="tReb"></select>
     <h3 class="sub">Melamina</h3>
     <div class="row">
@@ -393,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-23.01';
+const VERSAO = '2026-10-26.01';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -448,7 +462,7 @@ let cores = ls.get('etq_cores', null) || (AQ && AQ.cores) || [];
 // configuração igual em todos os PCs: a deste PC ou a da pasta comum do Dropbox (D.cfgComum), a que foi mexida por último
 const CFG_L = ls.get('etq_cfg', {}), CFG_C = D.cfgComum || (typeof CFG_SEMENTE !== 'undefined' ? CFG_SEMENTE : {});
 const CFG_N = (+CFG_C._t || 0) > (+CFG_L._t || 0) ? CFG_C : CFG_L, CFG_V = CFG_N === CFG_C ? CFG_L : CFG_C;
-let cfg = Object.assign({empresa:'', preset:'100x50', lw:100, lh:50, copias:1, bc:true, fitaPerda:10, fitaLarg:0, veio:{}, fech:{}, tCorte:2, tReb:2, t25:2, tMel:4, transp:0.05, pqArea:0.05, p1:90, melFinal:2.5, melPass:4, melSobrep:'', soPCF:true, mag:null, oFolga:10, oMargem:15, oSepCor:true, oRot:true, oRetalho:false, oPeqRet:true, veioTudo:false, oEspelhar:false}, (AQ && AQ.cfg) || {}, CFG_V, CFG_N);
+let cfg = Object.assign({empresa:'', preset:'100x50', lw:100, lh:50, copias:1, bc:true, fitaPerda:10, fitaLarg:0, veio:{}, fech:{}, tCorte:2, tReb:2, t25:2, tMel:4, transp:0.05, pqArea:0.05, p1:90, melFinal:2.5, melPass:4, melSobrep:'', soPCF:true, mag:null, oFolga:10, oMargem:15, oSepCor:true, oRot:true, oRetalho:false, oPeqRet:true, veioTudo:false, oEspelhar:false, ponteOn:true, ponteQtd:4, ponteComp:8, ponteAlt:1.5, ponteMin:300}, (AQ && AQ.cfg) || {}, CFG_V, CFG_N);
 // Paulo (16/10): fresa de 6 mm como padrão no corte, no corte de peça grossa e no rebaixo (uma vez só; depois você muda à vontade)
 if (!cfg.fresa6) { const t6 = (cfg.mag || []).find(x => +x.d === 6 && /reta/i.test(x.nome)); const t = t6 ? +t6.t : 2; cfg.tCorte = t; cfg.t25 = t; cfg.tReb = t; cfg.fresa6 = true }
 // listas por cor (nomes, veio, lâmina…) juntam as do plano, deste PC e do Dropbox — vale a mais nova em cada cor
@@ -2203,10 +2217,11 @@ function renderCNC(){
   const prof = (+D.espessura) - (+cfg.melFinal || 0), mp = +cfg.melPass || 4;
   $('melInfo').textContent = prof > 0 ? `Rebaixo de ${fmt(prof)} mm em ${Math.ceil(prof / mp - 1e-6)} passadas (chapa ${fmt(D.espessura)} → ${fmt(+cfg.melFinal)} mm).` : 'Espessura final maior que a chapa.';
 }
-[['transp','transp'],['pqArea','pqArea'],['p1','p1'],['melFinal','melFinal'],['melPass','melPass'],['melSobrep','melSobrep']].forEach(([id, k]) => {
+[['transp','transp'],['pqArea','pqArea'],['p1','p1'],['melFinal','melFinal'],['melPass','melPass'],['melSobrep','melSobrep'],['ponteQtd','ponteQtd'],['ponteComp','ponteComp'],['ponteAlt','ponteAlt'],['ponteMin','ponteMin']].forEach(([id, k]) => {
   $(id).value = cfg[k]; $(id).addEventListener('input', e => { cfg[k] = e.target.value; salvar(); renderCNC(); renderFolhas() });
 });
 ['tCorte','t25','tReb','tMel'].forEach(id => $(id).addEventListener('change', e => { cfg[id] = +e.target.value; salvar() }));
+$('ponteOn').checked = cfg.ponteOn !== false; $('ponteOn').addEventListener('change', e => { cfg.ponteOn = e.target.checked; salvar() });
 $('soPCF').checked = !!cfg.soPCF; $('soPCF').addEventListener('change', e => { cfg.soPCF = e.target.checked; salvar() });
 $('magTb').addEventListener('input', e => { const m = e.target.dataset.m; if (m === undefined) return; const k = e.target.dataset.k; cfg.mag[m][k] = k === 'nome' ? e.target.value : +e.target.value; salvar() });
 $('magTb').addEventListener('change', () => renderCNC());
@@ -3960,6 +3975,43 @@ function gcLinha(pts){
   const a = pts[li], b = pts[(li + 1) % pts.length]; return [[(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]].concat(pts.slice(li + 1), pts.slice(0, li + 1));
 }
 function gcCaminho(q, lado, r){ return lado === 'fora' ? gcOffset(q, r, +1) : lado === 'dentro' ? gcOffset(q, r, -1) : gcLinha(q) }
+// PONTES: igual ao gcContorno, mas em N trechos (espalhados no contorno) a fresa não desce abaixo de 'alt' (mm acima da mesa):
+// fica uma lâmina que segura o miolo. Comprimento da ponte = o que sobra de material (a fresa come o raio dos dois lados).
+function pontesCfg(){ return {qtd: Math.max(1, Math.min(20, Math.round(+cfg.ponteQtd || 4))), comp: Math.max(0.5, +cfg.ponteComp || 8), alt: Math.max(0.2, +cfg.ponteAlt || 1.5)} }
+function gcContornoPontes(L, q, zTopo, zFim, fe, pt){
+  const f4 = GC.f4, seg = q.concat([q[0]]), zs = zSegura(zTopo);
+  const acc = [0]; for (let i = 1; i < seg.length; i++) acc.push(acc[i - 1] + Math.hypot(seg[i][0] - seg[i - 1][0], seg[i][1] - seg[i - 1][1]));
+  const per = acc[acc.length - 1]; if (!(per > 0)) return gcContorno(L, q, zTopo, zFim, fe);
+  const R = Math.min(GC.rampa, per * 0.5), W = pt.comp + fe.d, zTab = Math.max(zFim, pt.alt);
+  const centros = Array.from({length: pt.qtd}, (_, k) => per * (k + 0.5) / pt.qtd);
+  const md = s => ((s % per) + per) % per;
+  const naPonte = s => centros.some(c => { const d = Math.abs(md(s) - c); return Math.min(d, per - d) < W / 2 });
+  const pos = s => { s = md(s); let i = 1; while (i < acc.length - 1 && acc[i] < s) i++; const a = seg[i - 1], b = seg[i], l = acc[i] - acc[i - 1], t = l > 0 ? (s - acc[i - 1]) / l : 0; return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t] };
+  const base = s => s <= R ? zTopo - (zTopo - zFim) * s / R : zFim;
+  const zSeg = (s, meio) => naPonte(meio) ? Math.max(base(s), zTab) : base(s);
+  // pontos de quebra: cantos do contorno (2 voltas), começo/fim de cada ponte, fim da rampa
+  const qb = new Set([R, R + per]);
+  acc.forEach(a => { qb.add(a); qb.add(a + per) });
+  centros.forEach(c => { [md(c - W / 2), md(c + W / 2)].forEach(x => { qb.add(x); qb.add(x + per) }) });
+  const pts = [...qb].filter(x => x > 1e-6 && x <= R + per + 1e-6).sort((a, b) => a - b);
+  L.push(`G0   Z${f4(zs)}`, `G0 X${f4(q[0][0])} Y${f4(q[0][1])}`, `G0   Z${f4(Math.max(zTopo, GC.topoChapa != null ? GC.topoChapa : zTopo) + 5)}`, `G1   Z${f4(zTopo)} F${fe.p.toFixed(1)}`);
+  let ant = 0, zAtual = zTopo, feed = false;
+  pts.forEach((b, k) => {
+    const meio = (ant + b) / 2, zIni = naPonte(meio) ? Math.max(base(ant), zTab) : base(ant), zFimSeg = zSeg(b, meio);
+    if (Math.abs(zIni - zAtual) > 1e-4) L.push(`G1   Z${f4(zIni)}`);   // sobe para a ponte / desce depois dela
+    const [x, y] = pos(b);
+    L.push(`G1 X${f4(x)} Y${f4(y)} Z${f4(zFimSeg)}` + (!feed && ant >= R - 1e-6 ? ` F${fe.f.toFixed(1)}` : ''));
+    if (!feed && ant >= R - 1e-6) feed = true;
+    zAtual = zFimSeg; ant = b;
+  });
+  L.push(`G0   Z${f4(zs)}`);
+}
+function gcContornoNPontes(L, q, zTopo, zFim, fe, N, pt){
+  let zA = zTopo;
+  for (let k = 1; k <= N; k++) { const zb = zTopo - (zTopo - zFim) * k / N; gcContornoPontes(L, q, zA, zb, fe, pt); zA = zb }
+}
+const perimetro = q => q.reduce((s, a, i) => { const b = q[(i + 1) % q.length]; return s + Math.hypot(b[0] - a[0], b[1] - a[1]) }, 0);
+const usaPontes = q => cfg.ponteOn !== false && perimetro(q) >= (+cfg.ponteMin || 0);
 // contorno em N passadas (cada passada desce um pedaço, com rampa)
 function gcContornoN(L, q, zTopo, zFim, fe, N){
   let zA = zTopo;
@@ -4047,14 +4099,17 @@ function gerarGcodeDireto(){
     // ordem: furos → usinagens → rebaixos → pequenas (90%) → peças no vazado → vazados → peças → pequenas (resto)
     const passa = topo - zFim;   // profundidade de corte que atravessa (ex.: 18 + 0,05 = 18,05)
     // ORDEM (regra do Paulo): furos → rebaixos/usinagens → peças pequenas → peças grandes (contorno por último)
-    furos.forEach(o => reg(o.n, 'Furo / recorte', o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N)));
+    const PT = pontesCfg();
+    const cortaMiolo = (o, nome) => usaPontes(o.q) ? reg(o.n, `${nome} (com ${PT.qtd} pontes de ${fmt(PT.comp)} mm × ${fmt(PT.alt)} mm)`, o.lado, o.N, passa, () => gcContornoNPontes(L, o.q, topo, zFim, fe, o.N, PT))
+                                                   : reg(o.n, nome, o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N));
+    furos.forEach(o => cortaMiolo(o, 'Furo / recorte'));
     usin.forEach(o => reg(o.n, o.tipo, o.lado, o.N, o.prof, () => gcContornoN(L, o.q, topo, topo - o.prof, fe, o.N)));
     const rebDes = [];
     rebs.forEach(o => reg(o.n, 'Rebaixo (esvaziar)', 'bolsao', o.N, o.prof, () => { const a = gcBolsao(L, o.q, o.peca, topo, topo - o.prof, fe, o.N); if (a) rebDes.push(...a); else avisos.push(`${c.nome}: rebaixo nº ${o.n} menor que a fresa`) }));
     const z1 = Math.round((topo - p1 * (topo - zFim)) * 100) / 100;
     peq.forEach(o => reg(o.n, `Peça pequena — 1ª parte ${Math.round(p1 * 100)}% (deixa uma pele para não soltar; termina no fim)`, o.lado, o.N, topo - z1, () => gcContornoN(L, o.q, topo, z1, fe, o.N)));
     noVazado.forEach(o => reg(o.n, 'Peça (dentro do vazado)', o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N)));
-    vazados.forEach(o => reg(o.n, 'Vazado', o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N)));
+    vazados.forEach(o => cortaMiolo(o, 'Vazado'));
     normais.forEach(o => reg(o.n, 'Peça (contorno)', o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N)));
     peq.forEach(o => reg(o.n, 'Peça pequena — final (atravessa)', o.lado, 1, passa, () => gcContorno(L, o.q, z1, zFim, fe)));
     L.push(...gcRodape(topo));
