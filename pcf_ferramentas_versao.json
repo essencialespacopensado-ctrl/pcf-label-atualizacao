@@ -1,7 +1,8 @@
 {
-  "versao": "3.1.8",
+  "versao": "3.1.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Interruptor geral: o botão da barra saiu (o SketchUp não deixa o desenho dele mudar). O interruptor fica no topo do painel PCF — a luz acende verde quando ligado — e também no menu Extensões > PCF ligado / desligado.",
     "⏻ Interruptor geral do PCF (na barra e no topo do painel, com luz verde quando ligado). Desligado, nada roda sozinho: cotas e colisão na tela, números, vigias de seleção, bordas e busca de atualização param. Os botões continuam funcionando quando você clica. A escolha fica guardada.",
     "Painel Auto: seletor de espessura com um clique — 6,3 · 15,3 · 18,3 · 25,3 (o campo de digitar continua).",
     "Painel Auto: não duplica mais peças. Um clique = uma peça (o 2º clique do duplo clique e cliques enquanto a peça está sendo criada são ignorados) e, se já existe uma peça igual no mesmo lugar, ele avisa e não cria outra.",
