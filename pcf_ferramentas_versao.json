@@ -1,7 +1,10 @@
 {
-  "versao": "3.1.7",
+  "versao": "3.1.8",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "⏻ Interruptor geral do PCF (na barra e no topo do painel, com luz verde quando ligado). Desligado, nada roda sozinho: cotas e colisão na tela, números, vigias de seleção, bordas e busca de atualização param. Os botões continuam funcionando quando você clica. A escolha fica guardada.",
+    "Painel Auto: seletor de espessura com um clique — 6,3 · 15,3 · 18,3 · 25,3 (o campo de digitar continua).",
+    "Painel Auto: não duplica mais peças. Um clique = uma peça (o 2º clique do duplo clique e cliques enquanto a peça está sendo criada são ignorados) e, se já existe uma peça igual no mesmo lugar, ele avisa e não cria outra.",
     "Aba Interno: quando o módulo tem gavetas em vãos separados (divisão invisível / prateleira), cada vão aparece aberto e separado, como um módulo próprio (Vão 1 · de cima, Vão 2 · de baixo…), com todos os campos dele. Antes ficavam escondidos em 'Ajustar cada gaveteiro separado'. As Frentes empilhadas continuam em cima.",
     "Painel PCF, aba Medidas: '➕ Aumentar todas as selecionadas' — some (ou tire) Comprimento, Largura e Espessura de todas as peças selecionadas de uma vez. Um Ctrl+Z desfaz tudo.",
     "Painel PCF com visual escuro e tecnológico (todas as abas) e aba Medidas compacta: Medidas, Rotação, Espelhar, Posição, Afastamentos (em cruz) e Ações. Nenhuma função saiu.",
