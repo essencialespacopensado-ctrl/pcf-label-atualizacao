@@ -277,7 +277,7 @@ module PCFLabel
           { pts3: x[:pts], prof: (de_cima ? dd : esp_mm - dd).round(2), lado: de_cima ? 1 : -1 }
         end
         # usinagens da fresa do Dinabox (orgânico, ranhuras): contorno por fora, furos e rebaixos por dentro
-        pl_cont = nil; pl_furos = []; pl_rebs = []
+        pl_cont = nil; pl_furos = []; pl_rebs = []; pl_linhas = []
         d.entities.each do |pl|
           next unless pl.respond_to?(:definition) && pl.get_attribute('dinabox', 'polyline').is_a?(String)
           dados = (JSON.parse(pl.get_attribute('dinabox', 'polyline')) rescue nil)
@@ -286,6 +286,7 @@ module PCFLabel
           pz = dados['pz'].to_f
           tp = t * pl.transformation
           cadeias(pl.definition).each do |lp, fechado|
+            linha_uv = nil
             w = lp.map { |p| p.transform(tp) }
             prof_plano = dep.(w[0])                       # em que face está desenhada
             uv2 = w.map { |p| q = p - o; [q % u, q % v] }
@@ -296,11 +297,19 @@ module PCFLabel
               next if l < 1e-6
               nx = -dy / l * raio; ny = dx / l * raio
               final = [[a[0] + nx, a[1] + ny], [b[0] + nx, b[1] + ny], [b[0] - nx, b[1] - ny], [a[0] - nx, a[1] - ny]]
+              linha_uv = [a, b]
             else
               next
             end
             p3 = final.map { |x, y| o.offset(u, x).offset(v, y).offset(n, prof_plano) }
             atravessa = pz >= esp_mm - 0.3
+            # linha aberta (ranhura da fresa, ex.: corte/marcação entre as frentes da Peça Mãe): vai com a PRÓPRIA fresa (Ø 'di'),
+            # em 'pas' passadas, atravessando ou na profundidade pz
+            if linha_uv
+              l3 = linha_uv.map { |x, y| o.offset(u, x).offset(v, y).offset(n, prof_plano) }
+              pl_linhas << { pts3: p3, l3: l3, di: dados['di'].to_f, prof: pz.round(2), passa: atravessa, pas: dados['pas'].to_i }
+              next
+            end
             if dados['align'].to_s == '1'
               if atravessa
                 arf = ->(pp) { s2 = 0.0; pp.each_with_index { |q1, k| q2 = pp[(k + 1) % pp.size]; s2 += q1[0] * q2[1] - q2[0] * q1[1] }; s2.abs / 2 }
@@ -338,6 +347,7 @@ module PCFLabel
           rebs2 = rebs2.map { |r| r[:pl] ? r.merge(pts: recortar2(r[:pts], caixa).map { |x, y| [x.round(2), y.round(2)] }) : r }.reject { |r| r[:pts].size < 3 }
         end
         rebs2.each { |r| r.delete(:pl) }
+        linhas2 = pl_linhas.map { |r| { pts: r[:pts3].map { |q| p2.(q) }, linha: r[:l3].map { |q| p2.(q) }, di: r[:di], prof: r[:prof], passa: r[:passa], pas: r[:pas] } }
         rebs3 = rebs2.map { |r| r.delete(:p3) }
         # furos com o contorno 3D junto (para mostrar no SketchUp qual recorte é qual)
         buracos3 = ->(fc) { fc ? fc.loops.reject(&:outer?).map { |lp| lp.vertices.map { |vv| vv.position.transform(t) } } : [] }
@@ -357,7 +367,7 @@ module PCFLabel
         topo_nm = mod ? "Módulo Dinabox #{mod}" : (cam.first || nome).to_s
         pai_nome = cam.reverse.find { |c| !nome_limpo(c).empty? }
         auto = "#{auto} - #{nome_limpo(pai_nome)}" if pai_nome
-        pecas << { sk: e.persistent_id.to_s, skpath: (pids + [e.persistent_id]).join('.'), cam: (cam + [nome]).join(' > '), nome: nome, auto: auto, mat: (mat || 'sem material').to_s, esp: esp_padrao(esp), contorno: contorno, furos: furos, rebaixos: rebs2, virada: virar, origem: orig || 'SketchUp', topo: topo_id, topo_nome: topo_nm }
+        pecas << { sk: e.persistent_id.to_s, skpath: (pids + [e.persistent_id]).join('.'), cam: (cam + [nome]).join(' > '), nome: nome, auto: auto, mat: (mat || 'sem material').to_s, esp: esp_padrao(esp), contorno: contorno, furos: furos, rebaixos: rebs2, linhas: linhas2, virada: virar, origem: orig || 'SketchUp', topo: topo_id, topo_nome: topo_nm }
       elsif !filhos.empty?
         bb = Geom::BoundingBox.new; d.bounds.then { |b| 8.times { |k| bb.add(b.corner(k).transform(t)) } }
         coletar(d.entities, t, cam + [nome], pecas, bb, pids + [e.persistent_id], (e.material && e.material.display_name) || herd, orig, gira_e)
@@ -1472,7 +1482,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-23.06'
+  PLUGIN_VERSAO = '2026-10-26.01'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1947,7 +1957,11 @@ module PCFLabel
       end
       fs = p[:furos].each_with_index.map { |fu, i| filho.(fu, "f#{i + 1}", 'furo', '', '') }
       rs = (p[:rebaixos] || []).each_with_index.map { |r, i| filho.(r[:pts], "r#{i + 1}", 'rebaixo', r[:prof], r[:lado] < 0 ? 'rebaixo no VERSO (virar a peça)' : '') }
-      [mae] + fs + rs
+      ls = (p[:linhas] || []).each_with_index.map do |r, i|
+        c = filho.(r[:pts], "l#{i + 1}", 'usinagem', r[:passa] ? p[:esp] : r[:prof], r[:passa] ? 'corte entre as peças (Peça Mãe)' : 'marcação (Peça Mãe)')
+        c.merge(linha: r[:linha].map { |a, b| [(a - mx).round(2), (b - my).round(2)] }, fresaD: r[:di], passa: r[:passa], pasInicial: (r[:pas] > 0 ? r[:pas] : nil), okInicial: true, ladoInicial: 'linha')
+      end
+      [mae] + fs + rs + ls
     end
     esp_comum = lista.map { |x| x[:esp] }.group_by(&:itself).max_by { |_, v| v.size }.first
     titulo = (m.title.to_s.strip.empty? ? 'SketchUp' : m.title.to_s.strip)

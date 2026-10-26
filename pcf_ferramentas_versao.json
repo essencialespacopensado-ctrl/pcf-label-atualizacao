@@ -1,7 +1,8 @@
 {
-  "versao": "3.2.0",
+  "versao": "3.2.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Peça Mãe: escolha entre ✂ CORTAR ou ✎ SÓ MARCAR as divisões entre as frentes (o contorno de fora continua cortado). Fresa de 4 mm (editável) — o vão entre as frentes fica do tamanho da fresa. Cortar: 4 passadas (editável). Marcar: profundidade editável (padrão 1 mm). A escolha fica guardada.",
     "💡 Luz do PCF na barra: verde acesa = ligado; cinza apagada = desligado. Clicar na luz desliga tudo.",
     "Desligado, os botões PCF não abrem mais nada (Painel, Mover, Painel Auto, Correr, Peça Mãe, Paramétrico, Moldura, Veio, Calc Pró, Cotas e também Nesting, Números e Detalhamento do PCF Label): aparece 'O PCF está DESLIGADO. Ligar agora?' — Sim liga e abre; Não, nada acontece.",
     "Interruptor geral: o botão da barra saiu (o SketchUp não deixa o desenho dele mudar). O interruptor fica no topo do painel PCF — a luz acende verde quando ligado — e também no menu Extensões > PCF ligado / desligado.",

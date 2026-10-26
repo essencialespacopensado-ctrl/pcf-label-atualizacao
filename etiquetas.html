@@ -407,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-26.01';
+const VERSAO = '2026-10-26.02';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -519,7 +519,7 @@ D.pecas.forEach((p, i) => {
   p.nome = p._nomeAuto ? (p.nomeInicial || '') : s.nome; p.cor = (p.corInicial && /mm$/.test(s.cor || '') ? '' : s.cor) || p.corInicial || ''; p.obs = s.obs || p.camadaMDF || ''; p.f = s.f || [0,0,0,0]; p.fc = s.fc || '';
   p.tipo = p.dentro ? (s.tipo || p.tipoInicial || '') : 'peca';
   p.prof = s.prof !== undefined && s.prof !== '' ? s.prof : (p.profInicial !== undefined ? p.profInicial : '');
-  p.lado = s.lado || ''; p.pas = s.pas || 1; p.tipoOk = !!s.tipoOk;
+  p.lado = s.lado || p.ladoInicial || ''; p.pas = s.pas || p.pasInicial || 1; p.tipoOk = !!s.tipoOk || !!p.okInicial;
   if (!s.obs && p.obsInicial) p.obs = p.obsInicial;
   if (p.dentro) p.on = p.tipo === 'peca';
   p.on = s.on !== undefined ? s.on : !p.dentro;
@@ -3959,7 +3959,7 @@ function gcChapas(){
         (p.furos || []).forEach(h => itens.push({p: {tipo: 'furo', n: p.n, on: true, dentro: true, tipoOk: true}, q: tf(h), mae: false}));
         aberturas(p).forEach(h => itens.push({p: {tipo: 'vazado', n: p.n, on: true, dentro: true}, q: tf(h), mae: false}));
         const qm = itens[itens.length - 1].q;
-        (PLANO.filhosDe.get(p) || []).forEach(c => itens.push({p: c, q: tf(polyPts(c)), mae: false, paiQ: qm})) });
+        (PLANO.filhosDe.get(p) || []).forEach(c => itens.push({p: c, q: tf(polyPts(c)), ql: c.linha ? tf(c.linha) : null, mae: false, paiQ: qm})) });
       ch.push({nome: 'Chapa ' + nCh(i), cor: f.cor, itens, lado: txtLado(f)}) });
   } else {
     folhasLista().forEach(f => { const itens = [];
@@ -4012,6 +4012,24 @@ function gcContornoNPontes(L, q, zTopo, zFim, fe, N, pt){
 }
 const perimetro = q => q.reduce((s, a, i) => { const b = q[(i + 1) % q.length]; return s + Math.hypot(b[0] - a[0], b[1] - a[1]) }, 0);
 const usaPontes = q => cfg.ponteOn !== false && perimetro(q) >= (+cfg.ponteMin || 0);
+// LINHA ABERTA com a fresa própria (corte/marcação entre as frentes da Peça Mãe): cada passada desce em rampa
+// ao longo da linha e volta limpando no fundo
+function gcLinhaAberta(L, o, zTopo, zFim, fe){
+  const f4 = GC.f4, zs = zSegura(zTopo); const a = o.a, b = o.b;
+  L.push(`G0   Z${f4(zs)}`, `G0 X${f4(a[0])} Y${f4(a[1])}`, `G0   Z${f4(Math.max(zTopo, GC.topoChapa != null ? GC.topoChapa : zTopo) + 5)}`, `G1   Z${f4(zTopo)} F${fe.p.toFixed(1)}`);
+  for (let k = 1; k <= o.N; k++) {
+    const z = zTopo - (zTopo - zFim) * k / o.N;
+    L.push(`G1 X${f4(b[0])} Y${f4(b[1])} Z${f4(z)} F${fe.f.toFixed(1)}`, `G1 X${f4(a[0])} Y${f4(a[1])} Z${f4(z)}`);
+  }
+  L.push(`G0   Z${f4(zs)}`);
+}
+// troca de ferramenta no meio do programa (mesmo bloco do Aspire)
+function gcTroca(fe, topo){
+  const zh = GC.f4(topo + Z_SEG);
+  return [`G0 Z${zh}`, 'M5', ' ', '(########_Troca_de_Ferramentas_########)', `(Numero_da_Ferramenta:${fe.t})`, `(Descricao:${String(fe.nome).replace(/[()]/g, '')})`, ' ',
+    `G0 Z${zh}`, `M6 T${fe.t}`, `M3 S${fe.s}`, `G43 H${fe.t} Z${zh}`];
+}
+const ferrDiam = d => cfg.mag.filter(x => Math.abs(+x.d - d) < 0.05).sort((a, b) => (/reta/i.test(b.nome) ? 1 : 0) - (/reta/i.test(a.nome) ? 1 : 0))[0] || null;
 // contorno em N passadas (cada passada desce um pedaço, com rampa)
 function gcContornoN(L, q, zTopo, zFim, fe, N){
   let zA = zTopo;
@@ -4069,7 +4087,7 @@ function gerarGcodeDireto(){
     const ops = [];
     const reg = (n, tipo, lado, N, prof, fn) => { const a0 = L.length; fn(); let zmin = Infinity; for (let i = a0; i < L.length; i++) { const m = L[i].match(/Z(-?[\d.]+)/); if (m) zmin = Math.min(zmin, +m[1]) }
       ops.push({ordem: ops.length + 1, n, tipo, lado, N, prof, zEsperado: topo - prof, zmin: zmin === Infinity ? null : zmin, linhas: [a0 + 1, L.length]}) };
-    const usin = [], rebs = [], furos = [], peq = [], normais = [], noVazado = [], vazados = [];
+    const usin = [], rebs = [], furos = [], peq = [], normais = [], noVazado = [], vazados = [], linhasF = [];
     const maesC = c.itens.filter(it => it.mae);
     const furoComPeca = it => !it.mae && it.p.tipo === 'furo' && maesC.some(m => m.p !== paiDe(it.p) && m.q.every(([x, y]) => dentroPoly(x, y, it.q)));
     const vz = c.itens.filter(it => !it.mae && (it.p.tipo === 'vazado' || furoComPeca(it)));
@@ -4077,6 +4095,7 @@ function gerarGcodeDireto(){
     const mãeDe = it => c.itens.find(m => m.mae && it.pai === m.p);
     c.itens.forEach(it => {
       const p = it.p, N = passesDe(p);
+      if (!it.mae && p.linha && it.ql && +p.fresaD > 0) { linhasF.push({a: it.ql[0], b: it.ql[1], d: +p.fresaD, N, passa: !!p.passa, prof: +p.prof, n: (paiDe(p) || p).n}); return }
       if (!it.mae && p.tipo === 'vazado') { const q = gcOffset(it.q, r, -1); if (q) vazados.push({q, N: 1, n: p.n, lado: 'dentro'}); else avisos.push(`${c.nome}: vazado da peça nº ${p.n} menor que a fresa`); return }
       if (!it.mae) {
         const lado = ladoDe(p), prof = +p.prof;
@@ -4099,6 +4118,21 @@ function gerarGcodeDireto(){
     // ordem: furos → usinagens → rebaixos → pequenas (90%) → peças no vazado → vazados → peças → pequenas (resto)
     const passa = topo - zFim;   // profundidade de corte que atravessa (ex.: 18 + 0,05 = 18,05)
     // ORDEM (regra do Paulo): furos → rebaixos/usinagens → peças pequenas → peças grandes (contorno por último)
+    // PEÇA MÃE: linhas entre as frentes com a fresa delas (Ø 4) ANTES de tudo; depois troca para a fresa de corte
+    if (linhasF.length) {
+      const grupos = []; linhasF.forEach(o => { let g = grupos.find(x => Math.abs(x.d - o.d) < 0.05); if (!g) grupos.push(g = {d: o.d, itens: []}); g.itens.push(o) });
+      L.length = 0; let atual = null;
+      grupos.forEach((g, gi) => {
+        let tl = ferrDiam(g.d);
+        if (!tl) { avisos.push(`${c.nome}: não achei fresa de Ø ${fmt(g.d)} mm no magazine — linhas da Peça Mãe feitas com T${fe.t} (Ø ${fe.d})`); tl = fe }
+        if (gi === 0) { L.push(...gcCabecalho(tl, topo)); if (c.lado) L.splice(3, 0, `(COLOCAR A CHAPA: ${c.lado.replace(/[()]/g, '').replace(/[⬆⬇]/g, '').trim()})`) }
+        else if (tl.t !== atual.t) L.push(...gcTroca(tl, topo));
+        atual = tl;
+        g.itens.forEach(o => reg(o.n, o.passa ? `Corte entre as peças (Peça Mãe · fresa T${tl.t} Ø${fmt(tl.d)})` : `Marcação entre as peças (Peça Mãe · fresa T${tl.t} Ø${fmt(tl.d)})`, 'linha', o.N, o.passa ? passa : o.prof,
+          () => gcLinhaAberta(L, o, topo, o.passa ? zFim : topo - o.prof, tl)));
+      });
+      if (atual.t !== fe.t) L.push(...gcTroca(fe, topo));
+    }
     const PT = pontesCfg();
     const cortaMiolo = (o, nome) => usaPontes(o.q) ? reg(o.n, `${nome} (com ${PT.qtd} pontes de ${fmt(PT.comp)} mm × ${fmt(PT.alt)} mm)`, o.lado, o.N, passa, () => gcContornoNPontes(L, o.q, topo, zFim, fe, o.N, PT))
                                                    : reg(o.n, nome, o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N));
@@ -4116,7 +4150,7 @@ function gerarGcodeDireto(){
     const nomeArq = `${String(seq + 1).padStart(2, '0')} - ${String(osCli() || 'PCF').replace(/[\\/:*?"<>|]/g, '_')} - ${c.nome}${c.cor ? ' - ' + c.cor.replace(/[\\/:*?"<>|]/g, '_') : ''}.tap`;
     const Q = a => a.map(o => o.q);
     const des = [].concat(furos.map(o => ({q: o.q, n: o.n, t: 'furo'})), vazados.map(o => ({q: o.q, n: o.n, t: 'furo'})), peq.map(o => ({q: o.q, n: o.n, t: 'peq'})),
-      normais.map(o => ({q: o.q, n: o.n, t: 'corte'})), noVazado.map(o => ({q: o.q, n: o.n, t: 'corte'})), usin.map(o => ({q: o.q, n: o.n, t: 'usin'})));
+      normais.map(o => ({q: o.q, n: o.n, t: 'corte'})), noVazado.map(o => ({q: o.q, n: o.n, t: 'corte'})), usin.map(o => ({q: o.q, n: o.n, t: 'usin'})), linhasF.map(o => ({q: [o.a, o.b], n: o.n, t: o.passa ? 'furo' : 'usin'})));
     arquivos.push({fi: ordem[seq], des, nome: nomeArq, txt: L.join(GC.nl) + GC.nl, chapa: c, furos: Q(furos).concat(Q(vazados)), peq: Q(peq), normais: Q(normais).concat(Q(noVazado)), usin: Q(usin), rebs: rebDes, topo, fe, ops, espReal: espP(m0)});
   });
   return {arquivos, avisos, fe};

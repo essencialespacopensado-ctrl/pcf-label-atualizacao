@@ -1,5 +1,16 @@
 [
  {
+  "tela": "2026-10-26.02",
+  "plugin": "2026-10-26.01",
+  "data": "26/10",
+  "titulo": "Peça Mãe com fresa de 4 mm (cortar ou marcar)",
+  "itens": [
+   "G-code: as divisões entre as frentes da Peça Mãe saem com a FRESA DELAS (Ø 4 mm do magazine), primeiro, e depois a máquina troca para a fresa de corte e corta o contorno.",
+   "Cortar = atravessa nas passadas escolhidas na Peça Mãe (padrão 4); Só marcar = só a profundidade escolhida (a peça não solta).",
+   "Essas linhas já entram conferidas na lista e aparecem na conferência dos cortes com a fresa usada."
+  ]
+ },
+ {
   "tela": "2026-10-26.01",
   "plugin": "2026-10-23.06",
   "data": "26/10",
