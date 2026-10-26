@@ -1,5 +1,17 @@
 [
  {
+  "tela": "2026-10-26.03",
+  "plugin": "2026-10-26.01",
+  "data": "26/10",
+  "titulo": "Pontes: 5 mm sem corte",
+  "itens": [
+   "Pontes no miolo agora vêm como você pediu: 5 mm de comprimento e SEM CORTE (a fresa passa por cima, a ponte fica inteira).",
+   "Vale também para a moldura transformada em recorte orgânico (o corte de dentro dela ganha as pontes).",
+   "Ainda dá para mudar: ⚙ Ferramentas e usinagem → Pontes no miolo (deixe 'Altura que fica' vazio = sem corte, ou digite os mm que quer deixar).",
+   "Depois da ponte a fresa desce de novo na velocidade de mergulho."
+  ]
+ },
+ {
   "tela": "2026-10-26.02",
   "plugin": "2026-10-26.01",
   "data": "26/10",

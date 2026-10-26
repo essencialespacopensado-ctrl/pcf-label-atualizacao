@@ -313,7 +313,7 @@ td.fita input{width:auto;margin:0}
     </div>
     <div class="row">
       <div><label>Comprimento da ponte (mm)</label><input id="ponteComp" type="number" step="0.5" min="1"></div>
-      <div><label>Altura que fica (mm)</label><input id="ponteAlt" type="number" step="0.1" min="0.2"></div>
+      <div><label>Altura que fica (mm) — vazio = sem corte</label><input id="ponteAlt" type="number" step="0.1" min="0.2" placeholder="sem corte (inteira)"></div>
     </div>
     <div class="row">
       <div><label>Só em recortes com contorno de pelo menos (mm)</label><input id="ponteMin" type="number" step="10" min="0"></div>
@@ -407,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-26.02';
+const VERSAO = '2026-10-26.03';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -462,7 +462,7 @@ let cores = ls.get('etq_cores', null) || (AQ && AQ.cores) || [];
 // configuração igual em todos os PCs: a deste PC ou a da pasta comum do Dropbox (D.cfgComum), a que foi mexida por último
 const CFG_L = ls.get('etq_cfg', {}), CFG_C = D.cfgComum || (typeof CFG_SEMENTE !== 'undefined' ? CFG_SEMENTE : {});
 const CFG_N = (+CFG_C._t || 0) > (+CFG_L._t || 0) ? CFG_C : CFG_L, CFG_V = CFG_N === CFG_C ? CFG_L : CFG_C;
-let cfg = Object.assign({empresa:'', preset:'100x50', lw:100, lh:50, copias:1, bc:true, fitaPerda:10, fitaLarg:0, veio:{}, fech:{}, tCorte:2, tReb:2, t25:2, tMel:4, transp:0.05, pqArea:0.05, p1:90, melFinal:2.5, melPass:4, melSobrep:'', soPCF:true, mag:null, oFolga:10, oMargem:15, oSepCor:true, oRot:true, oRetalho:false, oPeqRet:true, veioTudo:false, oEspelhar:false, ponteOn:true, ponteQtd:4, ponteComp:8, ponteAlt:1.5, ponteMin:300}, (AQ && AQ.cfg) || {}, CFG_V, CFG_N);
+let cfg = Object.assign({empresa:'', preset:'100x50', lw:100, lh:50, copias:1, bc:true, fitaPerda:10, fitaLarg:0, veio:{}, fech:{}, tCorte:2, tReb:2, t25:2, tMel:4, transp:0.05, pqArea:0.05, p1:90, melFinal:2.5, melPass:4, melSobrep:'', soPCF:true, mag:null, oFolga:10, oMargem:15, oSepCor:true, oRot:true, oRetalho:false, oPeqRet:true, veioTudo:false, oEspelhar:false, ponteOn:true, ponteQtd:4, ponteComp:5, ponteAlt:'', ponteMin:300}, (AQ && AQ.cfg) || {}, CFG_V, CFG_N);
 // Paulo (16/10): fresa de 6 mm como padrão no corte, no corte de peça grossa e no rebaixo (uma vez só; depois você muda à vontade)
 if (!cfg.fresa6) { const t6 = (cfg.mag || []).find(x => +x.d === 6 && /reta/i.test(x.nome)); const t = t6 ? +t6.t : 2; cfg.tCorte = t; cfg.t25 = t; cfg.tReb = t; cfg.fresa6 = true }
 // listas por cor (nomes, veio, lâmina…) juntam as do plano, deste PC e do Dropbox — vale a mais nova em cada cor
@@ -496,6 +496,7 @@ function aplicarCodigos(){
 // espelhar vem desligado (muda o sentido das inclinações): desliga uma vez quem estava com o padrão antigo
 if (!cfg.espelharRevisto) { cfg.oEspelhar = false; cfg.espelharRevisto = true; try { localStorage.setItem('etq_cfg', JSON.stringify(cfg)) } catch (e) {} }
 // transpasse certo é 0,05 mm (antes ficou 0,5 por engano): corrige uma vez
+if (!cfg.ponteV2) { cfg.ponteComp = 5; cfg.ponteAlt = ''; cfg.ponteV2 = true; try { localStorage.setItem('etq_cfg', JSON.stringify(cfg)) } catch (e) {} }   // pontes: 5 mm SEM CORTE (padrão do Paulo)
 if (!cfg.transpCorrigido) { if (+cfg.transp === 0.5) cfg.transp = 0.05; cfg.transpCorrigido = true; try { localStorage.setItem('etq_cfg', JSON.stringify(cfg)) } catch (e) {} }
 const fmt = n => (Math.round(n*10)/10).toLocaleString('pt-BR', {useGrouping:false, maximumFractionDigits:1});
 const fmt2 = n => (Math.round(n*100)/100).toLocaleString('pt-BR', {useGrouping:false, maximumFractionDigits:2});
@@ -3977,12 +3978,12 @@ function gcLinha(pts){
 function gcCaminho(q, lado, r){ return lado === 'fora' ? gcOffset(q, r, +1) : lado === 'dentro' ? gcOffset(q, r, -1) : gcLinha(q) }
 // PONTES: igual ao gcContorno, mas em N trechos (espalhados no contorno) a fresa não desce abaixo de 'alt' (mm acima da mesa):
 // fica uma lâmina que segura o miolo. Comprimento da ponte = o que sobra de material (a fresa come o raio dos dois lados).
-function pontesCfg(){ return {qtd: Math.max(1, Math.min(20, Math.round(+cfg.ponteQtd || 4))), comp: Math.max(0.5, +cfg.ponteComp || 8), alt: Math.max(0.2, +cfg.ponteAlt || 1.5)} }
+function pontesCfg(){ const a = String(cfg.ponteAlt ?? '').trim(); return {qtd: Math.max(1, Math.min(20, Math.round(+cfg.ponteQtd || 4))), comp: Math.max(0.5, +cfg.ponteComp || 5), alt: a === '' ? null : Math.max(0.2, +a), inteira: a === ''} }
 function gcContornoPontes(L, q, zTopo, zFim, fe, pt){
   const f4 = GC.f4, seg = q.concat([q[0]]), zs = zSegura(zTopo);
   const acc = [0]; for (let i = 1; i < seg.length; i++) acc.push(acc[i - 1] + Math.hypot(seg[i][0] - seg[i - 1][0], seg[i][1] - seg[i - 1][1]));
   const per = acc[acc.length - 1]; if (!(per > 0)) return gcContorno(L, q, zTopo, zFim, fe);
-  const R = Math.min(GC.rampa, per * 0.5), W = pt.comp + fe.d, zTab = Math.max(zFim, pt.alt);
+  const R = Math.min(GC.rampa, per * 0.5), W = pt.comp + fe.d, zTab = pt.inteira ? (GC.topoChapa != null ? GC.topoChapa : zTopo) + 0.5 : Math.max(zFim, pt.alt);   // sem corte: a fresa passa por cima da ponte
   const centros = Array.from({length: pt.qtd}, (_, k) => per * (k + 0.5) / pt.qtd);
   const md = s => ((s % per) + per) % per;
   const naPonte = s => centros.some(c => { const d = Math.abs(md(s) - c); return Math.min(d, per - d) < W / 2 });
@@ -3998,9 +3999,11 @@ function gcContornoPontes(L, q, zTopo, zFim, fe, pt){
   let ant = 0, zAtual = zTopo, feed = false;
   pts.forEach((b, k) => {
     const meio = (ant + b) / 2, zIni = naPonte(meio) ? Math.max(base(ant), zTab) : base(ant), zFimSeg = zSeg(b, meio);
-    if (Math.abs(zIni - zAtual) > 1e-4) L.push(`G1   Z${f4(zIni)}`);   // sobe para a ponte / desce depois dela
+    let precisaF = false;
+    if (zIni > zAtual + 1e-4) L.push(`G1   Z${f4(zIni)}`);   // sobe para a ponte
+    else if (zIni < zAtual - 1e-4) { L.push(`G1   Z${f4(zIni)} F${fe.p.toFixed(1)}`); precisaF = feed }   // desce depois dela na velocidade de mergulho
     const [x, y] = pos(b);
-    L.push(`G1 X${f4(x)} Y${f4(y)} Z${f4(zFimSeg)}` + (!feed && ant >= R - 1e-6 ? ` F${fe.f.toFixed(1)}` : ''));
+    L.push(`G1 X${f4(x)} Y${f4(y)} Z${f4(zFimSeg)}` + ((!feed && ant >= R - 1e-6) || precisaF ? ` F${fe.f.toFixed(1)}` : ''));
     if (!feed && ant >= R - 1e-6) feed = true;
     zAtual = zFimSeg; ant = b;
   });
@@ -4134,7 +4137,7 @@ function gerarGcodeDireto(){
       if (atual.t !== fe.t) L.push(...gcTroca(fe, topo));
     }
     const PT = pontesCfg();
-    const cortaMiolo = (o, nome) => usaPontes(o.q) ? reg(o.n, `${nome} (com ${PT.qtd} pontes de ${fmt(PT.comp)} mm × ${fmt(PT.alt)} mm)`, o.lado, o.N, passa, () => gcContornoNPontes(L, o.q, topo, zFim, fe, o.N, PT))
+    const cortaMiolo = (o, nome) => usaPontes(o.q) ? reg(o.n, `${nome} (com ${PT.qtd} pontes de ${fmt(PT.comp)} mm ${PT.inteira ? 'sem corte' : '× ' + fmt(PT.alt) + ' mm'})`, o.lado, o.N, passa, () => gcContornoNPontes(L, o.q, topo, zFim, fe, o.N, PT))
                                                    : reg(o.n, nome, o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N));
     furos.forEach(o => cortaMiolo(o, 'Furo / recorte'));
     usin.forEach(o => reg(o.n, o.tipo, o.lado, o.N, o.prof, () => gcContornoN(L, o.q, topo, topo - o.prof, fe, o.N)));
