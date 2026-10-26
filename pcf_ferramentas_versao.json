@@ -1,7 +1,10 @@
 {
-  "versao": "3.1.3",
+  "versao": "3.1.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Aba Interno: quando o módulo tem gavetas em vãos separados (divisão invisível / prateleira), cada vão aparece aberto e separado, como um módulo próprio (Vão 1 · de cima, Vão 2 · de baixo…), com todos os campos dele. Antes ficavam escondidos em 'Ajustar cada gaveteiro separado'. As Frentes empilhadas continuam em cima.",
+    "Painel PCF, aba Medidas: '➕ Aumentar todas as selecionadas' — some (ou tire) Comprimento, Largura e Espessura de todas as peças selecionadas de uma vez. Um Ctrl+Z desfaz tudo.",
+    "Painel PCF com visual escuro e tecnológico (todas as abas) e aba Medidas compacta: Medidas, Rotação, Espelhar, Posição, Afastamentos (em cruz) e Ações. Nenhuma função saiu.",
     "Painel Auto: a lista de espessuras que aparece no editor do Dinabox (Propriedades > Espessura) agora vem da configuração ATUAL do componente no Dinabox (a mesma que você salva na galeria), e não mais da peça usada como molde. Vale para o tamponamento simples e o com 45°.",
     "Painel Auto / Corrigir: mudou a lista na galeria do Dinabox? As peças que já estão no projeto recebem a lista nova sem reinserir — ao abrir o Painel Auto, ao criar uma peça, ao clicar numa peça ou no botão Corrigir (bandeja de medidas).",
     "Numeração: em projeto novo os grupos e os nomes começam no 1. A peça criada pelo Painel Auto não herda mais nome/número do molde (ex.: 'Painel 53'), e o contador de grupos só conta o que está de fato no projeto (cópias que ficavam em definições sem uso não contam mais)."
