@@ -1,12 +1,23 @@
 {
  "tela": "2026-10-26.03",
- "plugin": "2026-10-26.02",
+ "plugin": "2026-10-27.01",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-26.03",
+   "plugin": "2026-10-27.01",
+   "data": "27/10",
+   "titulo": "Plano de corte não fecha mais sozinho",
+   "itens": [
+    "Correção: com um corte de seção ativo mas 'Mostrar cortes de seção' desligado, o PCF Label achava que nenhuma peça estava na tela — e o plano fechava sozinho.",
+    "Se nenhuma peça estiver na tela, o plano é feito com todas (não fica mais vazio).",
+    "A linha de corte desenhada na frente da peça (recorte orgânico, moldura) não esconde mais a peça."
+   ]
+  },
   {
    "tela": "2026-10-26.03",
    "plugin": "2026-10-26.02",

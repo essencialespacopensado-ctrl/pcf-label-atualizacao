@@ -1495,7 +1495,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-26.02'
+  PLUGIN_VERSAO = '2026-10-27.01'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1895,7 +1895,8 @@ module PCFLabel
     end
     return false if xs.empty?
     # corte de seção ativo (do modelo): o que fica do lado cortado (oposto à seta do plano) não aparece
-    m.entities.grep(Sketchup::SectionPlane).select(&:active?).each do |sp|
+    # (só se "Mostrar cortes de seção" estiver ligado: desligado, o corte não esconde nada)
+    (m.rendering_options['DisplaySectionCuts'] == false ? [] : m.entities.grep(Sketchup::SectionPlane).select(&:active?)).each do |sp|
       a, bb, c, d = sp.get_plane
       cortada = (0..7).all? { |k| q = b.corner(k).transform(t); a * q.x + bb * q.y + c * q.z + d < 0 }
       return false if cortada
@@ -1906,10 +1907,19 @@ module PCFLabel
     n = 9
     pts = []
     (0..n).each { |i| (0..n).each { |j| pts << [x0 + (x1 - x0) * i / n.to_f, y0 + (y1 - y0) * j / n.to_f] } }
+    # linha de corte desenhada na frente da peça (recorte orgânico, moldura…) e linhas do Dinabox não tapam a peça: o raio passa por elas
+    transparente = lambda do |cam|
+      cam.any? { |e| (e.respond_to?(:get_attribute) && e.get_attribute('pcf', 'tipo') == 'linha_corte') || (e.respond_to?(:definition) && e.definition.name =~ /dinabox_polyline/i) }
+    end
     pts.each do |x, y|
-      hit = m.raytest(view.pickray(x, y), true)
-      next unless hit && hit[1]
-      return true if hit[1].include?(ent)
+      ray = view.pickray(x, y)
+      6.times do
+        hit = m.raytest(ray, true)
+        break unless hit && hit[1]
+        return true if hit[1].include?(ent)
+        break unless transparente.(hit[1])
+        ray = [hit[0].offset(ray[1], 0.01.mm), ray[1]]
+      end
     end
     false
   rescue StandardError
@@ -1921,6 +1931,7 @@ module PCFLabel
     fora = pecas.reject { |p| na_tela?(m, p[:skpath]) }
     return pecas if fora.empty?
     dentro = pecas.size - fora.size
+    return pecas if dentro.zero?   # nenhuma na tela: faz com todas (antes o "Sim" fazia um plano vazio e a tela fechava)
     nomes = fora.map { |p| nome_limpo(p[:nome]).then { |x| x.empty? ? p[:nome].to_s : x } }.uniq.first(6).join(', ')
     msg = "#{fora.size} peça(s) não estão na tela agora (fora da vista ou de outra cena):\n#{nomes}#{fora.size > 6 ? '…' : ''}\n\n" \
           "Sim = plano só com as #{dentro} peça(s) que estão na tela\nNão = plano com todas as #{pecas.size}\nCancelar = não fazer o plano"
