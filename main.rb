@@ -1675,7 +1675,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-27.05'
+  PLUGIN_VERSAO = '2026-10-27.06'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2307,6 +2307,7 @@ module PCFLabel
     d.add_action_callback('novo') { |_c| (d.close rescue nil); enviar(true) }
     d.add_action_callback('abrir') do |_c, skp, id|
       begin
+        skp = caminho_local(skp)
         (d.close rescue nil)
         if chave_projeto(skp) == chave_projeto(Sketchup.active_model.path)
           @projeto_externo = nil; @pedido_plano = id; enviar(true)
@@ -2317,7 +2318,7 @@ module PCFLabel
         UI.messagebox("PCF Label: não consegui abrir — #{e.message}")
       end
     end
-    d.add_action_callback('pasta') { |_c, pasta| UI.openURL('file:///' + pasta.to_s.tr('\\', '/')) rescue nil }
+    d.add_action_callback('pasta') { |_c, pasta| UI.openURL('file:///' + caminho_local(pasta)) rescue nil }
     d.add_action_callback('reindexar') { |_c| (reindexar rescue nil); inicio }
     d.add_action_callback('nuvem') { |_c, k| (d.close rescue nil); @projeto_externo = nil; splash rescue nil; UI.start_timer(0.3, false) { nuvem_abrir(k) } }
     d.add_action_callback('conta') { |_c| f = conta_pcf; f ? f.conta_janela : UI.messagebox('O login ainda não está instalado neste PC. Clique no ⬆ Atualizar da barra PCF.') }
@@ -2353,7 +2354,21 @@ module PCFLabel
     js.(ok: false, msg: "Erro: #{e.message}") rescue nil
   end
   # abre o plano de OUTRA OS sem abrir o .skp dela: o plano guarda as próprias peças; o que você salvar vai para a pasta daquela OS
+  # caminho salvo em OUTRO computador (ex.: C:/Users/Usuario/Projetos Zonta Dropbox/...): acha o mesmo arquivo neste PC
+  # trocando o começo até a pasta do Dropbox pela pasta do Dropbox deste usuário
+  def self.caminho_local(p)
+    p = p.to_s.tr('\\', '/')
+    return p if p.empty? || File.exist?(p)
+    partes = p.split('/')
+    i = partes.index { |x| x =~ /dropbox/i }
+    return p unless i
+    casa = (ENV['USERPROFILE'] || ENV['HOME'] || '').tr('\\', '/')
+    [File.join(casa, *partes[i..-1]), *Dir.glob(File.join(casa, '*', *partes[i..-1]))].find { |x| File.exist?(x) } || p
+  rescue
+    p.to_s
+  end
   def self.abrir_plano_externo(skp, id)
+    skp = caminho_local(skp)
     @projeto_externo = skp.to_s
     id = id_plano(id)
     pl = ler_plano(id)

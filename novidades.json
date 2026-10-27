@@ -1,6 +1,16 @@
 [
  {
   "tela": "2026-10-27.01",
+  "plugin": "2026-10-27.06",
+  "data": "27/10",
+  "titulo": "Abrir plano de outro computador pelo Início",
+  "itens": [
+   "Correção: plano salvo em outro computador (ex.: pasta C:/Users/Usuario/... do Dropbox) não abria e a tela fechava — agora o PCF Label acha o mesmo arquivo na pasta do Dropbox deste PC.",
+   "O 📁 também abre a pasta certa neste PC."
+  ]
+ },
+ {
+  "tela": "2026-10-27.01",
   "plugin": "2026-10-27.05",
   "data": "27/10",
   "titulo": "Nomes sempre no mesmo padrão",
