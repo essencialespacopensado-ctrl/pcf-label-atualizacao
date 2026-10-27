@@ -1675,7 +1675,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-27.04'
+  PLUGIN_VERSAO = '2026-10-27.05'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2424,6 +2424,12 @@ module PCFLabel
       <div id="vazio" style="display:none">Nenhum plano de corte encontrado. Clique em 🔄 Reindexar.</div>
       <script>
       var D=__DADOS__; var ord='mtime', asc=false;
+      // escrita sempre no mesmo padrão: Primeira Letra Maiúscula (de/da/do/e/em minúsculos), espaços certos, hífen com espaço
+      var MIN={de:1,da:1,do:1,das:1,dos:1,e:1,em:1,no:1,na:1,nos:1,nas:1,com:1,para:1,a:1,o:1};
+      function pad(t){ t=String(t==null?'':t).replace(/[_]+/g,' ').replace(/\s*-\s*/g,' - ').replace(/\s+/g,' ').trim(); if(!t) return t;
+        return t.split(' ').map(function(w,i){ if(/\d/.test(w)||w=='-') return w.toUpperCase()==w?w:w; var l=w.toLocaleLowerCase('pt-BR'); if(i>0&&MIN[l]) return l; return l.replace(/[a-zà-ÿ]/,function(c){return c.toLocaleUpperCase('pt-BR');}); }).join(' '); }
+      function padL(e){ e.cliente=pad(e.cliente); e.amb=pad(e.amb); e.projeto=pad(e.projeto); (e.planos||[]).forEach(function(p){p.nome=pad(p.nome);}); return e; }
+      (D.linhas||[]).forEach(padL);
       function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
       // agrupado por CLIENTE: clique no nome do cliente para abrir/fechar os projetos dele
       var abertos={}; (D.linhas||[]).forEach(function(e){ if(e.atual) abertos[cliKey(e)]=true; });
@@ -2472,7 +2478,7 @@ module PCFLabel
         var nv=document.getElementById('nv');
         if(!r.ok){nv.innerHTML='☁ '+esc(r.msg)+(r.login?' <button id="bConta">👤 Entrar</button>':''); var bc=document.getElementById('bConta'); if(bc)bc.onclick=function(){sketchup.conta();}; return;}
         var grupos={};
-        r.lista.forEach(function(m){var g=grupos[m.chave]||(grupos[m.chave]={cliente:m.cliente,os:m.os,amb:m.amb,projeto:m.projeto,skp:m.skp,mtime:0,data:'',planos:[],nuvem:true,pasta:''});
+        r.lista.forEach(function(m){m.cliente=pad(m.cliente);m.amb=pad(m.amb);m.projeto=pad(m.projeto);m.nome=pad(m.nome);var g=grupos[m.chave]||(grupos[m.chave]={cliente:m.cliente,os:m.os,amb:m.amb,projeto:m.projeto,skp:m.skp,mtime:0,data:'',planos:[],nuvem:true,pasta:''});
           g.planos.push({k:m.k,id:m.id,nome:m.nome||'Plano',data:m.data,pecas:m.pecas,pc:m.pc}); var t=+m.t||0; if(t>g.mtime){g.mtime=Math.round(t>1e11?t/1000:t);g.data=m.data||'';}});
         var n=0;
         Object.keys(grupos).forEach(function(c){var g=grupos[c];

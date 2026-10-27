@@ -1,6 +1,15 @@
 [
  {
   "tela": "2026-10-27.01",
+  "plugin": "2026-10-27.05",
+  "data": "27/10",
+  "titulo": "Nomes sempre no mesmo padrão",
+  "itens": [
+   "Na página Início, cliente, ambiente, projeto e plano aparecem sempre no mesmo padrão: Primeira Letra Maiúscula (de/da/do/e em minúsculo), espaços e hífens certos — ex.: PARQUE DAS EMAS → Parque das Emas."
+  ]
+ },
+ {
+  "tela": "2026-10-27.01",
   "plugin": "2026-10-27.04",
   "data": "27/10",
   "titulo": "Início separado por cliente",
