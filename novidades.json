@@ -1,5 +1,16 @@
 [
  {
+  "tela": "2026-10-27.01",
+  "plugin": "2026-10-27.02",
+  "data": "27/10",
+  "titulo": "☁ Clientes e OSs na nuvem (dentro do login)",
+  "itens": [
+   "Todo plano salvo vai para a sua conta (login do PCF). Em qualquer computador: ☁ Clientes e OSs → escolha o cliente/OS → abre o plano, mesmo com outro projeto aberto no SketchUp.",
+   "O que você mudar num plano aberto da lista é salvo de volta na conta (e no PC), sem mexer no projeto que está aberto.",
+   "Login: botão 👤 Conta do PCF (e-mail e senha). Os botões do PCF continuam funcionando sem login."
+  ]
+ },
+ {
   "tela": "2026-10-26.03",
   "plugin": "2026-10-27.01",
   "data": "27/10",

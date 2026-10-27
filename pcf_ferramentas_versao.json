@@ -1,7 +1,8 @@
 {
-  "versao": "3.2.5",
+  "versao": "3.2.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "👤 Login (botão Conta): entre com e-mail e senha para usar a lista de Clientes e OSs na nuvem do PCF Label. Os botões do PCF continuam funcionando sem login.",
     "Correção: janelas do Dinabox que não abriam ou fechavam sozinhas. O PCF não grava mais nada por conta própria no modelo enquanto uma janela do Dinabox (editor, gavetas, portas…) estiver aberta — espera ela fechar. E as listas de espessura só são gravadas quando mudaram de verdade (antes regravava toda vez que você clicava numa peça)."
   ]
 }

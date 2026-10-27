@@ -1029,11 +1029,16 @@ module PCFLabel
     if ref.start_with?('PLANO_EXCLUIR:') then UI.start_timer(0.1, false) { excluir_plano(ref.sub('PLANO_EXCLUIR:', '')) }; return true end
     if ref.start_with?('PLANO_ABRIR:') then UI.start_timer(0.1, false) { abrir_plano(ref.sub('PLANO_ABRIR:', '')) }; return true end
     # plano novo e lista de planos: lê de novo o que está visível AGORA (não o da hora que abriu a tela)
+    if ref == 'PLANO_CLIENTES' then UI.start_timer(0.1, false) { nuvem_listar }; return true end
+    if ref.start_with?('PLANO_NUVEM:') then UI.start_timer(0.1, false) { nuvem_abrir(ref.sub('PLANO_NUVEM:', '')) }; return true end
+    if ref.start_with?('PROJETO_ABRIR:') then k, skp = ref.sub('PROJETO_ABRIR:', '').split('|', 2); UI.start_timer(0.1, false) { abrir_projeto_lista(k, skp) }; return true end
+    if ref == 'CONTA_LOGIN' then UI.start_timer(0.1, false) { f = conta_pcf; f ? f.conta_janela : UI.messagebox('O login ainda não está instalado neste PC. Atualize o PCF Ferramentas (⬆).') }; return true end
+    if ref == 'PLANO_PRINCIPAL' then UI.start_timer(0.1, false) { (@excluidos ||= []).delete(nome_plano); d = copia(@dados_vivos); d[:planoId] = 'principal'; d[:planoNome] = 'Plano principal'; d[:planoEscolhido] = true; d[:planos] = listar_planos; mostrar(d) }; return true end
     if ref == 'PLANO_NOVO' then UI.start_timer(0.1, false) { @pedido_novo = true; enviar(true) }; return true end
     if ref == 'PLANO_LISTA' then UI.start_timer(0.1, false) { enviar(true) }; return true end
     if ref == 'HIST'
       h = File.join(pasta_planos, 'historico')
-      arqs = Dir.glob(File.join(h, '*.json').tr('\\', '/')).select { |x| File.basename(x).start_with?(nome_plano + sufixo_plano(@plano_id) + ' ') }.sort_by { |x| File.mtime(x) }.last(60)
+      arqs = Dir.glob(File.join(h, '*.json').tr('\\', '/')).select { |x| File.basename(x).start_with?((@externo ? @externo[:chave] : nome_plano) + sufixo_plano(@plano_id) + ' ') }.sort_by { |x| File.mtime(x) }.last(60)
       lista = arqs.map { |x| { arq: File.basename(x), quando: File.mtime(x).strftime('%d/%m %H:%M'), txt: File.binread(x).force_encoding('UTF-8') } }
       @dlg.execute_script("receberVersoes(#{JSON.generate(lista).gsub('</', '<\\/')})") rescue nil
       return true
@@ -1168,6 +1173,7 @@ module PCFLabel
     require 'fileutils'
     txt = txt.to_s.dup.force_encoding('UTF-8')
     return if txt.strip.empty?
+    return salvar_plano_externo(txt) if @externo
     obj = (JSON.parse(txt) rescue nil)
     id = id_plano((obj && obj['id']) || @plano_id)
     return if (@excluidos ||= []).include?(nome_plano + sufixo_plano(id))   # plano excluído: a tela não grava ele de volta
@@ -1195,6 +1201,7 @@ module PCFLabel
     File.binwrite(File.join(pd, nome_plano + suf + '.json'), txt.b)
     a = arq_plano_modelo(id)
     (File.binwrite(a, txt.b) rescue nil) if a
+    (nuvem_enfileirar(nome_plano, id, obj, txt, Sketchup.active_model.path.to_s) rescue nil) if obj   # ☁ lista de clientes/OSs na conta
     (indice_atualizar_projeto(caminho_projeto) rescue nil)
     # histórico: uma cópia a cada 5 min, guarda as 40 últimas
     h = File.join(pd, 'historico')
@@ -1263,7 +1270,8 @@ module PCFLabel
   def self.mostrar(dados)
     dados[:pastaInfo] ||= info_pasta(caminho_projeto)
     dados[:externo] = true if @projeto_externo
-    dados[:projetoChave] = (nome_plano rescue nil)
+    dados[:projetoChave] = dados[:extChave] || (nome_plano rescue nil)
+    @externo = dados[:externo].is_a?(Hash) ? dados[:externo] : nil   # plano aberto da lista da nuvem (Hash); true = aberto pelo Início
     dados[:cfgComum] = (JSON.parse(File.read(File.join(pasta_comum, 'config.json'), encoding: 'UTF-8')) rescue nil)
     (checar_atualizacao(true) rescue nil)   # se tiver versão nova, instala sozinho
     (checar_online rescue nil)              # e pela internet, na hora
@@ -1316,6 +1324,7 @@ module PCFLabel
       re2 = /\A#{Regexp.escape(base)}(\.[\w\-]+)?\.json\z/
       arqs += Dir.children(File.dirname(pth)).select { |n| n =~ re2 }.map { |n| File.join(File.dirname(pth), n) }
     end
+    (listar_planos.each { |x| nuvem_enfileirar(nome_plano, x[:id], nil, nil, nil, { 'excluido' => true }) } rescue nil)
     arqs.each_with_index do |f, i|
       FileUtils.mv(f, File.join(h, nome_plano + ' ' + carimbo + " (reiniciado do zero #{i + 1})" + '.json')) rescue (File.delete(f) rescue nil)
     end
@@ -1324,11 +1333,181 @@ module PCFLabel
   rescue => e
     UI.messagebox("Não consegui reiniciar: #{e.message}") rescue nil
   end
+  # ==== ☁ 📋 CLIENTES e OSs NA NUVEM, dentro da CONTA do login (PCF Ferramentas · Firebase os-moveis) ====
+  # cada plano salvo vai para pcf_planos/<conta>/itens/<código>; sem login (ou sem internet) fica numa fila no PC
+  # (%APPDATA%\PCF Label\nuvem_fila) e sobe sozinho quando a conta estiver entrada. Nada vai para o Dropbox.
+  def self.conta_pcf
+    f = defined?(PCF::Ferramentas) ? PCF::Ferramentas : nil
+    (f && f.respond_to?(:fs_gravar) && f.respond_to?(:liberado?) && f.respond_to?(:com_token)) ? f : nil
+  end
+  def self.conta_info
+    f = conta_pcf; return nil unless f && f.liberado?
+    c = f.instance_variable_get(:@conta) || {}
+    c[:uid] ? c : nil
+  end
+  def self.doc_plano(chave, id)
+    require 'digest/md5'
+    Digest::MD5.hexdigest(chave.to_s + sufixo_plano(id))[0, 20]
+  end
+  def self.pasta_fila
+    d = File.join(ENV['APPDATA'] || Dir.tmpdir, 'PCF Label', 'nuvem_fila'); FileUtils.mkdir_p(d) rescue nil; d
+  end
+  # põe o plano (ou só uma marca, ex.: excluído) na fila para subir para a conta
+  def self.nuvem_enfileirar(chave, id, obj, txt, skp, extra = nil)
+    require 'fileutils'; require 'zlib'; require 'base64'
+    k = doc_plano(chave, id)
+    item = { 'doc' => k }
+    if obj
+      pr = (obj.dig('conf', 'proj') || {}); pi = skp.to_s.empty? ? {} : info_pasta(skp)
+      cli = pr['cliente'].to_s.strip; cli = pi[:cliente].to_s if cli.empty?
+      os = pr['os'].to_s.strip; os = pi[:os].to_s if os.empty?
+      amb = pr['amb'].to_s.strip; amb = pi[:amb].to_s if amb.empty?
+      item['campos'] = { 'chave' => chave.to_s, 'id' => id_plano(id), 'nome' => obj['nome'].to_s, 'cliente' => cli, 'os' => os, 'amb' => amb,
+                         'projeto' => obj['projeto'].to_s, 'skp' => skp.to_s, 'data' => obj['data'].to_s, 't' => obj['t'].to_i, 'n' => obj['n'].to_i,
+                         'pecas' => (obj['pecas'] || []).count { |p| !p['dentro'] }, 'pc' => ENV['COMPUTERNAME'].to_s, 'excluido' => false,
+                         'dados' => Base64.strict_encode64(Zlib::Deflate.deflate(txt.to_s.b, 9)) }
+    end
+    if extra
+      item['campos'] = (item['campos'] || {}).merge(extra)
+      item['mascara'] = extra.keys unless obj
+    end
+    File.binwrite(File.join(pasta_fila, k + (obj ? '' : '.marca') + '.json'), JSON.generate(item).b)
+    UI.start_timer(3, false) { nuvem_subir rescue nil } unless @subir_marcado; @subir_marcado = true
+  rescue
+    nil
+  end
+  # sobe a fila (um de cada vez); o que der certo sai da fila
+  def self.nuvem_subir
+    @subir_marcado = false
+    f = conta_pcf; c = conta_info
+    return unless f && c && !@subindo
+    nuvem_semear(c[:uid])
+    fila = Dir.glob(File.join(pasta_fila, '*.json').tr('\\', '/')).sort_by { |x| File.mtime(x) }
+    return if fila.empty?
+    @subindo = true
+    um = lambda do |i|
+      if i >= fila.size then @subindo = false; next end
+      arq = fila[i]; it = (JSON.parse(File.read(arq, encoding: 'UTF-8')) rescue nil)
+      unless it && it['doc'] && it['campos'] then (File.delete(arq) rescue nil); next um.call(i + 1) end
+      f.fs_gravar("pcf_planos/#{c[:uid]}/itens/#{it['doc']}", it['campos'], it['mascara']) do |s, _d|
+        (File.delete(arq) rescue nil) if s == 200
+        @nuvem_erro = s == 200 ? nil : s
+        um.call(i + 1)
+      end
+    end
+    um.call(0)
+  rescue
+    @subindo = false
+  end
+  # 1ª vez nesta conta neste PC: os planos que já existem no PC entram na lista da nuvem
+  def self.nuvem_semear(uid)
+    chv = "nuvem_semeado_#{uid}"
+    return if Sketchup.read_default('PCFLabel', chv, false)
+    Sketchup.write_default('PCFLabel', chv, true)
+    Dir.glob(File.join(pasta_planos, '*.json').tr('\\', '/')).each do |arq|
+      txt = File.binread(arq).force_encoding('UTF-8'); o = (JSON.parse(txt) rescue nil); next unless o.is_a?(Hash) && o['foto']
+      id = id_plano(o['id']); b = File.basename(arq, '.json')
+      chave = id == 'principal' ? b : b.sub(/\.#{Regexp.escape(id)}\z/, '')
+      nuvem_enfileirar(chave, id, o, txt, '')
+    end
+  rescue
+    nil
+  end
+  def self.responder_clientes(h)
+    @dlg.execute_script("mostrarClientes(#{JSON.generate(h).gsub('</', '<\\/')})") rescue nil
+  end
+  # lista de clientes / OSs / planos da conta (só os dados de cima, sem baixar os planos)
+  def self.nuvem_listar
+    f = conta_pcf
+    return responder_clientes(ok: false, semConta: true, msg: 'O login (conta) ainda não está instalado neste PC. Atualize o PCF Ferramentas (⬆).') unless f
+    c = conta_info
+    return responder_clientes(ok: false, login: true, msg: 'Entre na sua conta para ver os clientes e as OSs.') unless c
+    nuvem_subir
+    campos = %w[chave id nome cliente os amb projeto skp data t n pecas pc excluido]
+    url0 = "#{PCF::Ferramentas::FS_URL rescue 'https://firestore.googleapis.com/v1/projects/os-moveis/databases/(default)/documents/'}pcf_planos/#{c[:uid]}/itens?pageSize=300&" + campos.map { |x| "mask.fieldPaths=#{x}" }.join('&')
+    tudo = []
+    pagina = lambda do |tok|
+      f.com_token do |ok|
+        next responder_clientes(ok: false, msg: 'Sem internet ou a conta saiu. Tente de novo.') unless ok
+        cc = f.instance_variable_get(:@conta)
+        f.http(Sketchup::Http::GET, url0 + (tok ? "&pageToken=#{tok}" : ''), nil, cc[:id]) do |s, d|
+          next responder_clientes(ok: false, msg: "A nuvem não respondeu (#{s}). Tente de novo.") unless s == 200
+          tudo += (d['documents'] || []).map { |x| f.fs_doc(x).merge('k' => x['name'].to_s.split('/').last) }
+          next pagina.call(d['nextPageToken']) if d['nextPageToken']
+          atual = (nome_plano rescue nil)
+          fila = Dir.glob(File.join(pasta_fila, '*.json')).size
+          lista = tudo.reject { |m| m['excluido'] }.map { |m| m.merge('temSkp' => (!m['skp'].to_s.empty? && File.exist?(m['skp'].to_s)), 'atual' => m['chave'] == atual) }
+          responder_clientes(ok: true, lista: lista.sort_by { |m| -m['t'].to_i }, email: cc[:email].to_s, fila: fila)
+        end
+      end
+    end
+    pagina.call(nil)
+  rescue => e
+    responder_clientes(ok: false, msg: "Erro: #{e.message}")
+  end
+  # abre um plano da lista (de QUALQUER projeto, mesmo com outro projeto aberto)
+  def self.nuvem_abrir(k)
+    f = conta_pcf; c = conta_info
+    return responder_clientes(ok: false, login: true, msg: 'Entre na sua conta para abrir.') unless f && c
+    f.fs_get("pcf_planos/#{c[:uid]}/itens/#{k}") do |s, m|
+      begin
+        next responder_clientes(ok: false, msg: "Não consegui baixar esse plano (#{s}).") unless s == 200 && m && m['dados']
+        require 'zlib'; require 'base64'
+        txt = Zlib::Inflate.inflate(Base64.decode64(m['dados'])).force_encoding('UTF-8')
+        pl = JSON.parse(txt); id = id_plano(m['id'])
+        if m['chave'].to_s == (nome_plano rescue nil) && @dados_vivos
+          # é do projeto aberto agora: se a da nuvem for mais nova, ela vale; abre normal (com as peças vivas do SketchUp)
+          loc = ler_plano(id)
+          if loc.nil? || pl['t'].to_i > loc['t'].to_i
+            (File.binwrite(File.join(pasta_planos, nome_plano + sufixo_plano(id) + '.json'), txt.b) rescue nil)
+            a = arq_plano_modelo(id); (File.binwrite(a, txt.b) rescue nil) if a
+          end
+          next abrir_plano(id)
+        end
+        abrir_externo(m, pl)
+      rescue => e
+        responder_clientes(ok: false, msg: "Não consegui abrir: #{e.message}")
+      end
+    end
+  end
+  def self.abrir_externo(m, pl)
+    id = id_plano(m['id']); chave = m['chave'].to_s; skp = m['skp'].to_s
+    d = @dados_vivos ? copia(@dados_vivos) : { materiais: [], espessura: 18.3, chapa: '1850 x 2750', selecao: false, origem: 'sketchup', bancoCores: banco_arquivo.to_s }
+    d[:pecas] = copia(pl['pecas'] || []); d[:planoArq] = pl
+    d[:projeto] = (pl['projeto'] || m['projeto']).to_s; d[:data] = Time.now.strftime('%d/%m/%Y %H:%M'); d[:compras] = []
+    d[:planoId] = id; d[:planoNome] = (pl['nome'] || m['nome']).to_s
+    d[:numBase] = pl['numBase'].to_i; d[:chapaBase] = pl['chapaBase'].to_i
+    d[:planoEscolhido] = true; d[:planos] = (listar_planos rescue [])
+    d[:pastaInfo] = { cliente: m['cliente'].to_s, os: m['os'].to_s, amb: m['amb'].to_s }
+    d[:extChave] = chave
+    d[:externo] = { chave: chave, id: id, skp: skp, k: m['k'] || doc_plano(chave, id), temSkp: !skp.empty? && File.exist?(skp) }
+    mostrar(d)
+  end
+  # plano aberto da lista (de outro projeto): grava no PC e na conta, nunca no projeto que está aberto
+  def self.salvar_plano_externo(txt)
+    ex = @externo; obj = (JSON.parse(txt) rescue nil); return unless obj
+    obj['id'] = ex[:id]
+    obj['pecas'] ||= JSON.parse(JSON.generate(@dados_atual[:pecas])) if @dados_atual && @dados_atual[:pecas]
+    txt = JSON.generate(obj)
+    File.binwrite(File.join(pasta_planos, ex[:chave] + sufixo_plano(ex[:id]) + '.json'), txt.b)
+    if !ex[:skp].to_s.empty? && File.exist?(ex[:skp].to_s)
+      a = File.join(File.dirname(ex[:skp]), File.basename(ex[:skp], '.*') + '.pcfplano' + sufixo_plano(ex[:id]) + '.json')
+      (File.binwrite(a, txt.b) rescue nil)
+    end
+    nuvem_enfileirar(ex[:chave], ex[:id], obj, txt, ex[:skp])
+  end
+  def self.abrir_projeto_lista(k, skp)
+    return UI.messagebox("Não achei o projeto neste PC:\n#{skp}") unless File.exist?(skp.to_s)
+    @abrir_depois = true
+    Sketchup.open_file(skp)
+    UI.start_timer(1.5, false) { enviar if @abrir_depois; @abrir_depois = false }
+  end
   # exclui um plano: os arquivos vão para o histórico (dá para recuperar em "Versões"), não some de vez
   def self.excluir_plano(id)
     require 'fileutils'
     id = id_plano(id); suf = sufixo_plano(id); pd = pasta_planos; h = File.join(pd, 'historico'); FileUtils.mkdir_p(h)
     (@excluidos ||= []) << nome_plano + suf
+    (nuvem_enfileirar(nome_plano, id, nil, nil, nil, { 'excluido' => true }) rescue nil)
     carimbo = Time.now.strftime('%Y-%m-%d %H-%M-%S')
     [File.join(pd, nome_plano + suf + '.json'), arq_plano_modelo(id)].compact.each_with_index do |f, i|
       next unless File.exist?(f)
@@ -1495,7 +1674,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-27.01'
+  PLUGIN_VERSAO = '2026-10-27.02'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2021,13 +2200,15 @@ module PCFLabel
       return
     end
     @dados_vivos = copia(dados)          # o que está visível AGORA (para plano novo)
+    UI.start_timer(4, false) { nuvem_subir rescue nil }
     if @pedido_novo then @pedido_novo = false; novo_plano; return "#{lista.size} peças no plano novo" end
     if @pedido_plano then id = @pedido_plano; @pedido_plano = nil; abrir_plano(id); return "plano #{id} aberto" end
     planos = listar_planos
     dados[:planos] = planos
     # já tem plano salvo: PERGUNTA se quer fazer um plano de corte novo ou abrir um plano já feito (✕ = abre o último)
-    unless planos.empty?
-      dados[:planoEscolhido] = false
+    # sempre pergunta ao abrir (dá para abrir plano de outro cliente/OS pela lista da conta ☁)
+    if !planos.empty? || !@abrir_novo_direto
+      dados[:planoEscolhido] = false; dados[:inicio] = true
       mostrar(dados)
       return "#{planos.size} plano(s) salvo(s): escolha novo ou abrir"
     end
