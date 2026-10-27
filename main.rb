@@ -1414,6 +1414,7 @@ module PCFLabel
     nil
   end
   def self.responder_clientes(h)
+    if (@dlg.nil? || !@dlg.visible?) && h[:ok] == false then (@dlg.close rescue nil); UI.messagebox("PCF Label: #{h[:msg]}"); return end
     @dlg.execute_script("mostrarClientes(#{JSON.generate(h).gsub('</', '<\\/')})") rescue nil
   end
   # lista de clientes / OSs / planos da conta (só os dados de cima, sem baixar os planos)
@@ -1674,7 +1675,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-27.02'
+  PLUGIN_VERSAO = '2026-10-27.03'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2318,8 +2319,38 @@ module PCFLabel
     end
     d.add_action_callback('pasta') { |_c, pasta| UI.openURL('file:///' + pasta.to_s.tr('\\', '/')) rescue nil }
     d.add_action_callback('reindexar') { |_c| (reindexar rescue nil); inicio }
+    d.add_action_callback('nuvem') { |_c, k| (d.close rescue nil); @projeto_externo = nil; splash rescue nil; UI.start_timer(0.3, false) { nuvem_abrir(k) } }
+    d.add_action_callback('conta') { |_c| f = conta_pcf; f ? f.conta_janela : UI.messagebox('O login ainda não está instalado neste PC. Clique no ⬆ Atualizar da barra PCF.') }
+    d.add_action_callback('pronto') { |_c| inicio_nuvem(d) }
     d.set_file(arq)
     d.show
+  end
+  # ☁ planos da CONTA (de todos os computadores) na página Início
+  def self.inicio_nuvem(d)
+    js = ->(h) { d.execute_script("addNuvem(#{JSON.generate(h).gsub('</', '<\\/')})") rescue nil }
+    f = conta_pcf
+    return js.(ok: false, msg: 'Login não instalado neste PC — clique no ⬆ Atualizar da barra PCF.') unless f
+    c = conta_info
+    return js.(ok: false, login: true, msg: 'Entre na sua conta (👤 Conta) para ver os planos de todos os computadores.') unless c
+    nuvem_subir rescue nil
+    campos = %w[chave id nome cliente os amb projeto skp data t pecas pc excluido]
+    url0 = 'https://firestore.googleapis.com/v1/projects/os-moveis/databases/(default)/documents/' + "pcf_planos/#{c[:uid]}/itens?pageSize=300&" + campos.map { |x| "mask.fieldPaths=#{x}" }.join('&')
+    tudo = []
+    pagina = lambda do |tok|
+      f.com_token do |ok|
+        next js.(ok: false, msg: 'Sem internet ou a conta saiu.') unless ok
+        cc = f.instance_variable_get(:@conta)
+        f.http(Sketchup::Http::GET, url0 + (tok ? "&pageToken=#{tok}" : ''), nil, cc[:id]) do |s, dd|
+          next js.(ok: false, msg: "A nuvem não respondeu (#{s}).") unless s == 200
+          tudo += (dd['documents'] || []).map { |x| f.fs_doc(x).merge('k' => x['name'].to_s.split('/').last) }
+          next pagina.call(dd['nextPageToken']) if dd['nextPageToken']
+          js.(ok: true, email: cc[:email].to_s, lista: tudo.reject { |m| m['excluido'] })
+        end
+      end
+    end
+    pagina.call(nil)
+  rescue => e
+    js.(ok: false, msg: "Erro: #{e.message}") rescue nil
   end
   # abre o plano de OUTRA OS sem abrir o .skp dela: o plano guarda as próprias peças; o que você salvar vai para a pasta daquela OS
   def self.abrir_plano_externo(skp, id)
@@ -2371,6 +2402,8 @@ module PCFLabel
       .sub{color:#6b7280;font-size:12px}
       .planos{display:flex;gap:4px;flex-wrap:wrap}
       .planos button{padding:4px 8px;font-size:12px}
+      .planos button.nv{background:#eef6ff;border-color:#9cc3f5}
+      .nvb{display:inline-block;padding:1px 6px;border-radius:8px;background:#1f6feb;color:#fff;font-size:11px;margin-left:4px}
       #vazio{padding:30px;text-align:center;color:#6b7280}
       </style></head><body>
       <div class="topo"><h2>PCF Label — Início</h2>
@@ -2378,6 +2411,7 @@ module PCFLabel
         <button class="p" id="novo">➕ Plano do projeto aberto</button>
         <button id="reindexar" title="Varre todas as pastas da empresa (demora alguns segundos)">🔄 Reindexar</button>
       </div>
+      <div id="nv" style="padding:6px 14px;background:#eef6ff;border-bottom:1px solid #d6e6fb;font-size:12px">☁ Buscando os planos da sua conta…</div>
       <table><thead><tr>
         <th data-k="mtime">Data</th><th data-k="cliente">Cliente</th><th data-k="os">OS</th><th data-k="amb">Ambiente</th><th data-k="projeto">Projeto</th><th>Planos</th><th></th>
       </tr></thead><tbody id="corpo"></tbody></table>
@@ -2394,20 +2428,38 @@ module PCFLabel
         L.forEach(function(e){
           var tr=document.createElement('tr'); if(e.atual)tr.className='atual';
           var n=e.planos.length;
-          var pls=e.planos.map(function(p){return '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>';}).join('');
+          var pls=e.planos.map(function(p){return p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>';}).join('');
           tr.innerHTML='<td>'+esc(e.data)+'</td><td><b>'+esc(e.cliente||'—')+'</b></td><td>'+esc(e.os||'—')+'</td><td>'+esc(e.amb||'—')+'</td>'+
-            '<td>'+esc(e.projeto)+(e.atual?' <span class="badge">aberto</span>':'')+'<div class="sub">'+esc(e.pasta)+'</div></td>'+
+            '<td>'+esc(e.projeto)+(e.atual?' <span class="badge">aberto</span>':'')+(e.nuvem?'<span class="nvb">☁ nuvem</span>':'')+'<div class="sub">'+esc(e.pasta||'')+'</div></td>'+
             '<td><span class="badge'+(n>1?' m':'')+'">'+n+(n>1?' planos':' plano')+'</span></td>'+
-            '<td><div class="planos">'+pls+' <button data-pasta="'+esc(e.pasta)+'" title="Abrir a pasta do projeto">📁</button></div></td>';
+            '<td><div class="planos">'+pls+(e.pasta?' <button data-pasta="'+esc(e.pasta)+'" title="Abrir a pasta do projeto">📁</button>':'')+'</div></td>';
           tb.appendChild(tr);
         });
       }
       document.getElementById('busca').oninput=render;
       document.querySelectorAll('th[data-k]').forEach(function(th){th.onclick=function(){var k=th.dataset.k; if(ord==k)asc=!asc; else {ord=k;asc=(k!='mtime');} render();};});
-      document.getElementById('corpo').onclick=function(ev){var b=ev.target.closest('button');if(!b)return; if(b.dataset.pasta)sketchup.pasta(b.dataset.pasta); else if(b.dataset.skp)sketchup.abrir(b.dataset.skp,b.dataset.id);};
+      document.getElementById('corpo').onclick=function(ev){var b=ev.target.closest('button');if(!b)return; if(b.dataset.k){b.textContent='⏳ abrindo…';sketchup.nuvem(b.dataset.k);} else if(b.dataset.pasta)sketchup.pasta(b.dataset.pasta); else if(b.dataset.skp)sketchup.abrir(b.dataset.skp,b.dataset.id);};
       document.getElementById('novo').onclick=function(){sketchup.novo();};
       document.getElementById('reindexar').onclick=function(){this.textContent='⏳ Varrendo…';this.disabled=true;sketchup.reindexar();};
+      // ☁ planos da conta (de todos os computadores): entram na lista; o que já está neste PC não repete
+      function norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim();}
+      function addNuvem(r){
+        var nv=document.getElementById('nv');
+        if(!r.ok){nv.innerHTML='☁ '+esc(r.msg)+(r.login?' <button id="bConta">👤 Entrar</button>':''); var bc=document.getElementById('bConta'); if(bc)bc.onclick=function(){sketchup.conta();}; return;}
+        var grupos={};
+        r.lista.forEach(function(m){var g=grupos[m.chave]||(grupos[m.chave]={cliente:m.cliente,os:m.os,amb:m.amb,projeto:m.projeto,skp:m.skp,mtime:0,data:'',planos:[],nuvem:true,pasta:''});
+          g.planos.push({k:m.k,id:m.id,nome:m.nome||'Plano',data:m.data,pecas:m.pecas,pc:m.pc}); var t=+m.t||0; if(t>g.mtime){g.mtime=Math.round(t>1e11?t/1000:t);g.data=m.data||'';}});
+        var n=0;
+        Object.keys(grupos).forEach(function(c){var g=grupos[c];
+          var loc=D.linhas.find(function(e){return (g.skp&&e.skp&&norm(e.skp)==norm(g.skp)) || (norm(e.cliente)==norm(g.cliente)&&norm(e.os)==norm(g.os)&&norm(e.projeto)==norm(g.projeto));});
+          if(loc){ g.planos.forEach(function(p){ if(!loc.planos.some(function(q){return norm(q.nome)==norm(p.nome);})) loc.planos.push(p); }); }
+          else { D.linhas.push(g); n++; }
+        });
+        nv.innerHTML='☁ Conta <b>'+esc(r.email)+'</b> · '+r.lista.length+' plano(s) na nuvem (de todos os computadores)'+(n?' · '+n+' projeto(s) que não estão neste PC':'')+' — botões <b>☁</b> abrem direto da nuvem, mesmo com outro projeto aberto.';
+        render();
+      }
       render();
+      if(window.sketchup&&sketchup.pronto)sketchup.pronto();
       </script></body></html>
     HTML
   end

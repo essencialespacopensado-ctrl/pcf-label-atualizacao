@@ -1,12 +1,23 @@
 {
  "tela": "2026-10-27.01",
- "plugin": "2026-10-27.02",
+ "plugin": "2026-10-27.03",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-27.01",
+   "plugin": "2026-10-27.03",
+   "data": "27/10",
+   "titulo": "☁ Planos da conta na página Início",
+   "itens": [
+    "A página Início (botão PCF · Nesting) agora mostra também os planos da sua conta, salvos em QUALQUER computador (botões ☁).",
+    "Clique no ☁ do plano e ele abre direto da nuvem, mesmo com outro projeto aberto no SketchUp.",
+    "Sem login: aparece o botão 👤 Entrar na própria página."
+   ]
+  },
   {
    "tela": "2026-10-27.01",
    "plugin": "2026-10-27.02",
