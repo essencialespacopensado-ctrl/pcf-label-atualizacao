@@ -1675,7 +1675,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-27.03'
+  PLUGIN_VERSAO = '2026-10-27.04'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2397,6 +2397,11 @@ module PCFLabel
       th{position:sticky;top:52px;background:#f0f1f4;text-align:left;padding:8px 10px;font-size:12px;color:#555;border-bottom:1px solid #dde1e7;cursor:pointer}
       td{padding:8px 10px;border-bottom:1px solid #eceef2;vertical-align:middle}
       tr.atual td{background:#fff7ed}
+      tr.cli td{background:#eef1f6;cursor:pointer;font-size:14px;padding:10px;border-top:2px solid #d5dae3}
+      tr.cli:hover td{background:#e3e8f1}
+      tr.cli.atual td{background:#ffedd5}
+      tr.pj td:first-child{padding-left:26px}
+      .seta{display:inline-block;width:14px;color:#e8590c}
       .badge{display:inline-block;padding:2px 8px;border-radius:10px;background:#e5e7eb;font-size:12px}
       .badge.m{background:#e8590c;color:#fff;font-weight:600}
       .sub{color:#6b7280;font-size:12px}
@@ -2408,38 +2413,58 @@ module PCFLabel
       </style></head><body>
       <div class="topo"><h2>PCF Label — Início</h2>
         <input id="busca" placeholder="Buscar cliente, OS, ambiente, projeto…">
+        <button id="abrirTodos" title="Abrir/fechar todos os clientes">⇕ Todos</button>
         <button class="p" id="novo">➕ Plano do projeto aberto</button>
         <button id="reindexar" title="Varre todas as pastas da empresa (demora alguns segundos)">🔄 Reindexar</button>
       </div>
       <div id="nv" style="padding:6px 14px;background:#eef6ff;border-bottom:1px solid #d6e6fb;font-size:12px">☁ Buscando os planos da sua conta…</div>
       <table><thead><tr>
-        <th data-k="mtime">Data</th><th data-k="cliente">Cliente</th><th data-k="os">OS</th><th data-k="amb">Ambiente</th><th data-k="projeto">Projeto</th><th>Planos</th><th></th>
+        <th data-k="mtime">Data</th><th data-k="cliente">Cliente ▾</th><th data-k="os">OS</th><th data-k="amb">Ambiente</th><th data-k="projeto">Projeto</th><th>Planos</th><th></th>
       </tr></thead><tbody id="corpo"></tbody></table>
       <div id="vazio" style="display:none">Nenhum plano de corte encontrado. Clique em 🔄 Reindexar.</div>
       <script>
       var D=__DADOS__; var ord='mtime', asc=false;
       function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+      // agrupado por CLIENTE: clique no nome do cliente para abrir/fechar os projetos dele
+      var abertos={}; (D.linhas||[]).forEach(function(e){ if(e.atual) abertos[cliKey(e)]=true; });
+      function cliKey(e){ return String(e.cliente||'').toLowerCase().replace(/\s+/g,' ').trim() || '~'; }
       function render(){
         var q=(document.getElementById('busca').value||'').toLowerCase();
         var L=D.linhas.filter(function(e){return !q||[e.cliente,e.os,e.amb,e.projeto,e.data].join(' ').toLowerCase().indexOf(q)>=0;});
         L.sort(function(a,b){var x=a[ord],y=b[ord];if(ord=='mtime'){x=+x;y=+y;}else{x=String(x).toLowerCase();y=String(y).toLowerCase();}return (x<y?-1:x>y?1:0)*(asc?1:-1);});
+        var G={}, ordem=[];
+        L.forEach(function(e){var k=cliKey(e); if(!G[k]){G[k]={nome:e.cliente||'Sem cliente',linhas:[],mt:0,planos:0,atual:false};ordem.push(k);} var g=G[k]; g.linhas.push(e); g.mt=Math.max(g.mt,+e.mtime||0); g.planos+=e.planos.length; if(e.atual)g.atual=true;});
+        if(ord=='cliente') ordem.sort(function(a,b){return (G[a].nome.toLowerCase()<G[b].nome.toLowerCase()?-1:1)*(asc?1:-1);});
+        else if(ord=='mtime') ordem.sort(function(a,b){return (G[b].mt-G[a].mt)*(asc?-1:1);});
         var tb=document.getElementById('corpo');tb.innerHTML='';
         document.getElementById('vazio').style.display=L.length?'none':'block';
-        L.forEach(function(e){
-          var tr=document.createElement('tr'); if(e.atual)tr.className='atual';
-          var n=e.planos.length;
-          var pls=e.planos.map(function(p){return p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>';}).join('');
-          tr.innerHTML='<td>'+esc(e.data)+'</td><td><b>'+esc(e.cliente||'—')+'</b></td><td>'+esc(e.os||'—')+'</td><td>'+esc(e.amb||'—')+'</td>'+
-            '<td>'+esc(e.projeto)+(e.atual?' <span class="badge">aberto</span>':'')+(e.nuvem?'<span class="nvb">☁ nuvem</span>':'')+'<div class="sub">'+esc(e.pasta||'')+'</div></td>'+
-            '<td><span class="badge'+(n>1?' m':'')+'">'+n+(n>1?' planos':' plano')+'</span></td>'+
-            '<td><div class="planos">'+pls+(e.pasta?' <button data-pasta="'+esc(e.pasta)+'" title="Abrir a pasta do projeto">📁</button>':'')+'</div></td>';
-          tb.appendChild(tr);
+        ordem.forEach(function(k){
+          var g=G[k], ab=!!q||!!abertos[k];
+          var oss={}; g.linhas.forEach(function(e){ if(e.os) oss[e.os]=1; });
+          var nos=Object.keys(oss).length, ult=g.linhas.reduce(function(m,e){return (+e.mtime||0)>(+m.mtime||0)?e:m;},g.linhas[0]);
+          var h=document.createElement('tr'); h.className='cli'+(g.atual?' atual':''); h.dataset.cli=k;
+          h.innerHTML='<td colspan="7"><span class="seta">'+(ab?'▾':'▸')+'</span> <b>'+esc(g.nome)+'</b>'+
+            ' <span class="sub">· '+(nos?nos+(nos>1?' OSs':' OS')+' · ':'')+g.linhas.length+(g.linhas.length>1?' projetos':' projeto')+' · '+g.planos+(g.planos>1?' planos':' plano')+' · último: '+esc((ult&&ult.data)||'')+'</span>'+
+            (g.atual?' <span class="badge">projeto aberto</span>':'')+'</td>';
+          tb.appendChild(h);
+          if(!ab) return;
+          g.linhas.forEach(function(e){
+            var tr=document.createElement('tr'); tr.className='pj'+(e.atual?' atual':'');
+            var n=e.planos.length;
+            var pls=e.planos.map(function(p){return p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>';}).join('');
+            tr.innerHTML='<td>'+esc(e.data)+'</td><td></td><td>'+esc(e.os||'—')+'</td><td>'+esc(e.amb||'—')+'</td>'+
+              '<td>'+esc(e.projeto)+(e.atual?' <span class="badge">aberto</span>':'')+(e.nuvem?'<span class="nvb">☁ nuvem</span>':'')+'<div class="sub">'+esc(e.pasta||'')+'</div></td>'+
+              '<td><span class="badge'+(n>1?' m':'')+'">'+n+(n>1?' planos':' plano')+'</span></td>'+
+              '<td><div class="planos">'+pls+(e.pasta?' <button data-pasta="'+esc(e.pasta)+'" title="Abrir a pasta do projeto">📁</button>':'')+'</div></td>';
+            tb.appendChild(tr);
+          });
         });
       }
       document.getElementById('busca').oninput=render;
       document.querySelectorAll('th[data-k]').forEach(function(th){th.onclick=function(){var k=th.dataset.k; if(ord==k)asc=!asc; else {ord=k;asc=(k!='mtime');} render();};});
-      document.getElementById('corpo').onclick=function(ev){var b=ev.target.closest('button');if(!b)return; if(b.dataset.k){b.textContent='⏳ abrindo…';sketchup.nuvem(b.dataset.k);} else if(b.dataset.pasta)sketchup.pasta(b.dataset.pasta); else if(b.dataset.skp)sketchup.abrir(b.dataset.skp,b.dataset.id);};
+      document.getElementById('corpo').onclick=function(ev){var hc=ev.target.closest('tr.cli');if(hc&&!ev.target.closest('button')){var k=hc.dataset.cli;abertos[k]=!abertos[k];render();return;}var b=ev.target.closest('button');if(!b)return; if(b.dataset.k){b.textContent='⏳ abrindo…';sketchup.nuvem(b.dataset.k);} else if(b.dataset.pasta)sketchup.pasta(b.dataset.pasta); else if(b.dataset.skp)sketchup.abrir(b.dataset.skp,b.dataset.id);};
       document.getElementById('novo').onclick=function(){sketchup.novo();};
+      document.getElementById('abrirTodos').onclick=function(){var algum=Object.keys(abertos).some(function(k){return abertos[k];}); abertos={}; if(!algum) D.linhas.forEach(function(e){abertos[cliKey(e)]=true;}); render();};
       document.getElementById('reindexar').onclick=function(){this.textContent='⏳ Varrendo…';this.disabled=true;sketchup.reindexar();};
       // ☁ planos da conta (de todos os computadores): entram na lista; o que já está neste PC não repete
       function norm(s){return String(s||'').toLowerCase().replace(/\s+/g,' ').trim();}

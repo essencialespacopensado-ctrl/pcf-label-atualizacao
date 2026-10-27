@@ -1,6 +1,16 @@
 [
  {
   "tela": "2026-10-27.01",
+  "plugin": "2026-10-27.04",
+  "data": "27/10",
+  "titulo": "Início separado por cliente",
+  "itens": [
+   "A página Início agora é organizada por CLIENTE: clique no nome do cliente para ver as OSs, projetos e planos dele.",
+   "O cliente do projeto aberto já vem aberto; ⇕ Todos abre/fecha todos; ao buscar, abre sozinho o que achar."
+  ]
+ },
+ {
+  "tela": "2026-10-27.01",
   "plugin": "2026-10-27.03",
   "data": "27/10",
   "titulo": "☁ Planos da conta na página Início",
