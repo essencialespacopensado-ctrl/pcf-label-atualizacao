@@ -643,12 +643,11 @@ module PCFLabel
   def self.botao_detalhamento
     return if $pcf_botao_det
     $pcf_botao_det = true
-    tb = UI.toolbar(PCFLabel::BARRA)
+    # (sem botão na barra: o Detalhamento fica no painel PCF · LayOut e no menu Extensões)
     cd = UI::Command.new('PCF · Detalhamento') { PCFLabel.detalhar }
     cd.tooltip = 'PCF · Detalhamento'
     cd.status_bar_text = 'Cenas · LayOut · PDF'
     PCFLabel.por_icone(cd, 'detalhamento', 'pcf_det.png')
-    tb.add_item(cd); tb.show
     UI.menu('Extensions').add_item(cd)
   end
   def self.detalhar
@@ -1675,7 +1674,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-27.06'
+  PLUGIN_VERSAO = '2026-10-28.01'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
