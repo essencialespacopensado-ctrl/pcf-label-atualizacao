@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PCF Dev</title>
+<meta name="theme-color" content="#1d2330">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PCF Dev">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icone-180.png">
+<link rel="icon" href="icone-192.png">
+<style>
+  :root { --bg:#f4f5f7; --card:#fff; --tx:#1d2330; --mu:#6b7280; --ln:#dfe3ea; --ac:#1f6feb; --rd:#c62828; --ok:#1b7f3b; --am:#b26a00; --la:#e8590c; }
+  * { box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html, body { margin:0; background:var(--bg); color:var(--tx); font:15px -apple-system, Segoe UI, Roboto, Arial, sans-serif; }
+  header { position:sticky; top:0; z-index:5; background:linear-gradient(135deg,#1d2330,#24324d); color:#fff; padding:calc(12px + env(safe-area-inset-top)) 16px 10px; }
+  header b { font-size:18px; letter-spacing:.03em; } header small { display:block; color:#9fb0c8; font-size:12px; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .abas { display:flex; gap:4px; margin-top:10px; }
+  .abas button { flex:1; border:0; border-radius:8px; padding:9px 4px; background:#2c3444; color:#cbd2de; font-weight:600; font-size:13px; }
+  .abas button.on { background:#fff; color:var(--tx); }
+  main { padding:12px 12px calc(24px + env(safe-area-inset-bottom)); max-width:640px; margin:0 auto; }
+  .card { background:var(--card); border:1px solid var(--ln); border-radius:12px; padding:12px; margin-bottom:10px; }
+  h3 { margin:0 0 8px; font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--mu); }
+  label.lb { display:block; font-size:13px; color:#374151; margin:10px 0 4px; }
+  input[type=email], input[type=password], input[type=text] { width:100%; padding:12px; border:1px solid var(--ln); border-radius:8px; font-size:16px; }
+  button { font:inherit; border:1px solid var(--ln); background:#fafbfc; border-radius:8px; padding:9px 10px; color:var(--tx); }
+  button:active { transform:scale(.96); }
+  button.pri { width:100%; margin-top:14px; background:var(--ac); color:#fff; border-color:var(--ac); font-weight:600; padding:13px; }
+  .msg { padding:10px 12px; border-radius:8px; margin-bottom:10px; display:none; }
+  .msg.er { display:block; background:#fdecea; color:var(--rd); } .msg.ok { display:block; background:#e6f4ea; color:var(--ok); } .msg.in { display:block; background:#eef2f8; color:#374151; }
+  .u .l1 { display:flex; justify-content:space-between; gap:8px; align-items:flex-start; }
+  .u .l1 b { word-break:break-word; } .u small { display:block; color:var(--mu); margin-top:3px; font-size:12px; }
+  .tag { font-size:11px; font-weight:700; padding:2px 8px; border-radius:10px; flex:none; }
+  .tag.ativo { background:#e6f4ea; color:var(--ok); } .tag.bloqueado { background:#fdecea; color:var(--rd); } .tag.pendente { background:#fff4e0; color:var(--am); }
+  .bt { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; align-items:center; }
+  .max { display:inline-flex; align-items:center; gap:6px; } .max button { width:36px; padding:7px 0; }
+  .pc { border-top:1px dashed var(--ln); margin-top:10px; padding-top:8px; }
+  .pcl { display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .pcl span { font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .bts { margin-top:6px; }
+  .bk { display:flex; align-items:center; gap:10px; padding:10px 4px; border-bottom:1px solid #f0f2f5; }
+  .bk:last-child { border-bottom:0; }
+  .bk span { flex:1; } .bk i { color:var(--mu); font-style:normal; font-size:11px; }
+  .bk .sw { position:relative; width:46px; height:28px; flex:none; }
+  .sw input { opacity:0; width:0; height:0; }
+  .sw b { position:absolute; inset:0; background:#cfd5de; border-radius:14px; transition:.15s; }
+  .sw b::after { content:''; position:absolute; left:3px; top:3px; width:22px; height:22px; border-radius:50%; background:#fff; transition:.15s; box-shadow:0 1px 2px rgba(0,0,0,.25); }
+  .sw input:checked + b { background:var(--ok); } .sw input:checked + b::after { left:21px; }
+  .todos { display:flex; gap:6px; margin:6px 0 2px; } .todos button { flex:1; font-size:13px; }
+  .sug { border-left:3px solid var(--la); } .sug.feita { border-left-color:var(--ok); opacity:.7; }
+  .sug p { margin:6px 0; white-space:pre-wrap; word-break:break-word; }
+  .vazio { color:var(--mu); text-align:center; padding:18px 6px; }
+  .esconde { display:none !important; }
+  .rod { display:flex; gap:8px; } .rod button { flex:1; }
+  .instalar { background:#fff8ef; border-color:#f3d5b5; font-size:13px; line-height:1.45; }
+</style>
+</head>
+<body>
+<header>
+  <b>🛠 PCF · Desenvolvedor</b>
+  <small id="quem">Entre com a conta do desenvolvedor</small>
+  <div class="abas esconde" id="abas">
+    <button data-aba="usuarios" class="on">👥 Usuários</button>
+    <button data-aba="sugestoes">💡 Sugestões</button>
+    <button data-aba="mais">⚙ Mais</button>
+  </div>
+</header>
+<main>
+  <div class="msg" id="msg"></div>
+
+  <section id="vLogin">
+    <div class="card">
+      <h3>Entrar</h3>
+      <label class="lb" for="email">E-mail</label>
+      <input type="email" id="email" autocomplete="username" inputmode="email">
+      <label class="lb" for="senha">Senha</label>
+      <input type="password" id="senha" autocomplete="current-password">
+      <button class="pri" id="bEntrar">Entrar</button>
+    </div>
+    <div class="card instalar" id="dica"></div>
+  </section>
+
+  <section id="vUsuarios" class="esconde"><div id="lista"><div class="vazio">Lendo…</div></div></section>
+  <section id="vSugestoes" class="esconde"><div id="sugs"><div class="vazio">Lendo…</div></div></section>
+  <section id="vMais" class="esconde">
+    <div class="card">
+      <h3>Chave da nuvem (GitHub)</h3>
+      <small id="chSit" style="color:var(--mu)">—</small>
+      <input type="password" id="chave" placeholder="Cole a chave nova" style="margin-top:8px">
+      <button class="pri" id="bChave">Salvar chave</button>
+    </div>
+    <div class="card rod"><button id="bAtual">↻ Recarregar</button><button id="bSair">Sair</button></div>
+  </section>
+</main>
+<script>
+(function () {
+  var CHAVE = 'AIzaSyDNUbouFugbZkVO12Tdz97HgrneF6kgk9Y', PROJ = 'os-moveis';
+  var FS = 'https://firestore.googleapis.com/v1/projects/' + PROJ + '/databases/(default)/documents/';
+  var AUTH = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=' + CHAVE;
+  var TOKEN = 'https://securetoken.googleapis.com/v1/token?key=' + CHAVE;
+  // mesma lista do plugin (se a nuvem tiver a lista atualizada, vale a da nuvem)
+  var BOTOES = [['nesting','PCF · Nesting (plano de corte)','Label'],['painel','Painel de medidas','Ferramentas'],['parede','Mover / encostar','Ferramentas'],['giro','Girar com o mouse','Ferramentas'],['cotas','Cotas na tela','Ferramentas'],['auto_mover','Mover automático','Ferramentas'],['organico','Recorte orgânico','Ferramentas'],['grupos','Grupos (agrupar / desagrupar)','Ferramentas'],['numeros','PCF · Números','Label'],['moldura','Criar moldura','Ferramentas'],['peca_mae','Peça Mãe','Ferramentas'],['correr','Correr','Ferramentas'],['veio','Inverter veio','Ferramentas'],['parametrico','Paramétrico','Ferramentas'],['calc_pro','Calc Pró','Ferramentas'],['painel_auto','Painel Auto','Ferramentas'],['detalhamento','PCF · Detalhamento','Label'],['pontes','Pontes do recorte','Ferramentas'],['painel_layout','PCF · LayOut','Ferramentas']].map(function (b) { return { id: b[0], nome: b[1], de: b[2] }; });
+
+  function $(i) { return document.getElementById(i); }
+  function esc(t) { return String(t == null ? '' : t).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+  function msg(t, tipo) { var m = $('msg'); m.textContent = t || ''; m.className = 'msg' + (t ? ' ' + (tipo || 'in') : ''); if (t && tipo === 'ok') setTimeout(function () { if (m.textContent === t) msg(''); }, 2500); }
+  function guarda(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} }
+  function le(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+
+  // ---------- Firestore (REST) ----------
+  function de(v) {
+    if (!v) return null;
+    if ('stringValue' in v) return v.stringValue;
+    if ('integerValue' in v) return parseInt(v.integerValue, 10);
+    if ('doubleValue' in v) return v.doubleValue;
+    if ('booleanValue' in v) return v.booleanValue;
+    if ('nullValue' in v) return null;
+    if ('timestampValue' in v) return v.timestampValue;
+    if ('arrayValue' in v) return (v.arrayValue.values || []).map(de);
+    if ('mapValue' in v) { var o = {}, f = v.mapValue.fields || {}; Object.keys(f).forEach(function (k) { o[k] = de(f[k]); }); return o; }
+    return null;
+  }
+  function para(x) {
+    if (x === null || x === undefined) return { nullValue: null };
+    if (typeof x === 'string') return { stringValue: x };
+    if (typeof x === 'boolean') return { booleanValue: x };
+    if (typeof x === 'number') return Number.isInteger(x) ? { integerValue: String(x) } : { doubleValue: x };
+    if (Array.isArray(x)) return { arrayValue: { values: x.map(para) } };
+    var f = {}; Object.keys(x).forEach(function (k) { f[k] = para(x[k]); }); return { mapValue: { fields: f } };
+  }
+  function doc(d) { var o = {}; Object.keys(d.fields || {}).forEach(function (k) { o[k] = de(d.fields[k]); }); o._id = String(d.name || '').split('/').pop(); return o; }
+
+  var ses = null;
+  function token() {
+    if (ses && ses.id && Date.now() < ses.exp) return Promise.resolve(ses.id);
+    var r = ses ? ses.refresh : le('pcfdev_refresh');
+    if (!r) return Promise.reject(new Error('sem login'));
+    return fetch(TOKEN, { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'grant_type=refresh_token&refresh_token=' + encodeURIComponent(r) })
+      .then(function (x) { return x.json(); }).then(function (d) {
+        if (!d.id_token) throw new Error('login venceu');
+        ses = { id: d.id_token, refresh: d.refresh_token, uid: d.user_id, exp: Date.now() + (parseInt(d.expires_in, 10) - 120) * 1000, email: (ses && ses.email) || le('pcfdev_email') || '' };
+        guarda('pcfdev_refresh', ses.refresh);
+        return ses.id;
+      });
+  }
+  function api(metodo, caminho, corpo) {
+    return token().then(function (tk) {
+      return fetch(FS + caminho, { method: metodo, headers: { 'Authorization': 'Bearer ' + tk, 'Content-Type': 'application/json' }, body: corpo ? JSON.stringify(corpo) : undefined });
+    }).then(function (x) {
+      if (x.status === 204) return {};
+      return x.json().then(function (d) { if (!x.ok) throw new Error((d.error && d.error.message) || ('erro ' + x.status)); return d; });
+    });
+  }
+  // grava só os campos pedidos (o resto do documento fica)
+  function grava(caminho, campos, mascara) {
+    var q = mascara.map(function (m) { return 'updateMask.fieldPaths=' + encodeURIComponent(m); }).join('&') + '&currentDocument.exists=true';
+    var f = {}; Object.keys(campos).forEach(function (k) { f[k] = para(campos[k]); });
+    return api('PATCH', caminho + '?' + q, { fields: f });
+  }
+
+  // ---------- login ----------
+  function entrar() {
+    var e = $('email').value.trim(), s = $('senha').value;
+    if (!e || !s) return msg('Preencha e-mail e senha.', 'er');
+    msg('Entrando…');
+    fetch(AUTH, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: e, password: s, returnSecureToken: true }) })
+      .then(function (x) { return x.json(); }).then(function (d) {
+        if (!d.idToken) throw new Error(erroAuth(d));
+        ses = { id: d.idToken, refresh: d.refreshToken, uid: d.localId, email: d.email, exp: Date.now() + (parseInt(d.expiresIn, 10) - 120) * 1000 };
+        $('senha').value = '';
+        return conferirDev();
+      }).catch(function (er) { msg(er.message, 'er'); });
+  }
+  function erroAuth(d) {
+    var c = ((d.error || {}).message || '').split(' ')[0];
+    return { EMAIL_NOT_FOUND: 'E-mail não cadastrado.', INVALID_PASSWORD: 'Senha errada.', INVALID_LOGIN_CREDENTIALS: 'E-mail ou senha errados.', USER_DISABLED: 'Conta desativada.', TOO_MANY_ATTEMPTS_TRY_LATER: 'Muitas tentativas. Espere um pouco.' }[c] || ('Não entrou (' + (c || 'sem internet?') + ').');
+  }
+  function conferirDev() {
+    return api('GET', 'config/dev').then(function (d) {
+      if (String(doc(d).uid) !== String(ses.uid)) { sair(); throw new Error('Esta conta não é a do desenvolvedor.'); }
+      guarda('pcfdev_refresh', ses.refresh); guarda('pcfdev_email', ses.email);
+      msg('');
+      mostrar(true);
+      carregar();
+    });
+  }
+  function sair() { ses = null; guarda('pcfdev_refresh', null); mostrar(false); }
+  function mostrar(logado) {
+    $('vLogin').classList.toggle('esconde', logado);
+    $('abas').classList.toggle('esconde', !logado);
+    $('quem').textContent = logado ? ('Conectado como ' + (ses.email || '')) : 'Entre com a conta do desenvolvedor';
+    if (logado) aba(abaAtual); else ['vUsuarios', 'vSugestoes', 'vMais'].forEach(function (v) { $(v).classList.add('esconde'); });
+  }
+
+  // ---------- abas ----------
+  var abaAtual = 'usuarios';
+  function aba(n) {
+    abaAtual = n;
+    document.querySelectorAll('#abas button').forEach(function (b) { b.classList.toggle('on', b.dataset.aba === n); });
+    $('vUsuarios').classList.toggle('esconde', n !== 'usuarios');
+    $('vSugestoes').classList.toggle('esconde', n !== 'sugestoes');
+    $('vMais').classList.toggle('esconde', n !== 'mais');
+  }
+  document.querySelectorAll('#abas button').forEach(function (b) { b.addEventListener('click', function () { aba(b.dataset.aba); }); });
+
+  // ---------- usuários ----------
+  var usuarios = [], pcAberto = {};
+  function carregar() {
+    api('GET', 'pcf_config/botoes').then(function (d) { var l = doc(d).lista; if (Array.isArray(l) && l.length) BOTOES = l; }).catch(function () {}).then(listar);
+    sugestoes();
+    api('GET', 'pcf_config/nuvem').then(function (d) { var n = doc(d); $('chSit').textContent = n.chave ? ('✔ Chave guardada' + (n.quando ? ' (' + n.quando + ')' : '')) : '✖ Ainda sem chave'; }).catch(function () { $('chSit').textContent = '✖ Ainda sem chave'; });
+  }
+  function listar() {
+    return api('GET', 'pcf_usuarios?pageSize=300').then(function (d) {
+      usuarios = (d.documents || []).map(doc).sort(function (a, b) { return (a.status === 'pendente' ? 0 : 1) - (b.status === 'pendente' ? 0 : 1) || String(a.email).localeCompare(String(b.email)); });
+      desenhar();
+    }).catch(function (er) { $('lista').innerHTML = '<div class="vazio">Não consegui ler os usuários (' + esc(er.message) + ').</div>'; });
+  }
+  function desenhar() {
+    if (!usuarios.length) { $('lista').innerHTML = '<div class="vazio">Nenhum usuário ainda.</div>'; return; }
+    var h = '';
+    usuarios.forEach(function (u) {
+      var maqs = u.maquinas || [], nm = u.nomes_maquinas || {}, bq = u.botoes_bloq || {}, max = u.max_maquinas || 1;
+      h += '<div class="card u"><div class="l1"><b>' + esc(u.nome && u.nome !== u.email ? u.nome + ' · ' + u.email : u.email) + '</b>' +
+        '<span class="tag ' + esc(u.status) + '">' + (u.status === 'ativo' ? 'LIBERADO' : u.status === 'bloqueado' ? 'BLOQUEADO' : 'AGUARDANDO') + '</span></div>' +
+        '<small>' + maqs.length + ' de ' + max + ' PC(s)' + (u.ultimo ? ' · último acesso ' + esc(u.ultimo) : '') + '</small>' +
+        '<div class="bt">' + (u.status !== 'ativo' ? '<button data-uid="' + esc(u._id) + '" data-st="ativo">✔ Liberar</button>' : '<button data-uid="' + esc(u._id) + '" data-st="bloqueado">⛔ Bloquear</button>') +
+        '<span class="max">PCs <button data-uid="' + esc(u._id) + '" data-max="' + (max - 1) + '">−</button><b>' + max + '</b><button data-uid="' + esc(u._id) + '" data-max="' + (max + 1) + '">+</button></span>' +
+        '<button data-uid="' + esc(u._id) + '" data-soltar="1">⟲ Soltar PCs</button></div>';
+      maqs.forEach(function (m) {
+        var k = u._id + '|' + m, bl = bq[m] || [], lib = BOTOES.filter(function (b) { return bl.indexOf(b.id) < 0; }).length;
+        h += '<div class="pc"><div class="pcl"><span>🖥 ' + esc(nm[m] || m) + '</span><button data-pc="' + esc(k) + '">' + (pcAberto[k] ? '▲' : '⚙') + ' Botões ' + lib + '/' + BOTOES.length + '</button></div>';
+        if (pcAberto[k]) {
+          h += '<div class="bts"><div class="todos"><button data-tudo="1" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '">Liberar todos</button><button data-tudo="0" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '">Bloquear todos</button></div>';
+          BOTOES.forEach(function (b) {
+            h += '<label class="bk"><span>' + esc(b.nome) + '<br><i>' + esc(b.de === 'Label' ? 'PCF Label' : 'PCF Ferramentas') + '</i></span><span class="sw"><input type="checkbox" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '" data-bid="' + esc(b.id) + '"' + (bl.indexOf(b.id) >= 0 ? '' : ' checked') + '><b></b></span></label>';
+          });
+          h += '</div>';
+        }
+        h += '</div>';
+      });
+      h += '</div>';
+    });
+    $('lista').innerHTML = h;
+  }
+  function salvarBloq(uid, maq, bloq) {
+    var u = usuarios.find(function (x) { return x._id === uid; });
+    if (u) { u.botoes_bloq = u.botoes_bloq || {}; u.botoes_bloq[maq] = bloq; }
+    var campos = { botoes_bloq: {} }; campos.botoes_bloq[maq] = bloq;
+    grava('pcf_usuarios/' + uid, campos, ['botoes_bloq.`' + maq + '`']).then(function () { msg('Salvo.', 'ok'); desenhar(); }).catch(function (er) { msg('Não salvei: ' + er.message, 'er'); listar(); });
+  }
+  $('lista').addEventListener('change', function (ev) {
+    var c = ev.target; if (!c.dataset || !c.dataset.bid) return;
+    var bloq = []; c.closest('.bts').querySelectorAll('input[data-bid]').forEach(function (x) { if (!x.checked) bloq.push(x.dataset.bid); });
+    salvarBloq(c.dataset.uid, c.dataset.maq, bloq);
+  });
+  $('lista').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    var uid = b.dataset.uid;
+    if (b.dataset.pc) { pcAberto[b.dataset.pc] = !pcAberto[b.dataset.pc]; desenhar(); return; }
+    if (b.dataset.tudo) { salvarBloq(uid, b.dataset.maq, b.dataset.tudo === '1' ? [] : BOTOES.map(function (x) { return x.id; })); return; }
+    var p;
+    if (b.dataset.st) p = grava('pcf_usuarios/' + uid, { status: b.dataset.st }, ['status']);
+    else if (b.dataset.max) p = grava('pcf_usuarios/' + uid, { max_maquinas: Math.min(20, Math.max(1, parseInt(b.dataset.max, 10))) }, ['max_maquinas']);
+    else if (b.dataset.soltar) { if (!confirm('Soltar todos os PCs deste usuário? O próximo PC em que ele entrar fica cadastrado.')) return; p = grava('pcf_usuarios/' + uid, { maquinas: [], nomes_maquinas: {} }, ['maquinas', 'nomes_maquinas']); }
+    if (p) p.then(function () { msg('Salvo.', 'ok'); listar(); }).catch(function (er) { msg('Não salvei: ' + er.message, 'er'); });
+  });
+
+  // ---------- sugestões ----------
+  function sugestoes() {
+    api('GET', 'pcf_sugestoes?pageSize=300').then(function (d) {
+      var l = (d.documents || []).map(doc).sort(function (a, b) { return a._id < b._id ? 1 : -1; });
+      l = l.filter(function (x) { return x.status !== 'feita'; }).concat(l.filter(function (x) { return x.status === 'feita'; }));
+      if (!l.length) { $('sugs').innerHTML = '<div class="vazio">Nenhuma sugestão ainda.</div>'; return; }
+      $('sugs').innerHTML = l.map(function (x) {
+        return '<div class="card sug' + (x.status === 'feita' ? ' feita' : '') + '"><small style="color:var(--mu)">' + esc([x.tipo, x.onde, x.email, x.quando, x.pc].filter(Boolean).join(' · ')) + '</small><p>' + esc(x.texto) + '</p>' +
+          '<div class="rod"><button data-sid="' + esc(x._id) + '" data-ac="' + (x.status === 'feita' ? 'nova' : 'feita') + '">' + (x.status === 'feita' ? '↺ Reabrir' : '✔ Feita') + '</button><button data-sid="' + esc(x._id) + '" data-ac="apagar">🗑 Apagar</button></div></div>';
+      }).join('');
+    }).catch(function (er) { $('sugs').innerHTML = '<div class="vazio">Não consegui ler as sugestões (' + esc(er.message) + ').</div>'; });
+  }
+  $('sugs').addEventListener('click', function (ev) {
+    var b = ev.target.closest('button'); if (!b) return;
+    var p;
+    if (b.dataset.ac === 'apagar') { if (!confirm('Apagar esta sugestão?')) return; p = api('DELETE', 'pcf_sugestoes/' + b.dataset.sid); }
+    else p = grava('pcf_sugestoes/' + b.dataset.sid, { status: b.dataset.ac }, ['status']);
+    p.then(sugestoes).catch(function (er) { msg('Não salvei: ' + er.message, 'er'); });
+  });
+
+  // ---------- mais ----------
+  $('bChave').addEventListener('click', function () {
+    var k = $('chave').value.trim(); if (!k) return msg('Cole a chave antes de salvar.', 'er');
+    var q = new Date(); var quando = ('0' + q.getDate()).slice(-2) + '/' + ('0' + (q.getMonth() + 1)).slice(-2) + '/' + q.getFullYear() + ' ' + ('0' + q.getHours()).slice(-2) + ':' + ('0' + q.getMinutes()).slice(-2);
+    api('PATCH', 'pcf_config/nuvem', { fields: { chave: para(k), quando: para(quando) } }).then(function () { $('chave').value = ''; msg('Chave salva: todos os PCs logados recebem sozinhos.', 'ok'); carregar(); }).catch(function (er) { msg('Não salvei: ' + er.message, 'er'); });
+  });
+  $('bAtual').addEventListener('click', function () { carregar(); msg('Atualizado.', 'ok'); });
+  $('bSair').addEventListener('click', sair);
+  $('bEntrar').addEventListener('click', entrar);
+  $('senha').addEventListener('keydown', function (ev) { if (ev.key === 'Enter') entrar(); });
+
+  // dica de instalação (aparece só fora do app instalado)
+  var instalado = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+  var ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+  $('dica').innerHTML = instalado ? '' : (ios ? '<b>Instalar no iPhone:</b> abra no Safari, toque em <b>Compartilhar</b> (quadrado com seta) → <b>Adicionar à Tela de Início</b>.' : '<b>Instalar no Android:</b> no Chrome, toque nos <b>⋮</b> → <b>Instalar app</b> (ou "Adicionar à tela inicial").');
+  $('dica').classList.toggle('esconde', !!instalado);
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(function () {});
+
+  // já tinha entrado antes neste celular
+  if (le('pcfdev_refresh')) { msg('Conectando…'); token().then(function () { ses.email = le('pcfdev_email') || ''; return conferirDev(); }).catch(function () { msg('Entre de novo.', 'er'); sair(); }); }
+  $('email').value = le('pcfdev_email') || '';
+})();
+</script>
+</body>
+</html>
