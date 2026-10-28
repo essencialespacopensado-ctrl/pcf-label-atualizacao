@@ -1,6 +1,18 @@
 [
  {
   "tela": "2026-10-27.01",
+  "plugin": "2026-10-28.02",
+  "data": "28/10",
+  "titulo": "Plano de corte abre muito mais rápido em projeto grande",
+  "itens": [
+   "⚡ Conferência de 'peça na tela' antes do plano: procurava cada peça varrendo o projeto inteiro (~0,3 s por peça). Num projeto de 750 peças isso levava minutos — agora a mesma conta leva ~9 s no total, com o mesmo resultado.",
+   "⚡ Peças que viraram tamponamento: procura todas de uma vez (antes ~5 s, agora ~0,4 s).",
+   "Plano salvo: as peças ocultas do plano são conferidas de uma vez só.",
+   "Sem o botão do Aspire instalado, o PCF Label não consulta mais o Windows a cada 5 min (~0,1 s de travadinha)."
+  ]
+ },
+ {
+  "tela": "2026-10-27.01",
   "plugin": "2026-10-28.01",
   "data": "28/10",
   "titulo": "Botão PCF · Detalhamento saiu da barra",

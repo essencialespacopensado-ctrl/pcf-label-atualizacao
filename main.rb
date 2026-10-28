@@ -194,6 +194,7 @@ module PCFLabel
   end
 
   def self.coletar(ents, tr, cam, pecas, pai_bb = nil, pids = [], herd = nil, origem = nil, gira = false)
+    @virou_cache = nil if cam.empty? && ents.is_a?(Sketchup::Entities) && (ents.parent.is_a?(Sketchup::Model) rescue false)   # coleta nova do projeto: procura de novo
     ents.each do |e|
       next unless e.is_a?(Sketchup::Group) || e.is_a?(Sketchup::ComponentInstance)
       next if e.hidden? || !camada_visivel?(e.layer)
@@ -203,7 +204,7 @@ module PCFLabel
       next if e.get_attribute('pcf', 'nao_cortar') || e.get_attribute('pcf', 'correr_modulo') || e.get_attribute('pcf', 'projeto_alu') || e.get_attribute('pcf', 'cofre_mae')
       # modelagem que o PCF Ferramentas já transformou em tamponamento/chapa aberta: corta só o tamponamento
       vid = e.get_attribute('pcf', 'virou')
-      next if vid && (Sketchup.active_model.find_entity_by_persistent_id(vid.to_i) rescue nil)
+      next if vid && virou_existe?(vid)
       d = e.definition
       orig = origem || origem_de(e, d)
       t = tr * e.transformation
@@ -1554,7 +1555,17 @@ module PCFLabel
         vivas = copia(@dados_vivos[:pecas] || [])
         ids_vivos = vivas.map { |x| base.call(x) }
         mod = Sketchup.active_model
-        ocultas = copia(pl['pecas']).reject { |x| b = base.call(x); ids_vivos.include?(b) || (b =~ /\A\d+\z/ && mod.find_entity_by_persistent_id(b.to_i).nil?) }
+        # peças do plano que não estão entre as vivas: procura todas de uma vez (uma a uma = ~0,3 s cada em projeto grande)
+        vivos_h = {}
+        ids_vivos.each { |b| vivos_h[b] = true }
+        procurar = copia(pl['pecas']).map { |x| base.call(x) }.reject { |b| vivos_h[b] || b !~ /\A\d+\z/ }.uniq
+        existe = {}
+        unless procurar.empty?
+          ach = (mod.find_entity_by_persistent_id(*procurar.map(&:to_i)) rescue nil)
+          ach = [ach] unless ach.is_a?(Array)
+          procurar.each_with_index { |b, i| existe[b] = !ach[i].nil? }
+        end
+        ocultas = copia(pl['pecas']).reject { |x| b = base.call(x); vivos_h[b] || (b =~ /\A\d+\z/ && !existe[b]) }
         d[:pecas] = vivas + ocultas
       end
       d[:planoArq] = pl
@@ -1582,6 +1593,7 @@ module PCFLabel
   # botão PCF (ponte com o Aspire): se não estiver rodando, abre
   BOTAO_VBS = 'C:\\Users\\Public\\Documents\\Vectric Files\\Gadgets\\Aspire V12.0\\PCF Label\\botao.vbs'
   def self.garantir_botao
+    return unless File.exist?(BOTAO_VBS)   # sem o botão do Aspire neste PC: nem consulta o Windows (~60–130 ms)
     require 'win32ole'
     procs = (WIN32OLE.connect('winmgmts://').ExecQuery("select CommandLine from Win32_Process where Name='powershell.exe'").each.map { |p| p.CommandLine.to_s } rescue nil)
     return if procs.nil? || procs.any? { |c| c =~ /botao\.ps1/i }
@@ -1674,7 +1686,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-28.01'
+  PLUGIN_VERSAO = '2026-10-28.02'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2057,10 +2069,18 @@ module PCFLabel
     cam = view.camera
     t = Geom::Transformation.new
     ent = nil
-    skpath.to_s.split('.').each do |id|
-      ent = (m.find_entity_by_persistent_id(id.to_i) rescue nil)
-      return true unless ent && ent.respond_to?(:transformation)   # não achou: não arrisca tirar
-      t = t * ent.transformation
+    # caminho da peça direto pelo SketchUp (<1 ms). Antes procurava cada nível pelo id, varrendo o projeto inteiro
+    # (~0,3 s por peça: num projeto de 750 peças eram minutos antes de abrir o plano)
+    ip = (m.instance_path_from_pid_path(skpath.to_s) rescue nil)
+    if ip && ip.valid? && (lf = ip.to_a.last) && lf.respond_to?(:transformation)
+      ent = lf
+      t = ip.transformation
+    else
+      skpath.to_s.split('.').each do |id|
+        ent = (m.find_entity_by_persistent_id(id.to_i) rescue nil)
+        return true unless ent && ent.respond_to?(:transformation)   # não achou: não arrisca tirar
+        t = t * ent.transformation
+      end
     end
     b = ent.definition.bounds
     w = view.vpwidth.to_f; h = view.vpheight.to_f
@@ -2103,6 +2123,28 @@ module PCFLabel
     false
   rescue StandardError
     true
+  end
+
+  # peça que virou tamponamento (atributo 'virou'): existe ainda o tamponamento? Procurar um id por vez varria o projeto
+  # inteiro (~0,3 s CADA; 16 peças = 5 s). Agora junta todos, procura de uma vez e guarda por 5 s (vale a coleta inteira).
+  def self.virou_existe?(vid)
+    m = Sketchup.active_model
+    id = vid.to_i
+    agora = Time.now.to_f
+    c = @virou_cache
+    unless c && c[:guid] == m.guid && agora - c[:t] < 5 && c[:ids].key?(id)
+      ids = {}
+      m.definitions.each { |d| next if d.image?; d.instances.each { |e| v = e.get_attribute('pcf', 'virou'); ids[v.to_i] = false if v } }
+      ids[id] = false
+      lista = ids.keys
+      ach = (m.find_entity_by_persistent_id(*lista) rescue nil)
+      ach = [ach] unless ach.is_a?(Array)
+      lista.each_with_index { |k, i| ids[k] = !ach[i].nil? }
+      c = @virou_cache = { guid: m.guid, t: agora, ids: ids }
+    end
+    c[:ids][id]
+  rescue StandardError
+    !!(Sketchup.active_model.find_entity_by_persistent_id(vid.to_i) rescue nil)
   end
 
   # o que NÃO está na tela agora não entra no plano — ou você escolhe (Sim = só as da tela; Não = todas; Cancelar = nada)

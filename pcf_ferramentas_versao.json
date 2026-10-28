@@ -1,7 +1,8 @@
 {
-  "versao": "3.4.1",
+  "versao": "3.4.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "⚡ Mais leve: a conferência das janelas abertas (para não atrapalhar o Dinabox) levava 30–75 ms a cada poucos segundos — agora menos de 1 ms. Peça nova do Painel Auto não faz mais o projeto inteiro ser varrido (~0,35 s) na alteração seguinte. Correr: refazer num módulo apaga as portas antigas de uma vez (antes ~0,3 s por porta).",
     "Correção do Inverter veio: muda só as peças selecionadas (as cópias não mudam junto), com um clique, quantas peças forem. Vale também dentro de módulo copiado.",
     "🔐 Liberação por botão e por PC: o desenvolvedor liga/desliga cada botão (PCF Ferramentas e PCF Label) em cada PC de cada usuário. Botão não liberado não aparece na barra (sem login liberado, a barra mostra só Conta, ⬆ Atualizar e Sugestões; ao entrar, os liberados aparecem).",
     "📱 Desenvolvedor no celular: app PCF Dev (Android e iPhone) com usuários, PCs, botões por PC e sugestões.",
