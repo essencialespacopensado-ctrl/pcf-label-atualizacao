@@ -1,5 +1,5 @@
 {
-  "versao": "3.3.1",
+  "versao": "3.3.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
     "Correção: com 2 SketchUp abertos, o que já estava aberto continuava com a versão antiga. Agora o ⬆ acende nele também e, ao clicar, recarrega na hora (todos os arquivos, inclusive o painel PCF · LayOut).",
