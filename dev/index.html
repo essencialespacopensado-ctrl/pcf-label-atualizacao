@@ -230,17 +230,23 @@
         '<div class="bt">' + (u.status !== 'ativo' ? '<button data-uid="' + esc(u._id) + '" data-st="ativo">✔ Liberar</button>' : '<button data-uid="' + esc(u._id) + '" data-st="bloqueado">⛔ Bloquear</button>') +
         '<span class="max">PCs <button data-uid="' + esc(u._id) + '" data-max="' + (max - 1) + '">−</button><b>' + max + '</b><button data-uid="' + esc(u._id) + '" data-max="' + (max + 1) + '">+</button></span>' +
         '<button data-uid="' + esc(u._id) + '" data-soltar="1">⟲ Soltar PCs</button></div>';
-      maqs.forEach(function (m) {
-        var k = u._id + '|' + m, bl = bq[m] || [], lib = BOTOES.filter(function (b) { return bl.indexOf(b.id) < 0; }).length;
-        h += '<div class="pc"><div class="pcl"><span>🖥 ' + esc(nm[m] || m) + '</span><button data-pc="' + esc(k) + '">' + (pcAberto[k] ? '▲' : '⚙') + ' Botões ' + lib + '/' + BOTOES.length + '</button></div>';
+      var linha = function (k, titulo, extra, bl, m) {
+        var lib = BOTOES.filter(function (b) { return bl.indexOf(b.id) < 0; }).length;
+        var r = '<div class="pc"><div class="pcl"><span>' + titulo + (extra ? ' <small style="display:inline;font-weight:400">' + extra + '</small>' : '') + '</span><button data-pc="' + esc(k) + '">' + (pcAberto[k] ? '▲' : '⚙') + ' Botões ' + lib + '/' + BOTOES.length + '</button></div>';
         if (pcAberto[k]) {
-          h += '<div class="bts"><div class="todos"><button data-tudo="1" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '">Liberar todos</button><button data-tudo="0" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '">Bloquear todos</button></div>';
+          r += '<div class="bts"><div class="todos"><button data-tudo="1" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '">Liberar todos</button><button data-tudo="0" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '">Bloquear todos</button></div>';
           BOTOES.forEach(function (b) {
-            h += '<label class="bk"><span>' + esc(b.nome) + '<br><i>' + esc(b.de === 'Label' ? 'PCF Label' : 'PCF Ferramentas') + '</i></span><span class="sw"><input type="checkbox" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '" data-bid="' + esc(b.id) + '"' + (bl.indexOf(b.id) >= 0 ? '' : ' checked') + '><b></b></span></label>';
+            r += '<label class="bk"><span>' + esc(b.nome) + '<br><i>' + esc(b.de === 'Label' ? 'PCF Label' : 'PCF Ferramentas') + '</i></span><span class="sw"><input type="checkbox" data-uid="' + esc(u._id) + '" data-maq="' + esc(m) + '" data-bid="' + esc(b.id) + '"' + (bl.indexOf(b.id) >= 0 ? '' : ' checked') + '><b></b></span></label>';
           });
-          h += '</div>';
+          r += '</div>';
         }
-        h += '</div>';
+        return r + '</div>';
+      };
+      var pad = u.botoes_bloq_padrao || [];
+      h += linha(u._id + '|*', '🌐 Padrão (todos os PCs)', 'vale para PCs novos', pad, '*');
+      maqs.forEach(function (m) {
+        var proprio = bq[m] !== undefined && bq[m] !== null;
+        h += linha(u._id + '|' + m, '🖥 ' + esc(nm[m] || m), proprio ? 'ajuste próprio' : 'segue o padrão', proprio ? bq[m] : pad, m);
       });
       h += '</div>';
     });
@@ -248,6 +254,11 @@
   }
   function salvarBloq(uid, maq, bloq) {
     var u = usuarios.find(function (x) { return x._id === uid; });
+    if (maq === '*') {
+      if (u) u.botoes_bloq_padrao = bloq;
+      grava('pcf_usuarios/' + uid, { botoes_bloq_padrao: bloq }, ['botoes_bloq_padrao']).then(function () { msg('Salvo.', 'ok'); desenhar(); }).catch(function (er) { msg('Não salvei: ' + er.message, 'er'); listar(); });
+      return;
+    }
     if (u) { u.botoes_bloq = u.botoes_bloq || {}; u.botoes_bloq[maq] = bloq; }
     var campos = { botoes_bloq: {} }; campos.botoes_bloq[maq] = bloq;
     grava('pcf_usuarios/' + uid, campos, ['botoes_bloq.`' + maq + '`']).then(function () { msg('Salvo.', 'ok'); desenhar(); }).catch(function (er) { msg('Não salvei: ' + er.message, 'er'); listar(); });
