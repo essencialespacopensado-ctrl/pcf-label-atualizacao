@@ -1,7 +1,8 @@
 {
-  "versao": "3.2.9",
+  "versao": "3.3.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "📏 PCF · LayOut com botões de COTAS NA CENA: Cotas gerais, Em corrente (módulos/divisões), Por peça e Limpar. Selecione o móvel (ou nada = tudo visível) e clique; cada cena tem sua etiqueta 'PCF Cotas - <cena>' e as cotas só aparecem nela. No LayOut: botão direito no viewport → Atualizar referência.",
     "📐 Novo Painel PCF · LayOut: janelinha que fica sempre por cima do LayOut (abre sozinha quando o LayOut abre) com 📐 Gerar detalhamento, abrir o último detalhamento e o PDF.",
     "🛠 Aba Desenvolvedor sempre visível na janela Conta, com login próprio: entra só para administrar (liberar usuários, PCs, sugestões) sem precisar logar o PC.",
     "Correção: 'Manter conectado' agora fica salvo na hora (antes se perdia se o SketchUp fechasse sozinho).",
