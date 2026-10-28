@@ -1,7 +1,8 @@
 {
-  "versao": "3.2.8",
+  "versao": "3.2.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "📐 Novo Painel PCF · LayOut: janelinha que fica sempre por cima do LayOut (abre sozinha quando o LayOut abre) com 📐 Gerar detalhamento, abrir o último detalhamento e o PDF.",
     "🛠 Aba Desenvolvedor sempre visível na janela Conta, com login próprio: entra só para administrar (liberar usuários, PCs, sugestões) sem precisar logar o PC.",
     "Correção: 'Manter conectado' agora fica salvo na hora (antes se perdia se o SketchUp fechasse sozinho).",
     "🔒 Login obrigatório: sem a conta LIBERADA nenhuma ferramenta do PCF funciona (nem o PCF Label) — o botão abre a tela de login. Funciona sem internet por até 7 dias depois da última conferência.",
