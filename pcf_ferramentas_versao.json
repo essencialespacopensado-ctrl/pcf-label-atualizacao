@@ -1,7 +1,9 @@
 {
-  "versao": "3.3.3",
+  "versao": "3.4.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🔐 Liberação por botão e por PC: o desenvolvedor liga/desliga cada botão (PCF Ferramentas e PCF Label) em cada PC de cada usuário. Botão não liberado não aparece na barra (sem login liberado, a barra mostra só Conta, ⬆ Atualizar e Sugestões; ao entrar, os liberados aparecem).",
+    "📱 Desenvolvedor no celular: app PCF Dev (Android e iPhone) com usuários, PCs, botões por PC e sugestões.",
     "⚡ SketchUp travando com o PCF ligado em projeto grande: uma conferência do Painel Auto levava ~3 s depois de CADA alteração (procurava as peças varrendo o projeto inteiro, uma por uma). Agora procura uma vez só e guarda — 0 ms. A checagem das janelas do Dinabox também ficou bem mais leve.",
     "Correção: com 2 SketchUp abertos, o que já estava aberto continuava com a versão antiga. Agora o ⬆ acende nele também e, ao clicar, recarrega na hora (todos os arquivos, inclusive o painel PCF · LayOut).",
     "📏 PCF · LayOut com botões de COTAS NA CENA: Cotas gerais, Em corrente (módulos/divisões), Por peça e Limpar. Selecione o móvel (ou nada = tudo visível) e clique; cada cena tem sua etiqueta 'PCF Cotas - <cena>' e as cotas só aparecem nela. No LayOut: botão direito no viewport → Atualizar referência.",
