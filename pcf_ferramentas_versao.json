@@ -1,7 +1,8 @@
 {
-  "versao": "3.4.5",
+  "versao": "3.4.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correção: peça do Painel Auto mudava de medida sozinha ao girar a vista ou dar zoom (o acerto automático depois da Escala foi desligado). A medida digitada fica.",
     "Correção: segurando a Escala (S), a peça do Painel Auto soltava do mouse. O PCF não grava mais nada ao apertar ou durante a Escala.",
     "📐 Painel de medidas: módulo mostra Largura (X), Altura (Z) e Profundidade (Y); peça mostra só Comprimento (lado 2750), Largura (lado 1850) e Espessura numa lista com as espessuras do padrão (6,3 / 15,3 / 18,3 / 25,3 …).",
     "Painel Auto: não pede mais para baixar componente do Dinabox — o PCF já traz os componentes que usa e guarda uma cópia sempre que encontra um.",
