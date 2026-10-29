@@ -1,7 +1,9 @@
 {
-  "versao": "3.4.2",
+  "versao": "3.4.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correção: pontos elétricos/hidráulicos de um projeto apareciam (travados) em outro projeto aberto depois. Agora cada projeto mostra só os seus pontos.",
+    "Painel Auto + Escala (tecla S): a medida que você dá na escala vira a medida da peça no Dinabox e no plano de corte (antes a peça voltava ou ficava com a medida antiga no Dinabox).",
     "🔐 Botões por usuário: '🌐 Padrão (todos os PCs)' em cada usuário — escolha os botões antes mesmo da pessoa instalar; cada PC pode ter ajuste próprio. Os PCs do desenvolvedor também aparecem na lista.",
     "Correção do Inverter veio: muda só as peças selecionadas (as cópias não mudam junto), com um clique, quantas peças forem. Vale também dentro de módulo copiado.",
     "🔐 Liberação por botão e por PC: o desenvolvedor liga/desliga cada botão (PCF Ferramentas e PCF Label) em cada PC de cada usuário. Botão não liberado não aparece na barra (sem login liberado, a barra mostra só Conta, ⬆ Atualizar e Sugestões; ao entrar, os liberados aparecem).",
