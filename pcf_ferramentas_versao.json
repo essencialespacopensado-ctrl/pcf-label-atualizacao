@@ -1,7 +1,10 @@
 {
-  "versao": "3.4.4",
+  "versao": "3.4.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correção: segurando a Escala (S), a peça do Painel Auto soltava do mouse. O PCF não grava mais nada ao apertar ou durante a Escala.",
+    "📐 Painel de medidas: módulo mostra Largura (X), Altura (Z) e Profundidade (Y); peça mostra só Comprimento (lado 2750), Largura (lado 1850) e Espessura numa lista com as espessuras do padrão (6,3 / 15,3 / 18,3 / 25,3 …).",
+    "Painel Auto: não pede mais para baixar componente do Dinabox — o PCF já traz os componentes que usa e guarda uma cópia sempre que encontra um.",
     "Correção urgente: segurando a Escala (S) nas peças do Painel Auto, a peça soltava do mouse sozinha. Agora o PCF não grava nada enquanto você está na Escala — acerta as medidas quando você sai dela.",
     "Correção: pontos elétricos/hidráulicos de um projeto apareciam (travados) em outro projeto aberto depois. Agora cada projeto mostra só os seus pontos.",
     "Painel Auto + Escala (tecla S): a medida que você dá na escala vira a medida da peça no Dinabox e no plano de corte (antes a peça voltava ou ficava com a medida antiga no Dinabox).",
