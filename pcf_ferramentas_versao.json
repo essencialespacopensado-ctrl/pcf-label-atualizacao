@@ -1,7 +1,8 @@
 {
-  "versao": "3.4.3",
+  "versao": "3.4.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "Correção urgente: segurando a Escala (S) nas peças do Painel Auto, a peça soltava do mouse sozinha. Agora o PCF não grava nada enquanto você está na Escala — acerta as medidas quando você sai dela.",
     "Correção: pontos elétricos/hidráulicos de um projeto apareciam (travados) em outro projeto aberto depois. Agora cada projeto mostra só os seus pontos.",
     "Painel Auto + Escala (tecla S): a medida que você dá na escala vira a medida da peça no Dinabox e no plano de corte (antes a peça voltava ou ficava com a medida antiga no Dinabox).",
     "🔐 Botões por usuário: '🌐 Padrão (todos os PCs)' em cada usuário — escolha os botões antes mesmo da pessoa instalar; cada PC pode ter ajuste próprio. Os PCs do desenvolvedor também aparecem na lista.",
