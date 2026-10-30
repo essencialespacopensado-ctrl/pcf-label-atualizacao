@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-30.06",
+ "tela": "2026-10-30.07",
  "plugin": "2026-10-30.06",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-30.07",
+   "plugin": "2026-10-30.06",
+   "data": "30/10",
+   "titulo": "Plano salvo aparece em todos os PCs",
+   "itens": [
+    "☁ Ao clicar em 💾 Salvar plano, o plano sobe para a sua conta e aparece no Início e em Clientes e OSs de todos os computadores logados (em poucos segundos).",
+    "Clientes e OSs: mostra só os planos salvos ou gerados; os rascunhos ficam no botão 📝."
+   ]
+  },
   {
    "tela": "2026-10-30.06",
    "plugin": "2026-10-30.06",

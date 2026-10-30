@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.06';
+const VERSAO = '2026-10-30.07';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3454,10 +3454,12 @@ function mostrarClientes(r){
   if (r.carregando) corpo = '<div class="hint" style="padding:20px 0">☁ Buscando na sua conta…</div>';
   else if (!r.ok) corpo = `<div class="hint erro" style="padding:14px 0">${esc(r.msg || 'Não consegui buscar.')}</div>${r.login ? '<button class="cLogin pri">🔑 Entrar na conta</button> <span class="hint">depois de entrar, clique em ↻</span>' : ''}`;
   else {
-    const L = r.lista || [];
+    // só os planos salvos (💾) ou gerados (✔); os rascunhos ficam no botão 📝
+    const todos = r.lista || [], nRasc = todos.filter(m => !m.gerado && !m.salvo).length;
+    const L = window.VER_RASC_CLI ? todos : todos.filter(m => m.gerado || m.salvo);
     const grupos = new Map();
     L.forEach(m => { const c = m.cliente || '(sem cliente)'; if (!grupos.has(c)) grupos.set(c, new Map()); const g = grupos.get(c), o = (m.os ? 'OS ' + m.os : 'sem OS') + (m.amb ? ' · ' + m.amb : ''); if (!g.has(o)) g.set(o, []); g.get(o).push(m) });
-    corpo = `<div class="hint" style="margin-bottom:6px">☁ Conta ${esc(r.email || '')} · ${L.length} plano(s)${r.fila ? ` · ${r.fila} esperando subir` : ''}</div>
+    corpo = `<div class="hint" style="margin-bottom:6px">☁ Conta ${esc(r.email || '')} · ${L.length} plano(s)${r.fila ? ` · ${r.fila} esperando subir` : ''}${nRasc ? ` · <button class="cRasc" style="font-size:12px">📝 ${window.VER_RASC_CLI ? 'esconder' : 'ver'} rascunhos (${nRasc})</button>` : ''}</div>
       <input class="cBusca" placeholder="🔎 Buscar cliente, OS, ambiente ou projeto…" style="width:100%;padding:8px;margin-bottom:8px;box-sizing:border-box">
       <div class="cLista">${[...grupos].map(([c, g]) => `<div class="cCli" style="margin:8px 0;border:1px solid #ddd;border-radius:8px;padding:6px 10px"><b style="font-size:15px">👤 ${esc(c)}</b>
         ${[...g].map(([o, ps]) => `<div style="margin:4px 0 4px 10px"><b>📁 ${esc(o)}</b>${ps.map(m => `<div class="cItem" data-busca="${esc((c + ' ' + o + ' ' + m.projeto + ' ' + m.nome).toLowerCase())}" style="display:flex;align-items:center;gap:8px;padding:5px 0 5px 12px;border-bottom:1px solid #f2f2f2">
@@ -3475,6 +3477,7 @@ function mostrarClientes(r){
     bx.querySelectorAll('.cCli').forEach(cl => cl.style.display = [...cl.querySelectorAll('.cItem')].some(it => it.style.display !== 'none') ? '' : 'none') }; setTimeout(() => bu.focus(), 50) }
   bx.querySelectorAll('.cAbrir').forEach(b => b.onclick = () => { b.textContent = 'abrindo…'; b.disabled = true; window.sketchup.pcf_selecionar('PLANO_NUVEM:' + b.dataset.k) });
   bx.querySelectorAll('.cExcl').forEach(b => b.onclick = () => pedirSenhaExcluir(b));
+  if (bx.querySelector('.cRasc')) bx.querySelector('.cRasc').onclick = () => { window.VER_RASC_CLI = !window.VER_RASC_CLI; mostrarClientes(r) };
   bx.querySelectorAll('.cProj').forEach(b => b.onclick = () => { b.textContent = 'abrindo…'; window.sketchup.pcf_selecionar('PROJETO_ABRIR:' + b.dataset.k + '|' + b.dataset.skp) });
 }
 // 🗑 EXCLUIR: 📝 rascunho (sem G-code) só confirma · ✔ gerado (G-code feito) pede a senha da conta PCF (o SketchUp confere; não fica guardada)
