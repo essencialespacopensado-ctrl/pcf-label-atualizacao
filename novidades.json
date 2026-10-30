@@ -1,5 +1,15 @@
 [
  {
+  "tela": "2026-10-30.06",
+  "plugin": "2026-10-30.06",
+  "data": "30/10",
+  "titulo": "💾 Salvar plano",
+  "itens": [
+   "💾 Salvar plano (quadro CORTE / CNC): o plano passa a aparecer na tela principal (Início) e na lista de planos, marcado \"💾 salvo\". Plano com G-code gerado também aparece (✔ gerado).",
+   "O que não foi salvo nem gerado continua guardado sozinho como 📝 rascunho (botão 📝 Rascunhos)."
+  ]
+ },
+ {
   "tela": "2026-10-30.05",
   "plugin": "2026-10-30.05",
   "data": "30/10",

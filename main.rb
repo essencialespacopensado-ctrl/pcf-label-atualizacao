@@ -1241,7 +1241,7 @@ module PCFLabel
     ids.uniq.map do |id|
       o = ler_plano(id); next nil unless o
       cr, ct = criado_de(o, [arq_plano_modelo(id), File.join(pasta_planos, nome_plano + sufixo_plano(id) + '.json')])
-      { id: id, nome: o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), data: o['data'], n: o['n'], t: o['t'], criado: cr, ct: ct, gerado: !o['gc'].nil? && o['gc'] != false,
+      { id: id, nome: o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), data: o['data'], n: o['n'], t: o['t'], criado: cr, ct: ct, gerado: !o['gc'].nil? && o['gc'] != false, salvo: !o['salvo'].to_s.empty?,
         pecas: (o['pecas'] ? o['pecas'].count { |p| !p['dentro'] } : nil) }
     end.compact.sort_by { |x| x[:id] == 'principal' ? 0 : x[:id].to_i }
   end
@@ -1375,7 +1375,7 @@ module PCFLabel
       os = pr['os'].to_s.strip; os = pi[:os].to_s if os.empty?
       amb = pr['amb'].to_s.strip; amb = pi[:amb].to_s if amb.empty?
       item['campos'] = { 'chave' => chave.to_s, 'id' => id_plano(id), 'nome' => obj['nome'].to_s, 'cliente' => cli, 'os' => os, 'amb' => amb,
-                         'projeto' => obj['projeto'].to_s, 'skp' => skp.to_s, 'data' => obj['data'].to_s, 'criado' => obj['criado'].to_s, 'gerado' => (!obj['gc'].nil? && obj['gc'] != false), 't' => obj['t'].to_i, 'n' => obj['n'].to_i,
+                         'projeto' => obj['projeto'].to_s, 'skp' => skp.to_s, 'data' => obj['data'].to_s, 'criado' => obj['criado'].to_s, 'gerado' => (!obj['gc'].nil? && obj['gc'] != false), 'salvo' => !obj['salvo'].to_s.empty?, 't' => obj['t'].to_i, 'n' => obj['n'].to_i,
                          'pecas' => (obj['pecas'] || []).count { |p| !p['dentro'] }, 'pc' => ENV['COMPUTERNAME'].to_s, 'excluido' => false,
                          'dados' => Base64.strict_encode64(Zlib::Deflate.deflate(txt.to_s.b, 9)) }
     end
@@ -1436,7 +1436,7 @@ module PCFLabel
     c = conta_info
     return responder_clientes(ok: false, login: true, msg: 'Entre na sua conta para ver os clientes e as OSs.') unless c
     nuvem_subir
-    campos = %w[chave id nome cliente os amb projeto skp data criado gerado t n pecas pc excluido]
+    campos = %w[chave id nome cliente os amb projeto skp data criado gerado salvo t n pecas pc excluido]
     url0 = "#{PCF::Ferramentas::FS_URL rescue 'https://firestore.googleapis.com/v1/projects/os-moveis/databases/(default)/documents/'}pcf_planos/#{c[:uid]}/itens?pageSize=300&" + campos.map { |x| "mask.fieldPaths=#{x}" }.join('&')
     tudo = []
     pagina = lambda do |tok|
@@ -1800,7 +1800,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.05'
+  PLUGIN_VERSAO = '2026-10-30.06'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2440,7 +2440,7 @@ module PCFLabel
       o = (JSON.parse(File.read(f, encoding: 'UTF-8')) rescue nil)
       next nil unless o.is_a?(Hash)
       cr, ct = criado_de(o, [f])
-      { 'id' => id, 'nome' => o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), 'data' => o['data'].to_s, 'criado' => cr, 'ct' => ct, 'gerado' => (!o['gc'].nil? && o['gc'] != false),
+      { 'id' => id, 'nome' => o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), 'data' => o['data'].to_s, 'criado' => cr, 'ct' => ct, 'gerado' => (!o['gc'].nil? && o['gc'] != false), 'salvo' => !o['salvo'].to_s.empty?,
         'n' => o['n'], 'pecas' => (o['pecas'] ? o['pecas'].count { |p| !p['dentro'] } : nil), 'mtime' => File.mtime(f).to_i }
     end.compact.sort_by { |x| [x['ct'].to_i, x['id'] == 'principal' ? 0 : x['id'].to_i] }
   end
@@ -2577,7 +2577,7 @@ module PCFLabel
     c = conta_info
     return js.(ok: false, login: true, msg: 'Entre na sua conta (👤 Conta) para ver os planos de todos os computadores.') unless c
     nuvem_subir rescue nil
-    campos = %w[chave id nome cliente os amb projeto skp data criado gerado t pecas pc excluido]
+    campos = %w[chave id nome cliente os amb projeto skp data criado gerado salvo t pecas pc excluido]
     url0 = 'https://firestore.googleapis.com/v1/projects/os-moveis/databases/(default)/documents/' + "pcf_planos/#{c[:uid]}/itens?pageSize=300&" + campos.map { |x| "mask.fieldPaths=#{x}" }.join('&')
     tudo = []
     pagina = lambda do |tok|
@@ -2679,7 +2679,7 @@ module PCFLabel
         <input id="busca" placeholder="Buscar cliente, OS, ambiente, projeto…">
         <button id="abrirTodos" title="Abrir/fechar todos os clientes">⇕ Todos</button>
         <button class="p" id="novo">➕ Plano do projeto aberto</button>
-        <button id="rasc" title="Planos ainda sem G-code gerado (salvos sozinhos)">📝 Rascunhos</button>
+        <button id="rasc" title="Planos que você não salvou (💾) nem gerou o G-code — o PCF guarda sozinho">📝 Rascunhos</button>
         <button id="reindexar" title="Varre todas as pastas da empresa (demora alguns segundos)">🔄 Reindexar</button>
       </div>
       <div id="nv" style="padding:6px 14px;background:#eef6ff;border-bottom:1px solid #d6e6fb;font-size:12px">☁ Buscando os planos da sua conta…</div>
@@ -2704,7 +2704,7 @@ module PCFLabel
         var L=D.linhas.filter(function(e){return !q||[e.cliente,e.os,e.amb,e.projeto,e.data].join(' ').toLowerCase().indexOf(q)>=0;});
         L.sort(function(a,b){var x=a[ord],y=b[ord];if(ord=='mtime'){x=+x;y=+y;}else{x=String(x).toLowerCase();y=String(y).toLowerCase();}return (x<y?-1:x>y?1:0)*(asc?1:-1);});
         var G={}, ordem=[];
-        L=L.filter(function(e){return VER_RASC||e.planos.some(function(p){return p.gerado;});});
+        L=L.filter(function(e){return VER_RASC||e.planos.some(function(p){return p.gerado||p.salvo;});});
         L.forEach(function(e){var k=cliKey(e); if(!G[k]){G[k]={nome:e.cliente||'Sem cliente',linhas:[],mt:0,planos:0,atual:false};ordem.push(k);} var g=G[k]; g.linhas.push(e); g.mt=Math.max(g.mt,+e.mtime||0); g.planos+=e.planos.length; if(e.atual)g.atual=true;});
         if(ord=='cliente') ordem.sort(function(a,b){return (G[a].nome.toLowerCase()<G[b].nome.toLowerCase()?-1:1)*(asc?1:-1);});
         else if(ord=='mtime') ordem.sort(function(a,b){return (G[b].mt-G[a].mt)*(asc?-1:1);});
@@ -2722,10 +2722,10 @@ module PCFLabel
           if(!ab) return;
           g.linhas.forEach(function(e){
             var tr=document.createElement('tr'); tr.className='pj'+(e.atual?' atual':'');
-            var vis=e.planos.filter(function(p){return p.gerado||VER_RASC;}); var n=vis.length;
+            var vis=e.planos.filter(function(p){return p.gerado||p.salvo||VER_RASC;}); var n=vis.length;
             if(!n) return;
             var pls=vis.map(function(p){var del='<button class="del" data-del="1" data-dk="'+esc(p.k||'')+'" data-dskp="'+esc(e.skp||'')+'" data-did="'+esc(p.id||'')+'" data-dger="'+(p.gerado?'1':'')+'" data-dnome="'+esc((p.nome||'Plano')+' · '+(e.cliente||'')+' · '+(e.projeto||''))+'" title="Excluir este plano (pede a senha da conta)">🗑</button>';
-              var qd='<span class="qd">'+(p.gerado?'<b style="color:#1d7a46">✔ gerado</b> · ':'<b style="color:#b8860b">📝 rascunho</b> · ')+(p.criado?'🕓 criado '+esc(p.criado):'')+(p.data?(p.criado?' · ':'')+'alterado '+esc(p.data):'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'</span>';
+              var qd='<span class="qd">'+(p.gerado?'<b style="color:#1d7a46">✔ gerado</b> · ':p.salvo?'<b style="color:#1f5fbf">💾 salvo</b> · ':'<b style="color:#b8860b">📝 rascunho</b> · ')+(p.criado?'🕓 criado '+esc(p.criado):'')+(p.data?(p.criado?' · ':'')+'alterado '+esc(p.data):'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'</span>';
               return '<div class="pl">'+(p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>')+qd+del+'</div>';}).join('');
             tr.innerHTML='<td>'+esc(e.data)+'</td><td></td><td>'+esc(e.os||'—')+'</td><td>'+esc(e.amb||'—')+'</td>'+
               '<td>'+esc(e.projeto)+(e.atual?' <span class="badge">aberto</span>':'')+(e.nuvem?'<span class="nvb">☁ nuvem</span>':'')+'<div class="sub">'+esc(e.pasta||'')+'</div></td>'+
@@ -2749,7 +2749,7 @@ module PCFLabel
         if(!r.ok){nv.innerHTML='☁ '+esc(r.msg)+(r.login?' <button id="bConta">👤 Entrar</button>':''); var bc=document.getElementById('bConta'); if(bc)bc.onclick=function(){sketchup.conta();}; return;}
         var grupos={};
         r.lista.forEach(function(m){m.cliente=pad(m.cliente);m.amb=pad(m.amb);m.projeto=pad(m.projeto);m.nome=pad(m.nome);var g=grupos[m.chave]||(grupos[m.chave]={cliente:m.cliente,os:m.os,amb:m.amb,projeto:m.projeto,skp:m.skp,mtime:0,data:'',planos:[],nuvem:true,pasta:''});
-          g.planos.push({k:m.k,id:m.id,nome:m.nome||'Plano',data:m.data,criado:m.criado,gerado:!!m.gerado,pecas:m.pecas,pc:m.pc}); var t=+m.t||0; if(t>g.mtime){g.mtime=Math.round(t>1e11?t/1000:t);g.data=m.data||'';}});
+          g.planos.push({k:m.k,id:m.id,nome:m.nome||'Plano',data:m.data,criado:m.criado,gerado:!!m.gerado,salvo:!!m.salvo,pecas:m.pecas,pc:m.pc}); var t=+m.t||0; if(t>g.mtime){g.mtime=Math.round(t>1e11?t/1000:t);g.data=m.data||'';}});
         var n=0;
         Object.keys(grupos).forEach(function(c){var g=grupos[c];
           var loc=D.linhas.find(function(e){return (g.skp&&e.skp&&norm(e.skp)==norm(g.skp)) || (norm(e.cliente)==norm(g.cliente)&&norm(e.os)==norm(g.os)&&norm(e.projeto)==norm(g.projeto));});
