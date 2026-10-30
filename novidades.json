@@ -1,5 +1,17 @@
 [
  {
+  "tela": "2026-10-30.12",
+  "plugin": "2026-10-30.12",
+  "data": "30/10",
+  "titulo": "Abrir não salva nem mexe no plano",
+  "itens": [
+   "Abrir um plano NÃO grava nada e não mexe em nada: só grava quando você muda alguma coisa.",
+   "Abrir não encaixa mais sozinho peça fora do plano — fica o botão ➕ Encaixar peças fora do plano para você decidir.",
+   "Peça que você colocou numa chapa de sobra não perde a cor/chapa ao abrir.",
+   "🕘 Voltar uma versão traz também as cores e as configurações das peças (antes só a posição)."
+  ]
+ },
+ {
   "tela": "2026-10-30.11",
   "plugin": "2026-10-30.11",
   "data": "30/10",

@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.11';
+const VERSAO = '2026-10-30.12';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -529,7 +529,7 @@ D.pecas.forEach((p, i) => {
   // nome automático (Fundo, Lateral, Painel N, "12 - …"): não conta como nome digitado — vira Painel N
   const ehAuto = n => !n || n === p.nomeInicial || /^(\d+\s*-\s*)?(tampo|base|prateleira|lateral( esquerda| direita)?|fundo|frente|pe[çc]a inclinada|painel|pe[çc]a)(\s+\d+)?(\s+-\s+.*)?$/i.test(String(n).trim());
   p._nomeAuto = s.nomeDig ? false : ehAuto(s.nome);
-  p.nome = p._nomeAuto ? (p.nomeInicial || '') : s.nome; p.cor = (p.corInicial && /mm$/.test(s.cor || '') ? '' : s.cor) || p.corInicial || ''; p.obs = s.obs || p.camadaMDF || ''; p.f = s.f || [0,0,0,0]; p.fc = s.fc || '';
+  p.nome = p._nomeAuto ? (p.nomeInicial || '') : s.nome; p.cor = (p.corInicial && /mm$/.test(s.cor || '') && !/^sobra/i.test(s.cor || '') ? '' : s.cor) || p.corInicial || ''; p.obs = s.obs || p.camadaMDF || ''; p.f = s.f || [0,0,0,0]; p.fc = s.fc || '';
   p.tipo = p.dentro ? (s.tipo || p.tipoInicial || '') : 'peca';
   p.prof = s.prof !== undefined && s.prof !== '' ? s.prof : (p.profInicial !== undefined ? p.profInicial : '');
   p.lado = s.lado || p.ladoInicial || ''; p.pas = s.pas || p.pasInicial || 1; p.espc = !!s.espc; p.espT = s.espT || ''; p.espProf = s.espProf !== undefined ? s.espProf : ''; p.tipoOk = !!s.tipoOk || !!p.okInicial;
@@ -3175,8 +3175,11 @@ function depoisDeMover(){
 }
 // ---- o plano fica salvo sozinho (por projeto) a cada mudança; dá para abrir de novo depois ----
 const KPL = 'etq_plano_' + PROJK + ((D.planoId && D.planoId !== 'principal') ? '#' + D.planoId : '');
+// assinatura do que importa no plano (sem hora): só grava quando ela muda — abrir não grava nada
+function assinPlano(o){ try { return JSON.stringify([o.foto, o.conf && o.conf.proj && o.conf.proj.pecas, o.conf && o.conf.proj && [o.conf.proj.cliente, o.conf.proj.os, o.conf.proj.amb], o.pf, o.gc, o.salvo, o.nome, o.n]) } catch (e) { return Math.random() + '' } }
 function salvarPlanoLocal(mapa){
   if (!PLANO || PLANO_EXCLUIDO || window.SEM_SALVAR) return;
+  if (!window.ABRIU_EM) window.ABRIU_EM = Date.now();
   let foto = fotoP();
   if (mapa) Object.entries(mapa).forEach(([a, b]) => { foto = foto.split('"' + a + '"').join('"' + b + '"') });
   const agora = new Date(), d2 = n => String(n).padStart(2, '0');
@@ -3184,6 +3187,10 @@ function salvarPlanoLocal(mapa){
   const pa0 = D.planoArq && (D.planoArq.id || 'principal') === (D.planoId || 'principal') ? D.planoArq : null;
   const criado = (pa0 && pa0.criado) || `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)}/${agora.getFullYear()} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`;
   const obj = {criado, data: `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`, n: PLANO.folhas.length, foto, t: Date.now(), projeto: D.projeto, conf: {proj, cfg, cores}, pf: PF, chapaBase: +D.chapaBase || 0, id: D.planoId || 'principal', nome: D.planoNome || 'Plano principal', gc: PLANO.gc || null, salvo: PLANO.salvo || null, numBase: +D.numBase || 0, numMax: (+D.numBase || 0) + PLANO.folhas.reduce((s, f) => s + f.pos.length, 0)};
+  // nada mudou (ex.: só abriu o plano): não grava, não muda a hora, não manda para a conta
+  const sig = assinPlano(obj);
+  if (sig === window.SIG_PLANO) return;
+  window.SIG_PLANO = sig;
   ls.set(KPL, obj); D.planoArq = obj;
   // também em ARQUIVO (ao lado do projeto .skp e em %APPDATA%\PCF Label\planos, com histórico) — não se perde ao fechar
   clearTimeout(salvarPlanoLocal.tm);
@@ -3208,11 +3215,23 @@ function receberVersoes(lista){
     modalExcluir({titulo: 'Excluir versão salva', nome: `Versão de ${v.quando} · ${v.n} chapas · ${v.pecas} peças`, gerado: v.gerado,
       ok: () => { const tr = b.closest('tr'); if (tr) tr.remove() },
       enviar: senha => window.sketchup.pcf_selecionar('HIST_EXCLUIR:' + JSON.stringify({arq: v.arq, senha})) }) });
-  bx.querySelectorAll('button[data-v]').forEach(b => b.onclick = () => { const v = vs[+b.dataset.v]; marcarP(); abrirPlanoSalvo(v.obj); salvarPlanoLocal(); bx.remove();
+  bx.querySelectorAll('button[data-v]').forEach(b => b.onclick = () => { const v = vs[+b.dataset.v]; marcarP(); aplicarProjDe(v.obj); abrirPlanoSalvo(v.obj); salvarPlanoLocal(); bx.remove();
     $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `🕘 Plano voltou para a versão de ${v.quando} (${v.n} chapas). Ctrl+Z desfaz.` });
   $('cncMsg').textContent = '';
 }
 function versaoExcluida(r){ excluirResp(r) }
+// acabou de ABRIR um plano salvo: guarda como ele está (assim abrir não grava nada; só grava quando você mexer)
+function marcaAberto(){ try { if (!PLANO) return; window.SIG_PLANO = assinPlano({foto: fotoP(), conf: {proj}, pf: PF, gc: PLANO.gc || null, salvo: PLANO.salvo || null, nome: D.planoNome || 'Plano principal', n: PLANO.folhas.length}) } catch (e) {} }
+// configurações das peças gravadas numa versão/plano (cor/chapa, lado, passadas, ⚙ especial, tipo, nome, fita) voltam junto
+function aplicarProjDe(o){
+  const pr = o && o.conf && o.conf.proj; if (!pr || !pr.pecas) return;
+  D.pecas.forEach(p => { const s = pr.pecas[p.k]; if (!s) return;
+    if (s.cor !== undefined && s.cor !== '') p.cor = s.cor;
+    ['lado','pas','tipo','prof','espT','espProf','fc','obs'].forEach(k => { if (s[k] !== undefined) p[k] = s[k] });
+    p.espc = !!s.espc; if (s.f) p.f = s.f; if (s.on !== undefined) p.on = s.on; if (s.nomeDig && s.nome) { p.nome = s.nome; p._nomeAuto = false } });
+  ['cliente','os','amb'].forEach(k => { if (pr[k] !== undefined) proj[k] = pr[k] });
+  try { renderTabela() } catch (e) {}
+}
 // o plano mais novo: o da memória da tela ou o do arquivo
 function planoSalvo(){
   const a = ls.get(KPL, null), b = D.planoArq && D.planoArq.foto ? D.planoArq : null;
@@ -4051,9 +4070,10 @@ if (D.origem === 'sketchup') {
   $('cncMsg').className = 'hint'; $('cncMsg').textContent = 'Calculando o plano de corte…';
   setTimeout(async () => { try { if ((D.inicio || (D.planos && D.planos.length)) && !D.planoEscolhido) { $('cncMsg').textContent = 'Escolha: plano de corte novo ou abrir um plano já feito.'; mostrarEscolhaPlano(true); return }
     const novasOrig = perguntarOrigens(); await perguntarMateriais(ZERADO);   // reiniciou do zero: confere TODOS os materiais de novo
-    if (planoSalvo()) { abrirPlanoSalvo(); if (PLANO && PLANO.retalhos && PLANO.retalhos.length) { PLANO.retalhos = []; await incluirForaDoPlano() }   // plano antigo com peças 'de retalho' sem chapa: ganham chapa no fim
+    if (planoSalvo()) { abrirPlanoSalvo(); marcaAberto(); if (PLANO && PLANO.retalhos && PLANO.retalhos.length) { PLANO.retalhos = []; await incluirForaDoPlano() }   // plano antigo com peças 'de retalho' sem chapa: ganham chapa no fim
     // tudo o que está visível tem que estar no plano: peça fora do plano ganha chapa nova no fim (as chapas que você ajustou não mudam)
-    if (PLANO && PLANO.folhas.length && foraDoPlano().length) await incluirForaDoPlano(); if (PLANO && PLANO.folhas.length) { await perguntarVeios(); return }
+    // abrir NÃO mexe no plano: peça fora do plano fica no botão ➕ Encaixar (você decide)
+    if (PLANO && PLANO.folhas.length) { try { atualizarFora() } catch (e) {} await perguntarVeios(); return }
     PLANO = null }   // plano salvo sem nenhuma chapa: calcula de novo
     if (false) { abrirPlanoSalvo(); if (PLANO && PLANO.folhas.length) { $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = $('cncMsg').textContent + ' (seu último plano, com os ajustes; para recalcular tudo: 🧩 Refazer otimização)'; return } }
     if (!semPendencias('gerar o plano de corte')) return;
