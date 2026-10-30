@@ -1,5 +1,15 @@
 [
  {
+  "tela": "2026-10-30.08",
+  "plugin": "2026-10-30.08",
+  "data": "30/10",
+  "titulo": "A janela do plano não recarrega mais sozinha",
+  "itens": [
+   "Correção: quando uma versão nova da tela era instalada, a janela do plano aberta recarregava sozinha e você perdia o que estava fazendo. Agora só aparece um aviso azul no canto; a tela nova entra quando você clicar nele ou abrir a janela de novo.",
+   "☁ O mesmo plano agora tem o mesmo número na conta em todos os PCs: salvou num PC, aparece nos outros sem ficar repetido."
+  ]
+ },
+ {
   "tela": "2026-10-30.07",
   "plugin": "2026-10-30.06",
   "data": "30/10",

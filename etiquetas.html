@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.07';
+const VERSAO = '2026-10-30.08';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3536,6 +3536,12 @@ if ($('pfFer')) { $('pfFer').onchange = mudouPF; $('pfPas').onchange = mudouPF; 
 function logTela(o){ try { if (window.sketchup && window.sketchup.pcf_selecionar) window.sketchup.pcf_selecionar('LOG:' + JSON.stringify(Object.assign({v: VERSAO, t: new Date().toLocaleTimeString()}, o)).slice(0, 1500)) } catch (e) {} }
 window.addEventListener('error', e => logTela({erro: String(e.message), linha: e.lineno}));
 window.addEventListener('unhandledrejection', e => logTela({erro: 'promise: ' + String(e.reason && e.reason.message || e.reason)}));
+// tela nova instalada com a janela aberta: só avisa (não recarrega sozinha); clique quando quiser
+function avisoTelaNova(){ if ($('avisoTelaNova')) return; const b = document.createElement('div'); b.id = 'avisoTelaNova';
+  b.style.cssText = 'position:fixed;bottom:16px;right:16px;z-index:9998;background:#1f5fbf;color:#fff;border-radius:10px;padding:10px 14px;font-weight:600;box-shadow:0 4px 14px rgba(0,0,0,.25);cursor:pointer;max-width:360px';
+  b.innerHTML = '⬆ Versão nova da tela pronta<div style="font-weight:400;font-size:12px;opacity:.9">clique quando quiser usar (o plano fica salvo) — ou feche e abra a janela</div>';
+  b.onclick = () => { try { clearTimeout(salvarPlanoLocal.tm); if (window.PLANO) salvarPlanoLocal() } catch (e) {} b.remove(); setTimeout(() => window.sketchup && window.sketchup.pcf_selecionar && window.sketchup.pcf_selecionar('TELA_RECARREGAR'), 1200) };
+  document.body.appendChild(b) }
 // ⬆ ATUALIZAÇÃO: nunca atualiza sozinho — aparece um botão com o que mudou; só atualiza quando você clica
 function temAtualizacao(info){
   let b = document.getElementById('btnAtualizacao');

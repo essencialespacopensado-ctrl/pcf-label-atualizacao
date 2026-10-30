@@ -1031,6 +1031,7 @@ module PCFLabel
     if ref.start_with?('PLANO_EXCLUIR:') then UI.start_timer(0.1, false) { id0 = ref.sub('PLANO_EXCLUIR:', ''); gerado_obj?(ler_plano(id0)) ? (UI.messagebox('Plano gerado (G-code já feito): exclua pela lista de planos, com a senha da conta.') rescue nil) : excluir_plano(id0) }; return true end
     if ref.start_with?('PLANO_ABRIR:') then UI.start_timer(0.1, false) { abrir_plano(ref.sub('PLANO_ABRIR:', '')) }; return true end
     # plano novo e lista de planos: lê de novo o que está visível AGORA (não o da hora que abriu a tela)
+    if ref == 'TELA_RECARREGAR' then UI.start_timer(0.1, false) { recarregar_seguro }; return true end
     if ref == 'PLANO_CLIENTES' then UI.start_timer(0.1, false) { nuvem_listar }; return true end
     if ref.start_with?('PLANO_NUVEM_EXCLUIR:') then h = (JSON.parse(ref.sub('PLANO_NUVEM_EXCLUIR:', '')) rescue {}); UI.start_timer(0.1, false) { nuvem_excluir(h) }; return true end
     if ref.start_with?('PLANO_NUVEM:') then UI.start_timer(0.1, false) { nuvem_abrir(ref.sub('PLANO_NUVEM:', '')) }; return true end
@@ -1357,9 +1358,12 @@ module PCFLabel
     c = f.instance_variable_get(:@conta) || {}
     c[:uid] ? c : nil
   end
-  def self.doc_plano(chave, id)
+  # nº do plano na conta. Com o caminho do projeto: o MESMO nº em todos os PCs (conta a partir da pasta do Dropbox),
+  # assim o plano salvo num PC é o mesmo nos outros (antes cada PC criava o seu e o plano aparecia repetido)
+  def self.doc_plano(chave, id, skp = nil)
     require 'digest/md5'
-    Digest::MD5.hexdigest(chave.to_s + sufixo_plano(id))[0, 20]
+    base = skp.to_s.empty? ? chave.to_s : 'rel:' + chave_rel(skp)
+    Digest::MD5.hexdigest(base + sufixo_plano(id))[0, 20]
   end
   def self.pasta_fila
     d = File.join(ENV['APPDATA'] || Dir.tmpdir, 'PCF Label', 'nuvem_fila'); FileUtils.mkdir_p(d) rescue nil; d
@@ -1367,8 +1371,14 @@ module PCFLabel
   # põe o plano (ou só uma marca, ex.: excluído) na fila para subir para a conta
   def self.nuvem_enfileirar(chave, id, obj, txt, skp, extra = nil)
     require 'fileutils'; require 'zlib'; require 'base64'
-    k = doc_plano(chave, id)
+    k = doc_plano(chave, id, skp)
     item = { 'doc' => k }
+    # o nº antigo deste PC (de antes): marca como excluído uma vez, para não ficar repetido na lista
+    velho = doc_plano(chave, id)
+    if velho != k && !(@migrados ||= {})[velho]
+      @migrados[velho] = true
+      File.binwrite(File.join(pasta_fila, velho + '.marca.json'), JSON.generate('doc' => velho, 'campos' => { 'excluido' => true }, 'mascara' => ['excluido']).b) rescue nil
+    end
     if obj
       pr = (obj.dig('conf', 'proj') || {}); pi = skp.to_s.empty? ? {} : info_pasta(skp)
       cli = pr['cliente'].to_s.strip; cli = pi[:cliente].to_s if cli.empty?
@@ -1495,10 +1505,15 @@ module PCFLabel
   # marca como excluído na conta (quando tem conta e o plano está lá)
   def self.marcar_excluido_nuvem(doc, &fim)
     f = conta_pcf; c = conta_info
-    return fim.call(true, nil) unless f && c && doc
-    f.fs_gravar("pcf_planos/#{c[:uid]}/itens/#{doc}", { 'excluido' => true, 'excluido_em' => Time.now.strftime('%d/%m/%Y %H:%M') }, %w[excluido excluido_em]) do |s2, _d2|
-      s2 == 200 ? fim.call(true, nil) : fim.call(false, "A nuvem não respondeu (#{s2}). Tente de novo.")
+    docs = Array(doc).compact.uniq
+    return fim.call(true, nil) unless f && c && !docs.empty?
+    um = lambda do |i|
+      next fim.call(true, nil) if i >= docs.size
+      f.fs_gravar("pcf_planos/#{c[:uid]}/itens/#{docs[i]}", { 'excluido' => true, 'excluido_em' => Time.now.strftime('%d/%m/%Y %H:%M') }, %w[excluido excluido_em]) do |s2, _d2|
+        s2 == 200 ? um.call(i + 1) : fim.call(false, "A nuvem não respondeu (#{s2}). Tente de novo.")
+      end
     end
+    um.call(0)
   end
   # 🗑 lista de Clientes e OSs
   def self.nuvem_excluir(h)
@@ -1622,7 +1637,7 @@ module PCFLabel
     require 'fileutils'
     id = id_plano(id); suf = sufixo_plano(id); pd = pasta_planos; h = File.join(pd, 'historico'); FileUtils.mkdir_p(h)
     (@excluidos ||= []) << nome_plano + suf
-    (nuvem_enfileirar(nome_plano, id, nil, nil, nil, { 'excluido' => true }) rescue nil)
+    (nuvem_enfileirar(nome_plano, id, nil, nil, caminho_projeto, { 'excluido' => true }) rescue nil)
     carimbo = Time.now.strftime('%Y-%m-%d %H-%M-%S')
     [File.join(pd, nome_plano + suf + '.json'), arq_plano_modelo(id)].compact.each_with_index do |f, i|
       next unless File.exist?(f)
@@ -1729,7 +1744,9 @@ module PCFLabel
     mt = (File.mtime(MODELO_TELA) rescue nil)
     return unless mt && @mt_tela && mt != @mt_tela
     @mt_tela = mt
-    recarregar_seguro
+    # NUNCA recarrega sozinha com você trabalhando (fazia perder o que estava fazendo): só avisa;
+    # a tela nova entra quando você clicar no aviso ou abrir a janela de novo
+    (@dlg.execute_script("try{avisoTelaNova()}catch(e){}") rescue nil)
   end
   # recarrega a tela (versão nova) SEM perder o que você fez: primeiro a tela grava o plano de agora,
   # depois abre de novo com o plano mais novo do arquivo (antes abria com o plano de quando a tela foi aberta)
@@ -1800,7 +1817,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.06'
+  PLUGIN_VERSAO = '2026-10-30.08'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2540,7 +2557,7 @@ module PCFLabel
     resp = ->(ok, msg, senha = false) { d.execute_script("exclResp(#{JSON.generate(ok: ok, msg: msg, senha: senha)})") rescue nil }
     skp = h['skp'].to_s.empty? ? '' : caminho_local(h['skp'])
     id = id_plano(h['id']); k = h['k'].to_s
-    doc = k.empty? ? (skp.empty? ? nil : doc_plano(chave_de_skp(skp), id)) : k
+    doc = k.empty? ? (skp.empty? ? nil : [doc_plano(chave_de_skp(skp), id, skp), doc_plano(chave_de_skp(skp), id)]) : k
     gerado_plano(skp, id, k) do |ger|
       conferir_senha(ger, h['senha']) do |ok, msg|
         next resp.(false, msg, ger) unless ok
