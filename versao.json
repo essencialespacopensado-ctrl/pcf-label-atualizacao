@@ -1,12 +1,21 @@
 {
- "tela": "2026-10-30.10",
- "plugin": "2026-10-30.10",
+ "tela": "2026-10-30.11",
+ "plugin": "2026-10-30.11",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-30.11",
+   "plugin": "2026-10-30.11",
+   "data": "30/10",
+   "titulo": "📂 Abrir último plano pega o mais novo de qualquer PC",
+   "itens": [
+    "📂 Abrir último plano: busca de novo o plano salvo mais novo (do arquivo ao lado do projeto, que vem de qualquer PC, ou da conta) e abre exatamente como ficou — peças, fresas, passadas, ⚙ especial e regras. Antes só reabria a cópia que a janela já tinha."
+   ]
+  },
   {
    "tela": "2026-10-30.10",
    "plugin": "2026-10-30.10",

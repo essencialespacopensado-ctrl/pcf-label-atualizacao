@@ -1031,6 +1031,7 @@ module PCFLabel
     if ref.start_with?('PLANO_EXCLUIR:') then UI.start_timer(0.1, false) { id0 = ref.sub('PLANO_EXCLUIR:', ''); gerado_obj?(ler_plano(id0)) ? (UI.messagebox('Plano gerado (G-code já feito): exclua pela lista de planos, com a senha da conta.') rescue nil) : excluir_plano(id0) }; return true end
     if ref.start_with?('PLANO_ABRIR:') then UI.start_timer(0.1, false) { abrir_plano(ref.sub('PLANO_ABRIR:', '')) }; return true end
     # plano novo e lista de planos: lê de novo o que está visível AGORA (não o da hora que abriu a tela)
+    if ref == 'PLANO_ULTIMO' then UI.start_timer(0.1, false) { abrir_ultimo_plano }; return true end
     if ref == 'TELA_RECARREGAR' then UI.start_timer(0.1, false) { recarregar_seguro }; return true end
     if ref == 'PLANO_CLIENTES' then UI.start_timer(0.1, false) { nuvem_listar }; return true end
     if ref.start_with?('PLANO_NUVEM_EXCLUIR:') then h = (JSON.parse(ref.sub('PLANO_NUVEM_EXCLUIR:', '')) rescue {}); UI.start_timer(0.1, false) { nuvem_excluir(h) }; return true end
@@ -1751,6 +1752,25 @@ module PCFLabel
     # a tela nova entra quando você clicar no aviso ou abrir a janela de novo
     (@dlg.execute_script("try{avisoTelaNova()}catch(e){}") rescue nil)
   end
+  # 📂 Abrir último plano: lê de novo o plano mais novo (arquivo ao lado do projeto / deste PC / conta) e reabre a janela
+  # com ELE (sem gravar antes o que estava na tela, que pode ser o velho)
+  def self.abrir_ultimo_plano
+    return unless @dlg && @dados_json && @saida
+    if @externo.is_a?(Hash) && @externo[:k]
+      k = @externo[:k]; (@dlg.close rescue nil); return nuvem_abrir(k)
+    end
+    pl = ler_plano(@plano_id || 'principal')
+    return (@dlg.execute_script("window.SEM_SALVAR=false;$('cncMsg').textContent='Não achei plano salvo deste projeto.'") rescue nil) unless pl
+    d = JSON.parse(@dados_json); d['planoArq'] = pl
+    @dados_json = JSON.generate(d).gsub('</', '<\\/')
+    d['forcarArq'] = true
+    File.write(@saida, File.read(MODELO_TELA, encoding: 'UTF-8').sub('__DADOS__') { JSON.generate(d).gsub('</', '<\\/') }, mode: 'w:UTF-8')
+    @mt_tela = File.mtime(MODELO_TELA) rescue nil
+    @dlg.set_file(@saida)
+  rescue => e
+    (@dlg.execute_script("window.SEM_SALVAR=false") rescue nil)
+    UI.messagebox("PCF Label: não consegui abrir o último plano — #{e.message}") rescue nil
+  end
   # recarrega a tela (versão nova) SEM perder o que você fez: primeiro a tela grava o plano de agora,
   # depois abre de novo com o plano mais novo do arquivo (antes abria com o plano de quando a tela foi aberta)
   def self.recarregar_seguro
@@ -1820,7 +1840,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.10'
+  PLUGIN_VERSAO = '2026-10-30.11'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

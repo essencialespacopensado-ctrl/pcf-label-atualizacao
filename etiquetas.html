@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.10';
+const VERSAO = '2026-10-30.11';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -485,7 +485,7 @@ function marcarCor(k, c, v){ cfg[k] = cfg[k] || {}; cfg.marcT = cfg.marcT || {};
 // que o que este PC tem guardado, vale a dele (foi feito em outro PC). Antes valia a deste PC e as mudanças do outro PC não apareciam.
 let proj = (() => { const pl = ls.get(KP, null), pa = AQ && AQ.proj;
   let kpl = null; try { kpl = ls.get('etq_plano_' + PROJK + ((D.planoId && D.planoId !== 'principal') ? '#' + D.planoId : ''), null) } catch (e) {}
-  const arqMaisNovo = !!(D.planoArq && (+D.planoArq.t || 0) > (+(kpl && kpl.t) || 0));
+  const arqMaisNovo = !!(D.planoArq && (D.forcarArq || (+D.planoArq.t || 0) > (+(kpl && kpl.t) || 0)));
   window.PLANO_ARQ_NOVO = arqMaisNovo;
   if (pa && (arqMaisNovo || !pl || (+pa._t || 0) > (+pl._t || 0))) return pa; return pl || {cliente:'', pecas:{}} })();
 // o plano veio mais novo de outro PC: ferramentas, passadas, pontes e regras do corte ficam EXATAMENTE como lá
@@ -3176,7 +3176,7 @@ function depoisDeMover(){
 // ---- o plano fica salvo sozinho (por projeto) a cada mudança; dá para abrir de novo depois ----
 const KPL = 'etq_plano_' + PROJK + ((D.planoId && D.planoId !== 'principal') ? '#' + D.planoId : '');
 function salvarPlanoLocal(mapa){
-  if (!PLANO || PLANO_EXCLUIDO) return;
+  if (!PLANO || PLANO_EXCLUIDO || window.SEM_SALVAR) return;
   let foto = fotoP();
   if (mapa) Object.entries(mapa).forEach(([a, b]) => { foto = foto.split('"' + a + '"').join('"' + b + '"') });
   const agora = new Date(), d2 = n => String(n).padStart(2, '0');
@@ -3216,6 +3216,7 @@ function versaoExcluida(r){ excluirResp(r) }
 // o plano mais novo: o da memória da tela ou o do arquivo
 function planoSalvo(){
   const a = ls.get(KPL, null), b = D.planoArq && D.planoArq.foto ? D.planoArq : null;
+  if (b && D.forcarArq) return b;   // 📂 Abrir último plano: o do arquivo (o mais novo, de qualquer PC)
   if (!b) return a; if (!a) return b;
   return (+b.t || 0) > (+a.t || 0) ? b : a;
 }
@@ -3404,7 +3405,8 @@ function renderPlano(){
   if (!PLANO.semRolar) { mostrarAba('plano'); $('otimBox').scrollIntoView({behavior:'smooth'}) }
   PLANO.semRolar = false;
 }
-$('btnAbrirPlano').onclick = () => abrirPlanoSalvo();
+// 📂 Abrir último plano: busca o plano mais novo do arquivo/conta (pode ter sido feito em outro PC) e abre igual
+$('btnAbrirPlano').onclick = () => { if (window.sketchup && window.sketchup.pcf_selecionar) { $('cncMsg').className = 'hint'; $('cncMsg').textContent = '📂 Buscando o último plano salvo (de qualquer PC)…'; clearTimeout(salvarPlanoLocal.tm); window.SEM_SALVAR = true; window.sketchup.pcf_selecionar('PLANO_ULTIMO') } else abrirPlanoSalvo() };
 $('btnIncluirFora').onclick = () => incluirForaDoPlano();
 $('btnZerar').onclick = () => reiniciarDoZero();
 if (!(window.sketchup && window.sketchup.pcf_selecionar) || D.origem !== 'sketchup') $('btnZerar').style.display = 'none';
