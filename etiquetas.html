@@ -407,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.04';
+const VERSAO = '2026-10-30.05';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3173,17 +3173,22 @@ function pedirVersoes(){
   window.sketchup.pcf_selecionar('HIST');
 }
 function receberVersoes(lista){
-  const vs = (lista || []).map(v => { try { const o = JSON.parse(v.txt); const F = JSON.parse(o.foto); return {arq: v.arq, data: o.data, quando: v.quando, n: F.length, pecas: F.reduce((a, f) => a + f.pos.length, 0), obj: o} } catch (e) { return null } }).filter(Boolean).reverse();
+  const vs = (lista || []).map(v => { try { const o = JSON.parse(v.txt); const F = JSON.parse(o.foto); return {arq: v.arq, gerado: !!v.gerado, data: o.data, quando: v.quando, n: F.length, pecas: F.reduce((a, f) => a + f.pos.length, 0), obj: o} } catch (e) { return null } }).filter(Boolean).reverse();
   let bx = $('versBox'); if (!bx) { bx = document.createElement('div'); bx.id = 'versBox'; document.body.appendChild(bx) }
   bx.style.cssText = 'position:fixed;inset:60px 20%;z-index:9998;background:#fff;border:1px solid #bbb;border-radius:10px;box-shadow:0 10px 40px rgba(0,0,0,.3);padding:14px;overflow:auto';
   bx.innerHTML = `<div class="otimbar"><b>🕘 Versões salvas do plano (${vs.length})</b><span style="flex:1"></span><button id="versFechar">Fechar</button></div>
     <div class="hint" style="margin:6px 0">Clique em <b>Abrir</b> para voltar o plano para aquela hora. Dá para desfazer com Ctrl+Z.</div>
-    <table style="width:100%;border-collapse:collapse">${vs.map((v, i) => `<tr style="border-bottom:1px solid #eee"><td style="padding:6px"><b>${esc(v.quando)}</b></td><td>${v.n} chapas</td><td>${v.pecas} peças</td><td style="text-align:right"><button class="pri" data-v="${i}">Abrir</button></td></tr>`).join('') || '<tr><td>Nenhuma versão salva ainda.</td></tr>'}</table>`;
+    <table style="width:100%;border-collapse:collapse">${vs.map((v, i) => `<tr style="border-bottom:1px solid #eee"><td style="padding:6px"><b>${esc(v.quando)}</b></td><td>${v.n} chapas</td><td>${v.pecas} peças</td><td>${v.gerado ? '<span style="color:#1d7a46;font-size:12px">✔ gerado</span>' : '<span style="color:#b8860b;font-size:12px">📝 rascunho</span>'}</td><td style="text-align:right;white-space:nowrap"><button class="pri" data-v="${i}">Abrir</button> <button class="vDel" data-d="${i}" title="${v.gerado ? 'Excluir esta versão (gerada: pede a senha da conta)' : 'Excluir esta versão (rascunho: sem senha)'}" style="color:#b3261e;border-color:#b3261e">🗑</button></td></tr>`).join('') || '<tr><td>Nenhuma versão salva ainda.</td></tr>'}</table>`;
   $('versFechar').onclick = () => bx.remove();
+  bx.querySelectorAll('button.vDel').forEach(b => b.onclick = () => { const v = vs[+b.dataset.d];
+    modalExcluir({titulo: 'Excluir versão salva', nome: `Versão de ${v.quando} · ${v.n} chapas · ${v.pecas} peças`, gerado: v.gerado,
+      ok: () => { const tr = b.closest('tr'); if (tr) tr.remove() },
+      enviar: senha => window.sketchup.pcf_selecionar('HIST_EXCLUIR:' + JSON.stringify({arq: v.arq, senha})) }) });
   bx.querySelectorAll('button[data-v]').forEach(b => b.onclick = () => { const v = vs[+b.dataset.v]; marcarP(); abrirPlanoSalvo(v.obj); salvarPlanoLocal(); bx.remove();
     $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `🕘 Plano voltou para a versão de ${v.quando} (${v.n} chapas). Ctrl+Z desfaz.` });
   $('cncMsg').textContent = '';
 }
+function versaoExcluida(r){ excluirResp(r) }
 // o plano mais novo: o da memória da tela ou o do arquivo
 function planoSalvo(){
   const a = ls.get(KPL, null), b = D.planoArq && D.planoArq.foto ? D.planoArq : null;
@@ -3397,7 +3402,7 @@ function mostrarEscolhaPlano(inicio){
     ${D.planos.filter(p => p.gerado || window.VER_RASC).slice().sort((a, b) => (+a.ct || 0) - (+b.ct || 0)).map(p => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee${p.gerado ? '' : ';opacity:.75'}"><div style="flex:1"><b>${esc(p.nome)}</b>${p.gerado ? ' <span style="color:#1d7a46;font-size:12px">✔ gerado</span>' : ' <span style="color:#b8860b;font-size:12px">📝 rascunho</span>'}<div class="hint">${p.criado ? '🕓 criado ' + esc(p.criado) + ' · ' : ''}${p.n || 0} chapa(s)${p.pecas ? ' · ' + p.pecas + ' peças' : ''} · alterado ${esc(p.data || '')}</div></div>
       ${!inicio && !D.externo && p.id === (D.planoId || 'principal') ? '<span class="hint" style="color:#1d7a46">● aberto</span>' : ''}
       <button class="pri pAbrir" data-id="${esc(p.id)}">📂 Abrir</button>
-      <button class="pExcluir" data-id="${esc(p.id)}" data-nome="${esc(p.nome)}" style="color:#c8102e;border-color:#c8102e">🗑 Excluir</button></div>`).join('') || (D.planos.length ? '<div class="hint">Nenhum plano gerado ainda (os rascunhos estão em 📝).</div>' : '<div class="hint">Nenhum plano salvo neste projeto.</div>')}
+      <button class="pExcluir" data-id="${esc(p.id)}" data-ger="${p.gerado ? '1' : ''}" data-nome="${esc(p.nome)}" style="color:#c8102e;border-color:#c8102e">🗑 Excluir</button></div>`).join('') || (D.planos.length ? '<div class="hint">Nenhum plano gerado ainda (os rascunhos estão em 📝).</div>' : '<div class="hint">Nenhum plano salvo neste projeto.</div>')}
     <div style="margin-top:14px;display:${inicio ? 'none' : 'flex'};gap:10px;align-items:center"><button class="pNovo" style="background:#1d7a46;color:#fff;border-color:#1d7a46">➕ Novo plano com o que está visível agora (${nVis} peças)</button>
     <span class="hint">os planos acima não mudam</span></div>
     <div style="margin-top:10px;text-align:right"><button class="pZerar" style="color:#c8102e;border-color:#c8102e">♻ Reiniciar do zero (exclui todos)</button></div></div>`;
@@ -3413,14 +3418,15 @@ function mostrarEscolhaPlano(inicio){
   bx.onclick = e => { if (e.target === bx && !inicio) bx.remove() };
   bx.querySelectorAll('.pExcluir').forEach(b => b.onclick = () => {
     const id = b.dataset.id, atual = id === (D.planoId || 'principal');
-    if (!confirm(`Excluir o "${b.dataset.nome}"?\n\n${atual ? 'É o plano que está aberto agora: depois de excluir, abre o último plano que sobrar.\n\n' : ''}O arquivo vai para o histórico (dá para recuperar em Versões).`)) return;
-    if (atual) { PLANO_EXCLUIDO = true; clearTimeout(salvarPlanoLocal.tm) }
-    try { localStorage.removeItem('etq_plano_' + PROJK + (id !== 'principal' ? '#' + id : '')) } catch (e) {}
-    b.textContent = 'excluindo…'; b.disabled = true;
-    window.sketchup.pcf_selecionar('PLANO_EXCLUIR:' + id);
-    if (!atual) { D.planos = (D.planos || []).filter(p => p.id !== id); b.closest('div[style*="border-bottom"]').remove() }
+    modalExcluir({titulo: 'Excluir plano', nome: b.dataset.nome + (atual ? ' (é o que está aberto: depois abre o último que sobrar)' : '') + ' · o arquivo vai para o histórico', gerado: !!b.dataset.ger,
+      cancelou: () => {},
+      ok: () => { try { localStorage.removeItem('etq_plano_' + PROJK + (id !== 'principal' ? '#' + id : '')) } catch (e) {}
+        if (!atual) { D.planos = (D.planos || []).filter(p => p.id !== id); const l = b.closest('div[style*="border-bottom"]'); if (l) l.remove() } },
+      enviar: senha => { if (atual) { PLANO_EXCLUIDO = true; clearTimeout(salvarPlanoLocal.tm) }
+        window.sketchup.pcf_selecionar('PLANO_EXCLUIR_CONF:' + JSON.stringify({id, senha})) }});
   });
 }
+function planoExcluidoResp(r){ if (!r.ok && (r.id === (D.planoId || 'principal'))) PLANO_EXCLUIDO = false; excluirResp(r) }
 var PLANO_EXCLUIDO = false;
 // 📋 CLIENTES e OSs: todos os planos da sua conta (nuvem), de qualquer projeto
 function pedirClientes(){
@@ -3444,7 +3450,7 @@ function mostrarClientes(r){
         ${[...g].map(([o, ps]) => `<div style="margin:4px 0 4px 10px"><b>📁 ${esc(o)}</b>${ps.map(m => `<div class="cItem" data-busca="${esc((c + ' ' + o + ' ' + m.projeto + ' ' + m.nome).toLowerCase())}" style="display:flex;align-items:center;gap:8px;padding:5px 0 5px 12px;border-bottom:1px solid #f2f2f2">
           <div style="flex:1">${esc(m.nome || 'Plano')} <span class="hint">· ${esc(m.projeto || '')} · ${m.n || 0} chapa(s) · ${m.pecas || 0} peças · ${esc(m.data || '')}${m.pc ? ' · ' + esc(m.pc) : ''}</span>${m.atual ? ' <span class="hint" style="color:#1d7a46">● projeto aberto</span>' : ''}</div>
           <button class="pri cAbrir" data-k="${esc(m.k)}">📂 Abrir plano</button>
-          <button class="cExcl" data-k="${esc(m.k)}" data-chave="${esc(m.chave || '')}" data-id="${esc(m.id || '')}" data-skp="${esc(m.skp || '')}" data-nome="${esc((m.nome || 'Plano') + ' · ' + c)}" title="Excluir este plano (pede a senha da conta)" style="color:#b3261e">🗑</button>
+          <button class="cExcl" data-k="${esc(m.k)}" data-chave="${esc(m.chave || '')}" data-id="${esc(m.id || '')}" data-skp="${esc(m.skp || '')}" data-ger="${m.gerado ? '1' : ''}" data-nome="${esc((m.nome || 'Plano') + ' · ' + c)}" title="Excluir este plano (gerado pede a senha da conta)" style="color:#b3261e">🗑</button>
           ${m.temSkp && !m.atual ? `<button class="cProj" data-k="${esc(m.k)}" data-skp="${esc(m.skp)}" title="Abre o projeto .skp no SketchUp">🗂 Abrir projeto</button>` : ''}</div>`).join('')}</div>`).join('')}</div>`).join('') || '<div class="hint">Nenhum plano na sua conta ainda. Cada plano que você salvar entra aqui sozinho.</div>'}</div>`;
   }
   bx.innerHTML = `<div style="background:#fff;border-radius:12px;padding:18px 22px;max-width:760px;width:94%;max-height:86vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.3)">${topo}${corpo}</div>`;
@@ -3458,34 +3464,42 @@ function mostrarClientes(r){
   bx.querySelectorAll('.cExcl').forEach(b => b.onclick = () => pedirSenhaExcluir(b));
   bx.querySelectorAll('.cProj').forEach(b => b.onclick = () => { b.textContent = 'abrindo…'; window.sketchup.pcf_selecionar('PROJETO_ABRIR:' + b.dataset.k + '|' + b.dataset.skp) });
 }
-// 🗑 EXCLUIR PLANO DA LISTA DE CLIENTES: só com a senha da conta PCF (o SketchUp confere no login; a senha não fica guardada)
-function pedirSenhaExcluir(btn){
+// 🗑 EXCLUIR: 📝 rascunho (sem G-code) só confirma · ✔ gerado (G-code feito) pede a senha da conta PCF (o SketchUp confere; não fica guardada)
+// o: {titulo, nome, gerado, enviar: senha => manda para o SketchUp}; a resposta chega em excluirResp(r)
+function modalExcluir(o){
   let bx = $('exclBox'); if (bx) bx.remove();
   bx = document.createElement('div'); bx.id = 'exclBox';
   bx.style.cssText = 'position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center';
-  bx.innerHTML = `<div style="background:#fff;border-radius:12px;padding:18px 22px;width:360px;max-width:92%;box-shadow:0 10px 40px rgba(0,0,0,.3)">
-    <h3 style="margin:0 0 6px;color:#b3261e">🗑 Excluir plano</h3>
-    <div style="margin-bottom:10px">${esc(btn.dataset.nome)}</div>
-    <label style="font-size:13px">Senha da sua conta PCF</label>
-    <input type="password" id="exclSenha" style="width:100%;padding:8px;box-sizing:border-box;margin:4px 0 8px" autocomplete="current-password">
+  bx.innerHTML = `<div style="background:#fff;border-radius:12px;padding:18px 22px;width:380px;max-width:92%;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+    <h3 style="margin:0 0 6px;color:#b3261e">🗑 ${esc(o.titulo || 'Excluir')}</h3>
+    <div style="margin-bottom:10px">${esc(o.nome || '')}</div>
+    <div id="exclSenhaBox" style="display:${o.gerado ? 'block' : 'none'}"><label style="font-size:13px">✔ Gerado (G-code já feito): senha da sua conta PCF</label>
+    <input type="password" id="exclSenha" style="width:100%;padding:8px;box-sizing:border-box;margin:4px 0 8px" autocomplete="current-password"></div>
+    ${o.gerado ? '' : '<div class="hint" style="margin-bottom:6px">📝 Rascunho (sem G-code gerado): exclui sem senha.</div>'}
     <div id="exclMsg" class="hint" style="min-height:18px"></div>
     <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button id="exclNao">Cancelar</button><button id="exclSim" style="background:#b3261e;color:#fff;border-color:#b3261e">Excluir</button></div></div>`;
   document.body.appendChild(bx);
   const se = $('exclSenha'), ok = $('exclSim');
-  const ir = () => { if (!se.value) { $('exclMsg').textContent = 'Digite a senha.'; return }
-    ok.disabled = true; ok.textContent = 'conferindo…'; $('exclMsg').className = 'hint'; $('exclMsg').textContent = '';
-    window.EXCL_BTN = btn;
-    window.sketchup.pcf_selecionar('PLANO_NUVEM_EXCLUIR:' + JSON.stringify({k: btn.dataset.k, chave: btn.dataset.chave, id: btn.dataset.id, skp: btn.dataset.skp, senha: se.value}));
-    se.value = '' };
+  const ir = () => { const pede = $('exclSenhaBox').style.display !== 'none'; if (pede && !se.value) { $('exclMsg').textContent = 'Digite a senha.'; return }
+    ok.disabled = true; ok.textContent = pede ? 'conferindo…' : 'excluindo…'; $('exclMsg').className = 'hint'; $('exclMsg').textContent = '';
+    window.EXCL_OK = o.ok || null; o.enviar(pede ? se.value : ''); se.value = '' };
   ok.onclick = ir; se.onkeydown = e => { if (e.key === 'Enter') ir(); if (e.key === 'Escape') bx.remove() };
-  $('exclNao').onclick = () => bx.remove(); setTimeout(() => se.focus(), 30);
+  $('exclNao').onclick = () => { bx.remove(); if (o.cancelou) o.cancelou() }; setTimeout(() => (o.gerado ? se : ok).focus(), 30);
 }
-function exclusaoResposta(r){
+function excluirResp(r){
   const bx = $('exclBox'); if (!bx) return;
-  if (r.ok) { bx.remove(); const it = window.EXCL_BTN && window.EXCL_BTN.closest('.cItem'); if (it) it.remove(); return }
+  if (r.ok) { bx.remove(); if (window.EXCL_OK) window.EXCL_OK(r); return }
   const ok = $('exclSim'); ok.disabled = false; ok.textContent = 'Excluir';
-  $('exclMsg').className = 'hint erro'; $('exclMsg').textContent = r.msg || 'Não excluí.'; $('exclSenha').focus();
+  if (r.senha) $('exclSenhaBox').style.display = 'block';
+  $('exclMsg').className = 'hint erro'; $('exclMsg').textContent = r.msg || 'Não excluí.'; if (r.senha) $('exclSenha').focus();
 }
+// 🗑 lista de Clientes e OSs
+function pedirSenhaExcluir(btn){
+  modalExcluir({titulo: 'Excluir plano', nome: btn.dataset.nome, gerado: !!btn.dataset.ger,
+    ok: () => { const it = btn.closest('.cItem'); if (it) it.remove() },
+    enviar: senha => window.sketchup.pcf_selecionar('PLANO_NUVEM_EXCLUIR:' + JSON.stringify({k: btn.dataset.k, chave: btn.dataset.chave, id: btn.dataset.id, skp: btn.dataset.skp, senha}))});
+}
+function exclusaoResposta(r){ excluirResp(r) }
 // ⚙ ferramenta e passadas SÓ DESTE plano de corte (gravadas junto do plano; os outros planos não mudam)
 function mostrarPF(){
   const bar = $('pfBar'), sel = $('pfFer'), pas = $('pfPas'); if (!bar || !sel) return;

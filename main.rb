@@ -1026,7 +1026,9 @@ module PCFLabel
     end
     if ref == 'ATUALIZAR' then UI.start_timer(0.1, false) { aplicar_atualizacao }; return true end
     if ref == 'PLANO_ZERAR' then UI.start_timer(0.1, false) { zerar_planos }; return true end
-    if ref.start_with?('PLANO_EXCLUIR:') then UI.start_timer(0.1, false) { excluir_plano(ref.sub('PLANO_EXCLUIR:', '')) }; return true end
+    if ref.start_with?('PLANO_EXCLUIR_CONF:') then h = (JSON.parse(ref.sub('PLANO_EXCLUIR_CONF:', '')) rescue {}); UI.start_timer(0.1, false) { plano_excluir_conf(h) }; return true end
+    if ref.start_with?('HIST_EXCLUIR:') then h = (JSON.parse(ref.sub('HIST_EXCLUIR:', '')) rescue {}); UI.start_timer(0.1, false) { hist_excluir(h) }; return true end
+    if ref.start_with?('PLANO_EXCLUIR:') then UI.start_timer(0.1, false) { id0 = ref.sub('PLANO_EXCLUIR:', ''); gerado_obj?(ler_plano(id0)) ? (UI.messagebox('Plano gerado (G-code já feito): exclua pela lista de planos, com a senha da conta.') rescue nil) : excluir_plano(id0) }; return true end
     if ref.start_with?('PLANO_ABRIR:') then UI.start_timer(0.1, false) { abrir_plano(ref.sub('PLANO_ABRIR:', '')) }; return true end
     # plano novo e lista de planos: lê de novo o que está visível AGORA (não o da hora que abriu a tela)
     if ref == 'PLANO_CLIENTES' then UI.start_timer(0.1, false) { nuvem_listar }; return true end
@@ -1040,7 +1042,7 @@ module PCFLabel
     if ref == 'HIST'
       h = File.join(pasta_planos, 'historico')
       arqs = Dir.glob(File.join(h, '*.json').tr('\\', '/')).select { |x| File.basename(x).start_with?((@externo ? @externo[:chave] : nome_plano) + sufixo_plano(@plano_id) + ' ') }.sort_by { |x| File.mtime(x) }.last(60)
-      lista = arqs.map { |x| { arq: File.basename(x), quando: File.mtime(x).strftime('%d/%m %H:%M'), txt: File.binread(x).force_encoding('UTF-8') } }
+      lista = arqs.map { |x| t = File.binread(x).force_encoding('UTF-8'); { arq: File.basename(x), quando: File.mtime(x).strftime('%d/%m %H:%M'), txt: t, gerado: gerado_obj?((JSON.parse(t) rescue nil)) } }
       @dlg.execute_script("receberVersoes(#{JSON.generate(lista).gsub('</', '<\\/')})") rescue nil
       return true
     end
@@ -1434,7 +1436,7 @@ module PCFLabel
     c = conta_info
     return responder_clientes(ok: false, login: true, msg: 'Entre na sua conta para ver os clientes e as OSs.') unless c
     nuvem_subir
-    campos = %w[chave id nome cliente os amb projeto skp data t n pecas pc excluido]
+    campos = %w[chave id nome cliente os amb projeto skp data criado gerado t n pecas pc excluido]
     url0 = "#{PCF::Ferramentas::FS_URL rescue 'https://firestore.googleapis.com/v1/projects/os-moveis/databases/(default)/documents/'}pcf_planos/#{c[:uid]}/itens?pageSize=300&" + campos.map { |x| "mask.fieldPaths=#{x}" }.join('&')
     tudo = []
     pagina = lambda do |tok|
@@ -1458,26 +1460,87 @@ module PCFLabel
   end
   # 🗑 exclui um plano da lista de clientes — só com a SENHA da conta PCF (conferida no login da conta, não fica guardada)
   # na nuvem fica marcado como excluído; os arquivos do plano neste PC vão para o histórico (dá para recuperar)
-  def self.nuvem_excluir(h)
+  # ---------- EXCLUIR: 📝 rascunho (sem G-code) sem senha · ✔ gerado (G-code já feito) só com a SENHA da conta PCF ----------
+  def self.gerado_obj?(o) o.is_a?(Hash) && !o['gc'].nil? && o['gc'] != false && o['gc'] != 0 end
+  def self.gerado_arq?(arq) gerado_obj?((JSON.parse(File.read(arq, encoding: 'UTF-8')) rescue nil)) end
+  # confere a senha só quando precisa (plano gerado); a senha vai só para o login da conta e não fica guardada
+  def self.conferir_senha(precisa, senha, &fim)
+    return fim.call(true, nil) unless precisa
     f = conta_pcf; c = conta_info
-    return responder_exclusao(false, 'Entre na sua conta primeiro.') unless f && c
-    k = h['k'].to_s; senha = h['senha'].to_s
-    return responder_exclusao(false, 'Digite a senha.') if senha.empty? || k.empty?
-    sc = f.singleton_class; url = "#{sc.const_get(:AUTH_URL)}signInWithPassword?key=#{sc.const_get(:FB_CHAVE)}"
-    f.http(Sketchup::Http::POST, url, { 'email' => c[:email].to_s, 'password' => senha, 'returnSecureToken' => false }) do |s, _d|
-      next responder_exclusao(false, s == 0 ? 'Sem internet: não deu para conferir a senha.' : 'Senha errada. O plano não foi excluído.') unless s == 200
-      f.fs_gravar("pcf_planos/#{c[:uid]}/itens/#{k}", { 'excluido' => true, 'excluido_em' => Time.now.strftime('%d/%m/%Y %H:%M') }, %w[excluido excluido_em]) do |s2, _d2|
-        next responder_exclusao(false, "A nuvem não respondeu (#{s2}). Tente de novo.") unless s2 == 200
-        (arquivar_plano_lista(h) rescue nil)
-        responder_exclusao(true, 'Plano excluído.')
-        UI.start_timer(0.3, false) { nuvem_listar }
+    return fim.call(false, 'Plano gerado: entre na sua conta (👤 Conta) para excluir com a senha.') unless f && c
+    return fim.call(false, 'Plano gerado (G-code já feito): digite a senha da conta para excluir.') if senha.to_s.empty?
+    sc = f.singleton_class
+    f.http(Sketchup::Http::POST, "#{sc.const_get(:AUTH_URL)}signInWithPassword?key=#{sc.const_get(:FB_CHAVE)}", { 'email' => c[:email].to_s, 'password' => senha.to_s, 'returnSecureToken' => false }) do |s, _r|
+      s == 200 ? fim.call(true, nil) : fim.call(false, s == 0 ? 'Sem internet: não deu para conferir a senha.' : 'Senha errada. Não foi excluído.')
+    end
+  rescue => e
+    fim.call(false, "Erro: #{e.message}")
+  end
+  # o plano está gerado? (arquivo deste PC; se ele só existe na conta, pergunta à conta; sem como saber = trata como gerado)
+  def self.gerado_plano(skp, id, k, chave = nil, &fim)
+    suf = sufixo_plano(id); arqs = []
+    unless skp.to_s.empty?
+      arqs << File.join(File.dirname(skp), File.basename(skp, '.*') + '.pcfplano' + suf + '.json')
+      arqs << File.join(pasta_planos, chave_de_skp(skp) + suf + '.json')
+    end
+    arqs << File.join(pasta_planos, chave.to_s + suf + '.json') unless chave.to_s.empty?
+    a = arqs.select { |x| File.exist?(x) }.max_by { |x| File.mtime(x) }
+    return fim.call(gerado_arq?(a)) if a
+    f = conta_pcf; c = conta_info
+    return fim.call(true) unless f && c && !k.to_s.empty?
+    f.fs_get("pcf_planos/#{c[:uid]}/itens/#{k}") { |s, m| fim.call(s == 200 && m ? !!m['gerado'] : true) }
+  rescue
+    fim.call(true)
+  end
+  # marca como excluído na conta (quando tem conta e o plano está lá)
+  def self.marcar_excluido_nuvem(doc, &fim)
+    f = conta_pcf; c = conta_info
+    return fim.call(true, nil) unless f && c && doc
+    f.fs_gravar("pcf_planos/#{c[:uid]}/itens/#{doc}", { 'excluido' => true, 'excluido_em' => Time.now.strftime('%d/%m/%Y %H:%M') }, %w[excluido excluido_em]) do |s2, _d2|
+      s2 == 200 ? fim.call(true, nil) : fim.call(false, "A nuvem não respondeu (#{s2}). Tente de novo.")
+    end
+  end
+  # 🗑 lista de Clientes e OSs
+  def self.nuvem_excluir(h)
+    k = h['k'].to_s; id = id_plano(h['id']); skp = h['skp'].to_s.empty? ? '' : caminho_local(h['skp'])
+    gerado_plano(skp, id, k, h['chave']) do |ger|
+      conferir_senha(ger, h['senha']) do |ok, msg|
+        next responder_exclusao(false, msg, ger) unless ok
+        marcar_excluido_nuvem(k.empty? ? nil : k) do |ok2, msg2|
+          next responder_exclusao(false, msg2) unless ok2
+          (arquivar_plano_lista(h) rescue nil)
+          responder_exclusao(true, 'Plano excluído.')
+          UI.start_timer(0.3, false) { nuvem_listar }
+        end
       end
     end
   rescue => e
     responder_exclusao(false, "Erro: #{e.message}")
   end
-  def self.responder_exclusao(ok, msg)
-    @dlg.execute_script("exclusaoResposta(#{JSON.generate(ok: ok, msg: msg)})") rescue nil
+  def self.responder_exclusao(ok, msg, senha = false)
+    @dlg.execute_script("exclusaoResposta(#{JSON.generate(ok: ok, msg: msg, senha: senha)})") rescue nil
+  end
+  # 🕘 versões salvas: apaga uma cópia do histórico (a de plano gerado pede a senha)
+  def self.hist_excluir(h)
+    arq = File.join(pasta_planos, 'historico', File.basename(h['arq'].to_s))
+    js = ->(o) { @dlg.execute_script("versaoExcluida(#{JSON.generate(o)})") rescue nil }
+    return js.(ok: false, arq: h['arq'], msg: 'Essa versão não existe mais.') unless File.exist?(arq)
+    ger = gerado_arq?(arq)
+    conferir_senha(ger, h['senha']) do |ok, msg|
+      next js.(ok: false, arq: h['arq'], msg: msg, senha: ger) unless ok
+      File.delete(arq) rescue (next js.(ok: false, arq: h['arq'], msg: 'Não consegui apagar o arquivo.'))
+      js.(ok: true, arq: h['arq'])
+    end
+  end
+  # 🗑 Planos deste projeto (dentro da janela): rascunho sem senha, gerado com senha
+  def self.plano_excluir_conf(h)
+    id = id_plano(h['id']); ger = gerado_obj?(ler_plano(id))
+    js = ->(o) { @dlg.execute_script("planoExcluidoResp(#{JSON.generate(o)})") rescue nil }
+    conferir_senha(ger, h['senha']) do |ok, msg|
+      next js.(ok: false, id: id, msg: msg, senha: ger) unless ok
+      js.(ok: true, id: id)
+      UI.start_timer(0.1, false) { excluir_plano(id) }
+    end
   end
   # tira o plano deste PC (vai para o histórico): o da pasta de planos e o que fica junto do projeto .skp
   def self.arquivar_plano_lista(h)
@@ -1737,7 +1800,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.04'
+  PLUGIN_VERSAO = '2026-10-30.05'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2474,26 +2537,19 @@ module PCFLabel
   # 🗑 Início: exclui um plano — só com a SENHA da conta PCF (conferida no login; não fica guardada)
   # na conta fica marcado como excluído; os arquivos do plano vão para o histórico (dá para recuperar)
   def self.inicio_excluir(d, h)
-    resp = ->(ok, msg) { d.execute_script("exclResp(#{JSON.generate(ok: ok, msg: msg)})") rescue nil }
-    f = conta_pcf; c = conta_info
-    return resp.(false, 'Entre na sua conta (👤 Conta) primeiro.') unless f && c
-    senha = h['senha'].to_s
-    return resp.(false, 'Digite a senha.') if senha.empty?
-    sc = f.singleton_class
-    f.http(Sketchup::Http::POST, "#{sc.const_get(:AUTH_URL)}signInWithPassword?key=#{sc.const_get(:FB_CHAVE)}", { 'email' => c[:email].to_s, 'password' => senha, 'returnSecureToken' => false }) do |s, _r|
-      next resp.(false, s == 0 ? 'Sem internet: não deu para conferir a senha.' : 'Senha errada. O plano não foi excluído.') unless s == 200
-      skp = h['skp'].to_s.empty? ? '' : caminho_local(h['skp'])
-      id = id_plano(h['id'])
-      doc = h['k'].to_s.empty? ? (skp.empty? ? nil : doc_plano(chave_de_skp(skp), id)) : h['k'].to_s
-      termina = lambda do
-        (inicio_arquivar(skp, id) rescue nil) unless skp.empty?
-        resp.(true, 'Plano excluído.')
-        UI.start_timer(0.3, false) { inicio rescue nil }
-      end
-      next termina.call unless doc
-      f.fs_gravar("pcf_planos/#{c[:uid]}/itens/#{doc}", { 'excluido' => true, 'excluido_em' => Time.now.strftime('%d/%m/%Y %H:%M') }, %w[excluido excluido_em]) do |s2, _d2|
-        next resp.(false, "A nuvem não respondeu (#{s2}). Tente de novo.") unless s2 == 200
-        termina.call
+    resp = ->(ok, msg, senha = false) { d.execute_script("exclResp(#{JSON.generate(ok: ok, msg: msg, senha: senha)})") rescue nil }
+    skp = h['skp'].to_s.empty? ? '' : caminho_local(h['skp'])
+    id = id_plano(h['id']); k = h['k'].to_s
+    doc = k.empty? ? (skp.empty? ? nil : doc_plano(chave_de_skp(skp), id)) : k
+    gerado_plano(skp, id, k) do |ger|
+      conferir_senha(ger, h['senha']) do |ok, msg|
+        next resp.(false, msg, ger) unless ok
+        marcar_excluido_nuvem(doc) do |ok2, msg2|
+          next resp.(false, msg2) unless ok2
+          (inicio_arquivar(skp, id) rescue nil) unless skp.empty?
+          resp.(true, 'Plano excluído.')
+          UI.start_timer(0.3, false) { inicio rescue nil }
+        end
       end
     end
   rescue => e
@@ -2668,7 +2724,7 @@ module PCFLabel
             var tr=document.createElement('tr'); tr.className='pj'+(e.atual?' atual':'');
             var vis=e.planos.filter(function(p){return p.gerado||VER_RASC;}); var n=vis.length;
             if(!n) return;
-            var pls=vis.map(function(p){var del='<button class="del" data-del="1" data-dk="'+esc(p.k||'')+'" data-dskp="'+esc(e.skp||'')+'" data-did="'+esc(p.id||'')+'" data-dnome="'+esc((p.nome||'Plano')+' · '+(e.cliente||'')+' · '+(e.projeto||''))+'" title="Excluir este plano (pede a senha da conta)">🗑</button>';
+            var pls=vis.map(function(p){var del='<button class="del" data-del="1" data-dk="'+esc(p.k||'')+'" data-dskp="'+esc(e.skp||'')+'" data-did="'+esc(p.id||'')+'" data-dger="'+(p.gerado?'1':'')+'" data-dnome="'+esc((p.nome||'Plano')+' · '+(e.cliente||'')+' · '+(e.projeto||''))+'" title="Excluir este plano (pede a senha da conta)">🗑</button>';
               var qd='<span class="qd">'+(p.gerado?'<b style="color:#1d7a46">✔ gerado</b> · ':'<b style="color:#b8860b">📝 rascunho</b> · ')+(p.criado?'🕓 criado '+esc(p.criado):'')+(p.data?(p.criado?' · ':'')+'alterado '+esc(p.data):'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'</span>';
               return '<div class="pl">'+(p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>')+qd+del+'</div>';}).join('');
             tr.innerHTML='<td>'+esc(e.data)+'</td><td></td><td>'+esc(e.os||'—')+'</td><td>'+esc(e.amb||'—')+'</td>'+
@@ -2708,17 +2764,17 @@ module PCFLabel
       function pedirSenha(b){ EXB=b; var bx=document.getElementById('exclBox'); if(bx)bx.remove();
         bx=document.createElement('div'); bx.id='exclBox';
         bx.innerHTML='<div class="cx"><h3 style="margin:0 0 6px;color:#b3261e">🗑 Excluir plano</h3><div style="margin-bottom:10px">'+esc(b.dataset.dnome)+'</div>'+
-          '<label style="font-size:13px">Senha da sua conta PCF</label><input type="password" id="exclSenha" style="width:100%;padding:8px;box-sizing:border-box;margin:4px 0 8px">'+
+          '<div id="exclSenhaBox" style="display:'+(b.dataset.dger?'block':'none')+'"><label style="font-size:13px">✔ Plano gerado: senha da sua conta PCF</label><input type="password" id="exclSenha" style="width:100%;padding:8px;box-sizing:border-box;margin:4px 0 8px"></div>'+(b.dataset.dger?'':'<div style="font-size:13px;margin-bottom:6px">📝 Rascunho (sem G-code gerado): exclui sem senha.</div>')+
           '<div id="exclMsg" style="min-height:18px;font-size:13px"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button id="exclNao">Cancelar</button> <button id="exclSim" style="background:#b3261e;color:#fff;border-color:#b3261e">Excluir</button></div></div>';
         document.body.appendChild(bx);
         var se=document.getElementById('exclSenha'), ok=document.getElementById('exclSim');
-        var ir=function(){ if(!se.value){document.getElementById('exclMsg').textContent='Digite a senha.';return;} ok.disabled=true; ok.textContent='conferindo…'; document.getElementById('exclMsg').textContent='';
+        var ir=function(){ var pede=document.getElementById('exclSenhaBox').style.display!=='none'; if(pede&&!se.value){document.getElementById('exclMsg').textContent='Digite a senha.';return;} ok.disabled=true; ok.textContent='conferindo…'; document.getElementById('exclMsg').textContent='';
           sketchup.excluir(JSON.stringify({k:b.dataset.dk, skp:b.dataset.dskp, id:b.dataset.did, senha:se.value})); se.value=''; };
         ok.onclick=ir; se.onkeydown=function(e){ if(e.key==='Enter')ir(); if(e.key==='Escape')bx.remove(); };
         document.getElementById('exclNao').onclick=function(){bx.remove();}; setTimeout(function(){se.focus();},30); }
       function exclResp(r){ var bx=document.getElementById('exclBox'); if(!bx)return;
         if(r.ok){ bx.remove(); if(EXB){ var x=EXB.closest('.pl'); if(x)x.remove(); else EXB.remove(); } return; }
-        var ok=document.getElementById('exclSim'); ok.disabled=false; ok.textContent='Excluir'; var m=document.getElementById('exclMsg'); m.style.color='#b3261e'; m.textContent=r.msg||'Não excluí.'; document.getElementById('exclSenha').focus(); }
+        var ok=document.getElementById('exclSim'); ok.disabled=false; ok.textContent='Excluir'; var m=document.getElementById('exclMsg'); m.style.color='#b3261e'; m.textContent=r.msg||'Não excluí.'; if(r.senha)document.getElementById('exclSenhaBox').style.display='block'; document.getElementById('exclSenha').focus(); }
       render();
       if(window.sketchup&&sketchup.pronto)sketchup.pronto();
       </script></body></html>
