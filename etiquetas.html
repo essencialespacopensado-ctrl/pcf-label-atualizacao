@@ -407,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.03';
+const VERSAO = '2026-10-30.04';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3323,7 +3323,7 @@ function renderPlano(){
       ${PLANO.folhas.some(f => f.naoCoube) ? `<button id="btnGirarTodas" style="background:#c8102e;color:#fff;border-color:#c8102e;margin-top:6px">↻ Girar contra o veio as que não couberam (você decide)</button>` : ''}
     ${n > tem && D.origem !== 'sketchup' ? `<span style="color:#7a5b00">⚠ O projeto tem ${tem} folha(s). Antes de aplicar, crie mais ${n - tem} no Aspire: Folha ▾ → Adicionar nova planilha.</span>` : ''}
     <span style="flex:1"></span>
-    ${D.origem === 'sketchup' ? `<button class="pri" id="btnGcPlano" style="background:#b8860b;border-color:#b8860b">⚡ Gerar G-code para a máquina</button><button id="btnSimular" style="background:#2e4a7a;color:#fff;border-color:#2e4a7a">🎬 Simular corte</button><button id="btnConferir" style="background:#1d7a46;color:#fff;border-color:#1d7a46">📋 Conferir cortes</button><button id="btnLiberarAj" title="Tira a marca ✋ de todas as peças (o otimizador pode mexer em todas)">✋ Liberar todos os ajustes</button><button id="btnAspireConf" title="Cria no Aspire um trabalho por chapa, com os mesmos percursos do G-code (rampa, passadas, profundidades, ferramenta), para conferir">📤 Abrir no Aspire (conferir)</button><button id="btnDxf">⤓ DXF por chapa</button>` : `<button class="pri" id="btnAplicar" style="background:#1d7a46;border-color:#1d7a46">✔ Aplicar no Aspire</button>`}
+    ${D.origem === 'sketchup' ? `<button id="btnLiberarAj" title="Tira a marca ✋ de todas as peças (o otimizador pode mexer em todas)">✋ Liberar todos os ajustes</button><button id="btnAspireConf" title="Cria no Aspire um trabalho por chapa, com os mesmos percursos do G-code (rampa, passadas, profundidades, ferramenta), para conferir">📤 Abrir no Aspire (conferir)</button><button id="btnDxf">⤓ DXF por chapa</button>` : `<button class="pri" id="btnAplicar" style="background:#1d7a46;border-color:#1d7a46">✔ Aplicar no Aspire</button>`}
     <button id="btnBuscar" title="Testa muitas outras arrumações por 40 segundos e fica com a melhor">🔍 Procurar plano melhor</button>
     <button id="btnDesfP" title="Desfazer a última ação (Ctrl+Z)" ${HISTP.length ? '' : 'disabled'}>↶ Desfazer</button>
     <button id="btnRefP" title="Refazer (Ctrl+Y)" ${REDOP.length ? '' : 'disabled'}>↷ Refazer</button>

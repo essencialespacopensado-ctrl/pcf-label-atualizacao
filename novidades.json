@@ -1,5 +1,14 @@
 [
  {
+  "tela": "2026-10-30.04",
+  "plugin": "2026-10-30.04",
+  "data": "30/10",
+  "titulo": "Cada botão num lugar só",
+  "itens": [
+   "⚡ Gerar G-code, 🎬 Simular corte e 📋 Conferir cortes ficam só no quadro CORTE / CNC (à esquerda) — saíram da barra de cima do plano, onde estavam repetidos."
+  ]
+ },
+ {
   "tela": "2026-10-30.03",
   "plugin": "2026-10-30.04",
   "data": "30/10",
