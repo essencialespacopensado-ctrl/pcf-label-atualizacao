@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-29.01",
- "plugin": "2026-10-30.01",
+ "plugin": "2026-10-30.02",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-29.01",
+   "plugin": "2026-10-30.02",
+   "data": "30/10",
+   "titulo": "🗑 Excluir plano também na tela Início",
+   "itens": [
+    "PCF Label — Início: ao lado de cada plano (Plano Principal, Plano 2, ☁…) tem o 🗑. Pede a senha da sua conta PCF; senha errada não exclui. O plano sai da lista (e da conta, em todos os PCs) e os arquivos dele vão para o histórico (dá para recuperar)."
+   ]
+  },
   {
    "tela": "2026-10-29.01",
    "plugin": "2026-10-30.01",

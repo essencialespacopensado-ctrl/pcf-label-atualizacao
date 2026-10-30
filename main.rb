@@ -1728,7 +1728,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.01'
+  PLUGIN_VERSAO = '2026-10-30.02'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2422,8 +2422,57 @@ module PCFLabel
     d.add_action_callback('nuvem') { |_c, k| (d.close rescue nil); @projeto_externo = nil; splash rescue nil; UI.start_timer(0.3, false) { nuvem_abrir(k) } }
     d.add_action_callback('conta') { |_c| f = conta_pcf; f ? f.conta_janela : UI.messagebox('O login ainda não está instalado neste PC. Clique no ⬆ Atualizar da barra PCF.') }
     d.add_action_callback('pronto') { |_c| inicio_nuvem(d) }
+    d.add_action_callback('excluir') { |_c, json| inicio_excluir(d, (JSON.parse(json.to_s) rescue {})) }
     d.set_file(arq)
     d.show
+  end
+  # chave do plano de um projeto (igual ao nome_plano quando ele está aberto)
+  def self.chave_de_skp(skp)
+    require 'digest/md5'
+    t = File.basename(skp.to_s, '.*').gsub(/[\\\/:*?"<>|]/, '_')
+    "#{t} ##{Digest::MD5.hexdigest(skp.to_s.downcase.tr('\\', '/'))[0, 6]}"
+  end
+  # 🗑 Início: exclui um plano — só com a SENHA da conta PCF (conferida no login; não fica guardada)
+  # na conta fica marcado como excluído; os arquivos do plano vão para o histórico (dá para recuperar)
+  def self.inicio_excluir(d, h)
+    resp = ->(ok, msg) { d.execute_script("exclResp(#{JSON.generate(ok: ok, msg: msg)})") rescue nil }
+    f = conta_pcf; c = conta_info
+    return resp.(false, 'Entre na sua conta (👤 Conta) primeiro.') unless f && c
+    senha = h['senha'].to_s
+    return resp.(false, 'Digite a senha.') if senha.empty?
+    sc = f.singleton_class
+    f.http(Sketchup::Http::POST, "#{sc.const_get(:AUTH_URL)}signInWithPassword?key=#{sc.const_get(:FB_CHAVE)}", { 'email' => c[:email].to_s, 'password' => senha, 'returnSecureToken' => false }) do |s, _r|
+      next resp.(false, s == 0 ? 'Sem internet: não deu para conferir a senha.' : 'Senha errada. O plano não foi excluído.') unless s == 200
+      skp = h['skp'].to_s.empty? ? '' : caminho_local(h['skp'])
+      id = id_plano(h['id'])
+      doc = h['k'].to_s.empty? ? (skp.empty? ? nil : doc_plano(chave_de_skp(skp), id)) : h['k'].to_s
+      termina = lambda do
+        (inicio_arquivar(skp, id) rescue nil) unless skp.empty?
+        resp.(true, 'Plano excluído.')
+        UI.start_timer(0.3, false) { inicio rescue nil }
+      end
+      next termina.call unless doc
+      f.fs_gravar("pcf_planos/#{c[:uid]}/itens/#{doc}", { 'excluido' => true, 'excluido_em' => Time.now.strftime('%d/%m/%Y %H:%M') }, %w[excluido excluido_em]) do |s2, _d2|
+        next resp.(false, "A nuvem não respondeu (#{s2}). Tente de novo.") unless s2 == 200
+        termina.call
+      end
+    end
+  rescue => e
+    resp.(false, "Erro: #{e.message}") rescue nil
+  end
+  def self.inicio_arquivar(skp, id)
+    require 'fileutils'
+    if chave_projeto(skp) == chave_projeto(Sketchup.active_model.path) && !@projeto_externo
+      excluir_plano(id) # projeto aberto: a exclusão normal (a tela se ajusta)
+    else
+      suf = sufixo_plano(id); pd = pasta_planos; hist = File.join(pd, 'historico'); FileUtils.mkdir_p(hist)
+      carimbo = Time.now.strftime('%Y-%m-%d %H-%M-%S'); chave = chave_de_skp(skp)
+      [File.join(File.dirname(skp), File.basename(skp, '.*') + '.pcfplano' + suf + '.json'), File.join(pd, chave + suf + '.json')].each_with_index do |a, i|
+        next unless File.exist?(a)
+        FileUtils.mv(a, File.join(hist, chave + suf + ' ' + carimbo + (i > 0 ? " (excluído, cópia #{i})" : ' (excluído)') + '.json')) rescue nil
+      end
+    end
+    indice_atualizar_projeto(skp)
   end
   # ☁ planos da CONTA (de todos os computadores) na página Início
   def self.inicio_nuvem(d)
@@ -2522,6 +2571,9 @@ module PCFLabel
       .planos{display:flex;gap:4px;flex-wrap:wrap}
       .planos button{padding:4px 8px;font-size:12px}
       .planos button.nv{background:#eef6ff;border-color:#9cc3f5}
+      .planos button.del{padding:4px 6px;color:#b3261e;margin-right:6px}
+      #exclBox{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:99}
+      #exclBox .cx{background:#fff;border-radius:12px;padding:18px 22px;width:360px;max-width:92%;box-shadow:0 10px 40px rgba(0,0,0,.3)}
       .nvb{display:inline-block;padding:1px 6px;border-radius:8px;background:#1f6feb;color:#fff;font-size:11px;margin-left:4px}
       #vazio{padding:30px;text-align:center;color:#6b7280}
       </style></head><body>
@@ -2571,7 +2623,8 @@ module PCFLabel
           g.linhas.forEach(function(e){
             var tr=document.createElement('tr'); tr.className='pj'+(e.atual?' atual':'');
             var n=e.planos.length;
-            var pls=e.planos.map(function(p){return p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>';}).join('');
+            var pls=e.planos.map(function(p){var del='<button class="del" data-del="1" data-dk="'+esc(p.k||'')+'" data-dskp="'+esc(e.skp||'')+'" data-did="'+esc(p.id||'')+'" data-dnome="'+esc((p.nome||'Plano')+' · '+(e.cliente||'')+' · '+(e.projeto||''))+'" title="Excluir este plano (pede a senha da conta)">🗑</button>';
+              return (p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>')+del;}).join('');
             tr.innerHTML='<td>'+esc(e.data)+'</td><td></td><td>'+esc(e.os||'—')+'</td><td>'+esc(e.amb||'—')+'</td>'+
               '<td>'+esc(e.projeto)+(e.atual?' <span class="badge">aberto</span>':'')+(e.nuvem?'<span class="nvb">☁ nuvem</span>':'')+'<div class="sub">'+esc(e.pasta||'')+'</div></td>'+
               '<td><span class="badge'+(n>1?' m':'')+'">'+n+(n>1?' planos':' plano')+'</span></td>'+
@@ -2582,7 +2635,7 @@ module PCFLabel
       }
       document.getElementById('busca').oninput=render;
       document.querySelectorAll('th[data-k]').forEach(function(th){th.onclick=function(){var k=th.dataset.k; if(ord==k)asc=!asc; else {ord=k;asc=(k!='mtime');} render();};});
-      document.getElementById('corpo').onclick=function(ev){var hc=ev.target.closest('tr.cli');if(hc&&!ev.target.closest('button')){var k=hc.dataset.cli;abertos[k]=!abertos[k];render();return;}var b=ev.target.closest('button');if(!b)return; if(b.dataset.k){b.textContent='⏳ abrindo…';sketchup.nuvem(b.dataset.k);} else if(b.dataset.pasta)sketchup.pasta(b.dataset.pasta); else if(b.dataset.skp)sketchup.abrir(b.dataset.skp,b.dataset.id);};
+      document.getElementById('corpo').onclick=function(ev){var hc=ev.target.closest('tr.cli');if(hc&&!ev.target.closest('button')){var k=hc.dataset.cli;abertos[k]=!abertos[k];render();return;}var b=ev.target.closest('button');if(!b)return; if(b.dataset.del){pedirSenha(b);return;} if(b.dataset.k){b.textContent='⏳ abrindo…';sketchup.nuvem(b.dataset.k);} else if(b.dataset.pasta)sketchup.pasta(b.dataset.pasta); else if(b.dataset.skp)sketchup.abrir(b.dataset.skp,b.dataset.id);};
       document.getElementById('novo').onclick=function(){sketchup.novo();};
       document.getElementById('abrirTodos').onclick=function(){var algum=Object.keys(abertos).some(function(k){return abertos[k];}); abertos={}; if(!algum) D.linhas.forEach(function(e){abertos[cliKey(e)]=true;}); render();};
       document.getElementById('reindexar').onclick=function(){this.textContent='⏳ Varrendo…';this.disabled=true;sketchup.reindexar();};
@@ -2603,6 +2656,22 @@ module PCFLabel
         nv.innerHTML='☁ Conta <b>'+esc(r.email)+'</b> · '+r.lista.length+' plano(s) na nuvem (de todos os computadores)'+(n?' · '+n+' projeto(s) que não estão neste PC':'')+' — botões <b>☁</b> abrem direto da nuvem, mesmo com outro projeto aberto.';
         render();
       }
+      // 🗑 excluir plano: só com a senha da conta PCF
+      var EXB=null;
+      function pedirSenha(b){ EXB=b; var bx=document.getElementById('exclBox'); if(bx)bx.remove();
+        bx=document.createElement('div'); bx.id='exclBox';
+        bx.innerHTML='<div class="cx"><h3 style="margin:0 0 6px;color:#b3261e">🗑 Excluir plano</h3><div style="margin-bottom:10px">'+esc(b.dataset.dnome)+'</div>'+
+          '<label style="font-size:13px">Senha da sua conta PCF</label><input type="password" id="exclSenha" style="width:100%;padding:8px;box-sizing:border-box;margin:4px 0 8px">'+
+          '<div id="exclMsg" style="min-height:18px;font-size:13px"></div><div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button id="exclNao">Cancelar</button> <button id="exclSim" style="background:#b3261e;color:#fff;border-color:#b3261e">Excluir</button></div></div>';
+        document.body.appendChild(bx);
+        var se=document.getElementById('exclSenha'), ok=document.getElementById('exclSim');
+        var ir=function(){ if(!se.value){document.getElementById('exclMsg').textContent='Digite a senha.';return;} ok.disabled=true; ok.textContent='conferindo…'; document.getElementById('exclMsg').textContent='';
+          sketchup.excluir(JSON.stringify({k:b.dataset.dk, skp:b.dataset.dskp, id:b.dataset.did, senha:se.value})); se.value=''; };
+        ok.onclick=ir; se.onkeydown=function(e){ if(e.key==='Enter')ir(); if(e.key==='Escape')bx.remove(); };
+        document.getElementById('exclNao').onclick=function(){bx.remove();}; setTimeout(function(){se.focus();},30); }
+      function exclResp(r){ var bx=document.getElementById('exclBox'); if(!bx)return;
+        if(r.ok){ bx.remove(); if(EXB){ var x=EXB.previousElementSibling; if(x)x.remove(); EXB.remove(); } return; }
+        var ok=document.getElementById('exclSim'); ok.disabled=false; ok.textContent='Excluir'; var m=document.getElementById('exclMsg'); m.style.color='#b3261e'; m.textContent=r.msg||'Não excluí.'; document.getElementById('exclSenha').focus(); }
       render();
       if(window.sketchup&&sketchup.pronto)sketchup.pronto();
       </script></body></html>
