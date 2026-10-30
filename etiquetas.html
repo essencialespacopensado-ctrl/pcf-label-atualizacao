@@ -407,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-29.01';
+const VERSAO = '2026-10-30.01';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -696,9 +696,12 @@ const MAGAZINE = [
   {t:2, nome:'6mm Reta', d:6, f:25000, p:7000, s:21000, pd:10, so:5},
   {t:3, nome:'6/30mm', d:6, f:25000, p:7000, s:21000, pd:8, so:5},
   {t:4, nome:'8mm Reta', d:8, f:25000, p:14000, s:21000, pd:6, so:7},
+  {t:8, nome:'45° (V)', d:12, f:12000, p:5000, s:18000, pd:5, so:5},
   {t:10, nome:'57mm Reta', d:57, f:5000, p:7000, s:18000, pd:8, so:50}
 ];
 if (!cfg.mag) cfg.mag = MAGAZINE.map(x => ({...x}));
+// T8 = fresa de 45° (Paulo cadastrou em 30/10): entra no magazine de quem ainda não tem
+if (!cfg.mag.some(x => +x.t === 8)) { cfg.mag.push({...MAGAZINE.find(x => x.t === 8)}); cfg.mag.sort((a, b) => +a.t - +b.t) }
 const ferr = t => cfg.mag.find(x => +x.t === +t) || cfg.mag[0];
 // ferramenta e passadas escolhidas SÓ PARA ESTE PLANO (ficam gravadas no plano; vazio = usa a configuração geral)
 const lerPF = o => { const s0 = o && o.pf; return s0 && typeof s0 === 'object' ? {t: s0.t || '', pas: Math.max(0, Math.min(20, Math.round(+s0.pas || 0)))} : {t: '', pas: 0} };
@@ -2250,7 +2253,9 @@ $('btnCsv').onclick = () => {
 function renderCNC(){
   const opts = sel => cfg.mag.map(x => `<option value="${x.t}"${+x.t === +sel ? ' selected' : ''}>T${x.t} · ${esc(x.nome)}</option>`).join('');
   $('tCorte').innerHTML = opts(cfg.tCorte); $('t25').innerHTML = opts(cfg.t25 || cfg.tCorte); $('tReb').innerHTML = opts(cfg.tReb); $('tMel').innerHTML = opts(cfg.tMel);
-  $('magTb').innerHTML = cfg.mag.map((x, i) => `<tr>${['t','nome','d','f','p','s','pd','so'].map(k => `<td><input data-m="${i}" data-k="${k}" value="${esc(x[k])}"${k === 'nome' ? ' style="min-width:80px"' : ''}></td>`).join('')}</tr>`).join('');
+  $('magTb').innerHTML = cfg.mag.map((x, i) => `<tr>${['t','nome','d','f','p','s','pd','so'].map(k => `<td><input data-m="${i}" data-k="${k}" value="${esc(x[k])}"${k === 'nome' ? ' style="min-width:80px"' : ''}></td>`).join('')}</tr>`).join('') +
+    `<tr><td colspan="8"><button id="magNova" style="padding:3px 10px">➕ Nova ferramenta</button></td></tr>`;
+  $('magNova').onclick = () => { const t = Math.max(0, ...cfg.mag.map(x => +x.t || 0)) + 1; cfg.mag.push({t, nome: 'Nova', d: 6, f: 15000, p: 5000, s: 18000, pd: 5, so: 5}); salvar(); renderCNC() };
   const prof = (+D.espessura) - (+cfg.melFinal || 0), mp = +cfg.melPass || 4;
   $('melInfo').textContent = prof > 0 ? `Rebaixo de ${fmt(prof)} mm em ${Math.ceil(prof / mp - 1e-6)} passadas (chapa ${fmt(D.espessura)} → ${fmt(+cfg.melFinal)} mm).` : 'Espessura final maior que a chapa.';
 }

@@ -1,5 +1,15 @@
 [
  {
+  "tela": "2026-10-30.01",
+  "plugin": "2026-10-30.02",
+  "data": "30/10",
+  "titulo": "Fresa T8 de 45° cadastrada",
+  "itens": [
+   "🔧 Magazine: T8 · 45° (V) cadastrada em todos os PCs (aparece na escolha da fresa, inclusive no ⚙ Especial). Confira o Ø e as velocidades na tabela de ferramentas (Configurações → CNC).",
+   "➕ Nova ferramenta: botão embaixo da tabela de ferramentas para cadastrar outras fresas."
+  ]
+ },
+ {
   "tela": "2026-10-29.01",
   "plugin": "2026-10-30.02",
   "data": "30/10",
