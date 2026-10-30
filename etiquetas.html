@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.08';
+const VERSAO = '2026-10-30.09';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -481,7 +481,12 @@ if (!cfg.fresa6) { const t6 = (cfg.mag || []).find(x => +x.d === 6 && /reta/i.te
 cfg.oSepCor = true;   // regra: cada cor/espessura nas suas chapas (nunca mistura)
 // marca veio/dupla/lâmina de uma cor guardando a hora (vale em todos os PCs)
 function marcarCor(k, c, v){ cfg[k] = cfg[k] || {}; cfg.marcT = cfg.marcT || {}; if (!!cfg[k][c] !== !!v || !(c in cfg[k])) { cfg[k][c] = !!v; cfg.marcT[k + '|' + c] = Date.now() } }
-let proj = (() => { const pl = ls.get(KP, null), pa = AQ && AQ.proj; if (pa && (!pl || (+pa._t || 0) > (+pl._t || 0))) return pa; return pl || {cliente:'', pecas:{}} })();
+// configuração das peças do plano (lado, passadas, ⚙ especial, nomes, tipos…): se o plano que veio do arquivo/conta é MAIS NOVO
+// que o que este PC tem guardado, vale a dele (foi feito em outro PC). Antes valia a deste PC e as mudanças do outro PC não apareciam.
+let proj = (() => { const pl = ls.get(KP, null), pa = AQ && AQ.proj;
+  let kpl = null; try { kpl = ls.get('etq_plano_' + PROJK + ((D.planoId && D.planoId !== 'principal') ? '#' + D.planoId : ''), null) } catch (e) {}
+  const arqMaisNovo = !!(D.planoArq && (+D.planoArq.t || 0) > (+(kpl && kpl.t) || 0));
+  if (pa && (arqMaisNovo || !pl || (+pa._t || 0) > (+pl._t || 0))) return pa; return pl || {cliente:'', pecas:{}} })();
 // cliente / OS / ambiente vazios: pega da pasta do projeto (ex.: "- 18. Fabrício e Aline\\26.146 - ESCADA")
 { const pi = D.pastaInfo || {}; if (!proj.cliente && pi.cliente) proj.cliente = pi.cliente; if (!proj.os && pi.os) proj.os = pi.os; if (!proj.amb && pi.amb) proj.amb = pi.amb }
 // códigos de material do SketchUp/Dinabox (ex.: DB1599755800) -> nome da cor que você escolheu

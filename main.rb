@@ -1220,7 +1220,10 @@ module PCFLabel
     suf = sufixo_plano(id)
     cands = [arq_plano_modelo(id), File.join(pasta_planos, nome_plano + suf + '.json')].compact.select { |x| File.exist?(x) }
     return nil if cands.empty?
-    JSON.parse(File.read(cands.max_by { |x| File.mtime(x) }, encoding: 'UTF-8')) rescue nil
+    # vale o de conteúdo mais NOVO (hora gravada dentro do plano), não o arquivo mexido por último:
+    # o arquivo ao lado do projeto (Dropbox) traz o que foi feito no outro PC
+    os = cands.map { |x| (JSON.parse(File.read(x, encoding: 'UTF-8')) rescue nil) }.compact
+    os.max_by { |o| o['t'].to_i }
   end
   # data e hora em que o plano foi criado: a gravada nele; plano antigo (sem ela) = quando o arquivo dele foi criado
   def self.criado_de(o, arqs)
@@ -1817,7 +1820,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.08'
+  PLUGIN_VERSAO = '2026-10-30.09'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

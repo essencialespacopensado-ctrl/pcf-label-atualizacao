@@ -1,5 +1,14 @@
 [
  {
+  "tela": "2026-10-30.09",
+  "plugin": "2026-10-30.09",
+  "data": "30/10",
+  "titulo": "Configurações do plano chegam nos outros PCs",
+  "itens": [
+   "Correção: ao abrir num PC um plano que foi mexido em outro, vinham só o nome e as peças — as configurações (lado da fresa, passadas, ⚙ especial, tipos, nomes, cliente/OS) ficavam as velhas daquele PC. Agora vale sempre a versão mais nova do plano, venha de onde vier."
+  ]
+ },
+ {
   "tela": "2026-10-30.08",
   "plugin": "2026-10-30.08",
   "data": "30/10",
