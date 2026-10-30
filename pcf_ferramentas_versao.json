@@ -1,7 +1,8 @@
 {
-  "versao": "3.4.8",
+  "versao": "3.4.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "⬆ Atualizar: quando outro SketchUp aberto (ou o PCF Label) já instalou uma versão nova do PCF Label, o ⬆ acende e carrega ela na hora — sem esperar a internet.",
     "Painel de medidas: peça do Painel Auto selecionada mostra as MESMAS medidas da janela do Painel Auto (comprimento × largura × espessura) e, se você mudar ali, a peça muda. Na janela do Painel Auto, mudar um campo já aplica na peça selecionada; sem nada selecionado a caixa de medidas some (não fica mais presa na última peça).",
     "Depois de atualizar, o aviso lembra: feche e abra o SketchUp para valer 100% (a barra e os ajustes automáticos só trocam ao reabrir).",
     "Painel Auto: Vertical no fundo de um vão (móvel montado com peças soltas, sem caixa do Dinabox) agora vira DIVISÓRIA — em pé, dividindo o vão, na altura e profundidade do vão (com recuo). Divisória e prateleira nunca levam corte 45°.",
