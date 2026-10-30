@@ -1,12 +1,23 @@
 {
- "tela": "2026-10-30.02",
- "plugin": "2026-10-30.03",
+ "tela": "2026-10-30.03",
+ "plugin": "2026-10-30.04",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-30.03",
+   "plugin": "2026-10-30.04",
+   "data": "30/10",
+   "titulo": "Só planos gerados na lista · rascunho salva sozinho · Início sem repetidos",
+   "itens": [
+    "📝 Rascunho: o plano que você está fazendo salva sozinho, mas só aparece nas listas depois de gerar o G-code (✔ gerado). Os rascunhos ficam no botão 📝 Rascunhos (Início) e \"📝 ver rascunhos\" (Planos deste projeto).",
+    "🔒 Etiquetas, folha de corte, lista de peças, lista de materiais, PDFs e Excel só liberam depois de gerar o G-code. Mexeu numa peça depois, trava de novo até gerar outra vez.",
+    "Início: o mesmo projeto aparecia duas vezes (caminho deste PC e do outro PC). Agora aparece uma vez só."
+   ]
+  },
   {
    "tela": "2026-10-30.02",
    "plugin": "2026-10-30.03",

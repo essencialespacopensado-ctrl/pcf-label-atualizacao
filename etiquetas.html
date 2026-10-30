@@ -407,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.02';
+const VERSAO = '2026-10-30.03';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -1059,7 +1059,24 @@ const mexeu = pp => !!(pp.mexida || pp.manual);   // só para mostrar (azul) at�
 const ajustada = pp => !!(PLANO && PLANO.gc && mexeu(pp));   // trava só no final (depois do G-code)
 // destaque azul / ✋ de peça mexida à mão: só até gerar o G-code (depois o plano fica limpo)
 const mostraMexida = () => !(PLANO && PLANO.gc);
-const marcaGcode = () => { if (PLANO) { PLANO.gc = Date.now(); salvarPlanoLocal(); renderPlano() } };
+const marcaGcode = () => { if (PLANO) { PLANO.gc = Date.now(); salvarPlanoLocal(); renderPlano() } travaSaidas() };
+// ✔ PLANO GERADO = G-code gerado (e nada mexido depois). Antes disso o plano é 📝 rascunho (salva sozinho, mas
+// etiquetas, folhas, listas, PDFs e Excel ficam travados até gerar o G-code)
+const SAIDAS = ['btnEt', 'btnEtPdf', 'btnMat', 'btnCorte', 'btnLista', 'btnSalvar', 'btnCsv'];
+const planoGerado = () => D.origem !== 'sketchup' || !!(typeof PLANO !== 'undefined' && PLANO && PLANO.gc);
+function travaSaidas(){
+  const ok = planoGerado();
+  SAIDAS.forEach(id => { const b = $(id); if (!b) return; b.disabled = !ok; b.style.opacity = ok ? '' : '.45';
+    if (!b.dataset.t0) b.dataset.t0 = b.title || ''; b.title = ok ? b.dataset.t0 : '🔒 Gere o G-code primeiro (⚡ Gerar G-code para a máquina)' });
+  let av = $('avisoGerar');
+  const alvo = $('btnEt') && $('btnEt').parentElement;
+  if (!ok && alvo && !av) { av = document.createElement('div'); av.id = 'avisoGerar'; av.className = 'hint'; av.style.cssText = 'color:#b8860b;font-weight:700;margin:4px 0';
+    av.textContent = '🔒 📝 Rascunho: gere o G-code (⚡) para liberar etiquetas, folhas e listas.'; alvo.insertBefore(av, alvo.firstChild) }
+  if (ok && av) av.remove();
+}
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('button'); if (b && SAIDAS.includes(b.id) && !planoGerado()) { e.stopImmediatePropagation(); e.preventDefault();
+  if ($('cncMsg')) { $('cncMsg').className = 'hint erro'; $('cncMsg').textContent = '🔒 Gere o G-code primeiro (⚡ Gerar G-code para a máquina). Depois disso libera etiquetas, folhas e listas.' } } }, true);
+setInterval(() => { try { travaSaidas() } catch (e) {} }, 800);
 function trocarPos(f, nova){
   const mk = new Map(); PLANO && PLANO.folhas.forEach(g => g.pos.forEach(pp => mk.set(pp.it.p, {manual: pp.manual, mexida: pp.mexida})));
   f.pos.forEach(pp => mk.set(pp.it.p, {manual: pp.manual, mexida: pp.mexida}));
@@ -3376,15 +3393,17 @@ function mostrarEscolhaPlano(inicio){
     ${inicio ? `<button class="pNovo pNovoTopo" style="width:100%;padding:14px;font-size:16px;font-weight:700;background:#1d7a46;color:#fff;border-color:#1d7a46;border-radius:10px">➕ Fazer plano de corte novo (${nVis} peças visíveis agora)</button>
     <button class="pClientes" style="width:100%;margin-top:10px;padding:12px;font-size:15px;font-weight:700;background:#1f5fbf;color:#fff;border-color:#1f5fbf;border-radius:10px">📋 Clientes e OSs · abrir plano de qualquer projeto (☁ na sua conta)</button>
     <div style="margin:16px 0 4px;font-weight:700">📂 Ou abrir um plano deste projeto:</div>` : `<button class="pClientes" style="margin-bottom:10px;background:#1f5fbf;color:#fff;border-color:#1f5fbf">📋 Clientes e OSs (todos os projetos, na nuvem)</button>`}
-    ${D.planos.slice().sort((a, b) => (+a.ct || 0) - (+b.ct || 0)).map(p => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee"><div style="flex:1"><b>${esc(p.nome)}</b><div class="hint">${p.criado ? '🕓 criado ' + esc(p.criado) + ' · ' : ''}${p.n || 0} chapa(s)${p.pecas ? ' · ' + p.pecas + ' peças' : ''} · alterado ${esc(p.data || '')}</div></div>
+    ${(() => { const rs = D.planos.filter(p => !p.gerado).length; return rs ? `<div style="text-align:right;margin:-4px 0 4px"><button class="pRasc" style="font-size:12px">📝 ${window.VER_RASC ? 'esconder' : 'ver'} rascunhos (${rs})</button></div>` : '' })()}
+    ${D.planos.filter(p => p.gerado || window.VER_RASC).slice().sort((a, b) => (+a.ct || 0) - (+b.ct || 0)).map(p => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee${p.gerado ? '' : ';opacity:.75'}"><div style="flex:1"><b>${esc(p.nome)}</b>${p.gerado ? ' <span style="color:#1d7a46;font-size:12px">✔ gerado</span>' : ' <span style="color:#b8860b;font-size:12px">📝 rascunho</span>'}<div class="hint">${p.criado ? '🕓 criado ' + esc(p.criado) + ' · ' : ''}${p.n || 0} chapa(s)${p.pecas ? ' · ' + p.pecas + ' peças' : ''} · alterado ${esc(p.data || '')}</div></div>
       ${!inicio && !D.externo && p.id === (D.planoId || 'principal') ? '<span class="hint" style="color:#1d7a46">● aberto</span>' : ''}
       <button class="pri pAbrir" data-id="${esc(p.id)}">📂 Abrir</button>
-      <button class="pExcluir" data-id="${esc(p.id)}" data-nome="${esc(p.nome)}" style="color:#c8102e;border-color:#c8102e">🗑 Excluir</button></div>`).join('') || '<div class="hint">Nenhum plano salvo neste projeto.</div>'}
+      <button class="pExcluir" data-id="${esc(p.id)}" data-nome="${esc(p.nome)}" style="color:#c8102e;border-color:#c8102e">🗑 Excluir</button></div>`).join('') || (D.planos.length ? '<div class="hint">Nenhum plano gerado ainda (os rascunhos estão em 📝).</div>' : '<div class="hint">Nenhum plano salvo neste projeto.</div>')}
     <div style="margin-top:14px;display:${inicio ? 'none' : 'flex'};gap:10px;align-items:center"><button class="pNovo" style="background:#1d7a46;color:#fff;border-color:#1d7a46">➕ Novo plano com o que está visível agora (${nVis} peças)</button>
     <span class="hint">os planos acima não mudam</span></div>
     <div style="margin-top:10px;text-align:right"><button class="pZerar" style="color:#c8102e;border-color:#c8102e">♻ Reiniciar do zero (exclui todos)</button></div></div>`;
   if (inicio) bx.dataset.inicio = '1';
   document.body.appendChild(bx);
+  if (bx.querySelector('.pRasc')) bx.querySelector('.pRasc').onclick = () => { window.VER_RASC = !window.VER_RASC; bx.remove(); mostrarEscolhaPlano(inicio) };
   bx.querySelectorAll('.pAbrir').forEach(b => b.onclick = () => { b.textContent = 'abrindo…'; window.sketchup.pcf_selecionar('PLANO_ABRIR:' + b.dataset.id) });
   bx.querySelectorAll('.pNovo').forEach(b => b.onclick = e => { e.target.textContent = 'criando…'; window.sketchup.pcf_selecionar((D.planos || []).length ? 'PLANO_NOVO' : 'PLANO_PRINCIPAL') });
   bx.querySelectorAll('.pClientes').forEach(b => b.onclick = () => pedirClientes());
