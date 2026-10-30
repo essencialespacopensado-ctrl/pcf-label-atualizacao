@@ -1219,6 +1219,14 @@ module PCFLabel
     return nil if cands.empty?
     JSON.parse(File.read(cands.max_by { |x| File.mtime(x) }, encoding: 'UTF-8')) rescue nil
   end
+  # data e hora em que o plano foi criado: a gravada nele; plano antigo (sem ela) = quando o arquivo dele foi criado
+  def self.criado_de(o, arqs)
+    c = o.is_a?(Hash) ? o['criado'].to_s : ''
+    t = arqs.compact.select { |x| File.exist?(x) }.map { |x| File.ctime(x) rescue nil }.compact.min
+    c = t.strftime('%d/%m/%Y %H:%M') if c.empty? && t
+    ct = (begin; d, h = c.split(' '); dd, mm, aa = d.split('/').map(&:to_i); hh, mi = h.to_s.split(':').map(&:to_i); Time.new(aa > 0 ? aa : Time.now.year, mm, dd, hh || 0, mi || 0).to_i; rescue; (t ? t.to_i : 0); end)
+    [c, ct]
+  end
   def self.listar_planos
     pth = caminho_projeto
     ids = []
@@ -1230,7 +1238,8 @@ module PCFLabel
     Dir.children(pd).each { |n| next unless n.start_with?(nome_plano) && n.end_with?('.json'); meio = n[nome_plano.size...-5]; ids << (meio.empty? ? 'principal' : meio.sub(/^\./, '')) if meio.empty? || meio.start_with?('.') } rescue nil
     ids.uniq.map do |id|
       o = ler_plano(id); next nil unless o
-      { id: id, nome: o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), data: o['data'], n: o['n'], t: o['t'],
+      cr, ct = criado_de(o, [arq_plano_modelo(id), File.join(pasta_planos, nome_plano + sufixo_plano(id) + '.json')])
+      { id: id, nome: o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), data: o['data'], n: o['n'], t: o['t'], criado: cr, ct: ct,
         pecas: (o['pecas'] ? o['pecas'].count { |p| !p['dentro'] } : nil) }
     end.compact.sort_by { |x| x[:id] == 'principal' ? 0 : x[:id].to_i }
   end
@@ -1364,7 +1373,7 @@ module PCFLabel
       os = pr['os'].to_s.strip; os = pi[:os].to_s if os.empty?
       amb = pr['amb'].to_s.strip; amb = pi[:amb].to_s if amb.empty?
       item['campos'] = { 'chave' => chave.to_s, 'id' => id_plano(id), 'nome' => obj['nome'].to_s, 'cliente' => cli, 'os' => os, 'amb' => amb,
-                         'projeto' => obj['projeto'].to_s, 'skp' => skp.to_s, 'data' => obj['data'].to_s, 't' => obj['t'].to_i, 'n' => obj['n'].to_i,
+                         'projeto' => obj['projeto'].to_s, 'skp' => skp.to_s, 'data' => obj['data'].to_s, 'criado' => obj['criado'].to_s, 't' => obj['t'].to_i, 'n' => obj['n'].to_i,
                          'pecas' => (obj['pecas'] || []).count { |p| !p['dentro'] }, 'pc' => ENV['COMPUTERNAME'].to_s, 'excluido' => false,
                          'dados' => Base64.strict_encode64(Zlib::Deflate.deflate(txt.to_s.b, 9)) }
     end
@@ -1728,7 +1737,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.02'
+  PLUGIN_VERSAO = '2026-10-30.03'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2347,9 +2356,10 @@ module PCFLabel
       f = File.join(dir, n)
       o = (JSON.parse(File.read(f, encoding: 'UTF-8')) rescue nil)
       next nil unless o.is_a?(Hash)
-      { 'id' => id, 'nome' => o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), 'data' => o['data'].to_s,
+      cr, ct = criado_de(o, [f])
+      { 'id' => id, 'nome' => o['nome'] || (id == 'principal' ? 'Plano principal' : "Plano #{id}"), 'data' => o['data'].to_s, 'criado' => cr, 'ct' => ct,
         'n' => o['n'], 'pecas' => (o['pecas'] ? o['pecas'].count { |p| !p['dentro'] } : nil), 'mtime' => File.mtime(f).to_i }
-    end.compact.sort_by { |x| x['id'] == 'principal' ? 0 : x['id'].to_i }
+    end.compact.sort_by { |x| [x['ct'].to_i, x['id'] == 'principal' ? 0 : x['id'].to_i] }
   end
   def self.indice_entrada(caminho)
     planos = planos_do_projeto(caminho)
@@ -2389,6 +2399,13 @@ module PCFLabel
     h = indice_ler
     if h.empty?
       h = (reindexar rescue {})
+    else
+      # índice antigo, sem a data de criação dos planos: completa uma vez
+      velhos = h.select { |_k, e| Array(e['planos']).any? { |p| !p.key?('criado') } }
+      unless velhos.empty?
+        velhos.each { |k, e| (n = indice_entrada(e['skp'].to_s) rescue nil); n ? h[k] = n : nil }
+        indice_gravar(h)
+      end
     end
     atual = chave_projeto(Sketchup.active_model.path)
     linhas = h.values.map { |e| e.merge('atual' => chave_projeto(e['skp']) == atual) }.sort_by { |e| [-(e['mtime'].to_i)] }
@@ -2482,7 +2499,7 @@ module PCFLabel
     c = conta_info
     return js.(ok: false, login: true, msg: 'Entre na sua conta (👤 Conta) para ver os planos de todos os computadores.') unless c
     nuvem_subir rescue nil
-    campos = %w[chave id nome cliente os amb projeto skp data t pecas pc excluido]
+    campos = %w[chave id nome cliente os amb projeto skp data criado t pecas pc excluido]
     url0 = 'https://firestore.googleapis.com/v1/projects/os-moveis/databases/(default)/documents/' + "pcf_planos/#{c[:uid]}/itens?pageSize=300&" + campos.map { |x| "mask.fieldPaths=#{x}" }.join('&')
     tudo = []
     pagina = lambda do |tok|
@@ -2568,7 +2585,9 @@ module PCFLabel
       .badge{display:inline-block;padding:2px 8px;border-radius:10px;background:#e5e7eb;font-size:12px}
       .badge.m{background:#e8590c;color:#fff;font-weight:600}
       .sub{color:#6b7280;font-size:12px}
-      .planos{display:flex;gap:4px;flex-wrap:wrap}
+      .planos{display:flex;flex-direction:column;gap:3px;align-items:flex-start}
+      .planos .pl{display:flex;align-items:center;gap:6px}
+      .planos .pl .qd{font-size:11px;color:#666;white-space:nowrap}
       .planos button{padding:4px 8px;font-size:12px}
       .planos button.nv{background:#eef6ff;border-color:#9cc3f5}
       .planos button.del{padding:4px 6px;color:#b3261e;margin-right:6px}
@@ -2624,7 +2643,8 @@ module PCFLabel
             var tr=document.createElement('tr'); tr.className='pj'+(e.atual?' atual':'');
             var n=e.planos.length;
             var pls=e.planos.map(function(p){var del='<button class="del" data-del="1" data-dk="'+esc(p.k||'')+'" data-dskp="'+esc(e.skp||'')+'" data-did="'+esc(p.id||'')+'" data-dnome="'+esc((p.nome||'Plano')+' · '+(e.cliente||'')+' · '+(e.projeto||''))+'" title="Excluir este plano (pede a senha da conta)">🗑</button>';
-              return (p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>')+del;}).join('');
+              var qd='<span class="qd">'+(p.criado?'🕓 criado '+esc(p.criado):'')+(p.data?(p.criado?' · ':'')+'alterado '+esc(p.data):'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'</span>';
+              return '<div class="pl">'+(p.k ? '<button class="nv" data-k="'+esc(p.k)+'" title="☁ da conta'+(p.pc?' · salvo no '+esc(p.pc):'')+' · '+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">☁ '+esc(p.nome)+'</button>' : '<button data-skp="'+esc(e.skp)+'" data-id="'+esc(p.id)+'" title="'+esc(p.data||'')+(p.pecas!=null?' · '+p.pecas+' peças':'')+'">'+esc(p.nome)+'</button>')+qd+del+'</div>';}).join('');
             tr.innerHTML='<td>'+esc(e.data)+'</td><td></td><td>'+esc(e.os||'—')+'</td><td>'+esc(e.amb||'—')+'</td>'+
               '<td>'+esc(e.projeto)+(e.atual?' <span class="badge">aberto</span>':'')+(e.nuvem?'<span class="nvb">☁ nuvem</span>':'')+'<div class="sub">'+esc(e.pasta||'')+'</div></td>'+
               '<td><span class="badge'+(n>1?' m':'')+'">'+n+(n>1?' planos':' plano')+'</span></td>'+
@@ -2646,7 +2666,7 @@ module PCFLabel
         if(!r.ok){nv.innerHTML='☁ '+esc(r.msg)+(r.login?' <button id="bConta">👤 Entrar</button>':''); var bc=document.getElementById('bConta'); if(bc)bc.onclick=function(){sketchup.conta();}; return;}
         var grupos={};
         r.lista.forEach(function(m){m.cliente=pad(m.cliente);m.amb=pad(m.amb);m.projeto=pad(m.projeto);m.nome=pad(m.nome);var g=grupos[m.chave]||(grupos[m.chave]={cliente:m.cliente,os:m.os,amb:m.amb,projeto:m.projeto,skp:m.skp,mtime:0,data:'',planos:[],nuvem:true,pasta:''});
-          g.planos.push({k:m.k,id:m.id,nome:m.nome||'Plano',data:m.data,pecas:m.pecas,pc:m.pc}); var t=+m.t||0; if(t>g.mtime){g.mtime=Math.round(t>1e11?t/1000:t);g.data=m.data||'';}});
+          g.planos.push({k:m.k,id:m.id,nome:m.nome||'Plano',data:m.data,criado:m.criado,pecas:m.pecas,pc:m.pc}); var t=+m.t||0; if(t>g.mtime){g.mtime=Math.round(t>1e11?t/1000:t);g.data=m.data||'';}});
         var n=0;
         Object.keys(grupos).forEach(function(c){var g=grupos[c];
           var loc=D.linhas.find(function(e){return (g.skp&&e.skp&&norm(e.skp)==norm(g.skp)) || (norm(e.cliente)==norm(g.cliente)&&norm(e.os)==norm(g.os)&&norm(e.projeto)==norm(g.projeto));});
@@ -2670,7 +2690,7 @@ module PCFLabel
         ok.onclick=ir; se.onkeydown=function(e){ if(e.key==='Enter')ir(); if(e.key==='Escape')bx.remove(); };
         document.getElementById('exclNao').onclick=function(){bx.remove();}; setTimeout(function(){se.focus();},30); }
       function exclResp(r){ var bx=document.getElementById('exclBox'); if(!bx)return;
-        if(r.ok){ bx.remove(); if(EXB){ var x=EXB.previousElementSibling; if(x)x.remove(); EXB.remove(); } return; }
+        if(r.ok){ bx.remove(); if(EXB){ var x=EXB.closest('.pl'); if(x)x.remove(); else EXB.remove(); } return; }
         var ok=document.getElementById('exclSim'); ok.disabled=false; ok.textContent='Excluir'; var m=document.getElementById('exclMsg'); m.style.color='#b3261e'; m.textContent=r.msg||'Não excluí.'; document.getElementById('exclSenha').focus(); }
       render();
       if(window.sketchup&&sketchup.pronto)sketchup.pronto();

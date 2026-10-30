@@ -1,12 +1,23 @@
 {
- "tela": "2026-10-30.01",
- "plugin": "2026-10-30.02",
+ "tela": "2026-10-30.02",
+ "plugin": "2026-10-30.03",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-30.02",
+   "plugin": "2026-10-30.03",
+   "data": "30/10",
+   "titulo": "Planos em lista com data e hora de criação",
+   "itens": [
+    "🕓 Início: os planos de cada projeto aparecem um embaixo do outro, com a data e a hora em que foram criados, a última alteração e o nº de peças (do mais antigo para o mais novo).",
+    "🗂 Planos de corte deste projeto: cada plano mostra \"criado dd/mm/aaaa hh:mm\" e \"alterado\".",
+    "Planos antigos (de antes desta versão): a criação vem da data em que o arquivo do plano foi criado."
+   ]
+  },
   {
    "tela": "2026-10-30.01",
    "plugin": "2026-10-30.02",

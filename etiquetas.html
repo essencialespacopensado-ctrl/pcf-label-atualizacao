@@ -407,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.01';
+const VERSAO = '2026-10-30.02';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3139,7 +3139,10 @@ function salvarPlanoLocal(mapa){
   let foto = fotoP();
   if (mapa) Object.entries(mapa).forEach(([a, b]) => { foto = foto.split('"' + a + '"').join('"' + b + '"') });
   const agora = new Date(), d2 = n => String(n).padStart(2, '0');
-  const obj = {data: `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`, n: PLANO.folhas.length, foto, t: Date.now(), projeto: D.projeto, conf: {proj, cfg, cores}, pf: PF, chapaBase: +D.chapaBase || 0, id: D.planoId || 'principal', nome: D.planoNome || 'Plano principal', gc: PLANO.gc || null, numBase: +D.numBase || 0, numMax: (+D.numBase || 0) + PLANO.folhas.reduce((s, f) => s + f.pos.length, 0)};
+  // criado: data e hora em que ESTE plano nasceu (não muda nos salvamentos seguintes)
+  const pa0 = D.planoArq && (D.planoArq.id || 'principal') === (D.planoId || 'principal') ? D.planoArq : null;
+  const criado = (pa0 && pa0.criado) || `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)}/${agora.getFullYear()} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`;
+  const obj = {criado, data: `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`, n: PLANO.folhas.length, foto, t: Date.now(), projeto: D.projeto, conf: {proj, cfg, cores}, pf: PF, chapaBase: +D.chapaBase || 0, id: D.planoId || 'principal', nome: D.planoNome || 'Plano principal', gc: PLANO.gc || null, numBase: +D.numBase || 0, numMax: (+D.numBase || 0) + PLANO.folhas.reduce((s, f) => s + f.pos.length, 0)};
   ls.set(KPL, obj); D.planoArq = obj;
   // também em ARQUIVO (ao lado do projeto .skp e em %APPDATA%\PCF Label\planos, com histórico) — não se perde ao fechar
   clearTimeout(salvarPlanoLocal.tm);
@@ -3373,7 +3376,7 @@ function mostrarEscolhaPlano(inicio){
     ${inicio ? `<button class="pNovo pNovoTopo" style="width:100%;padding:14px;font-size:16px;font-weight:700;background:#1d7a46;color:#fff;border-color:#1d7a46;border-radius:10px">➕ Fazer plano de corte novo (${nVis} peças visíveis agora)</button>
     <button class="pClientes" style="width:100%;margin-top:10px;padding:12px;font-size:15px;font-weight:700;background:#1f5fbf;color:#fff;border-color:#1f5fbf;border-radius:10px">📋 Clientes e OSs · abrir plano de qualquer projeto (☁ na sua conta)</button>
     <div style="margin:16px 0 4px;font-weight:700">📂 Ou abrir um plano deste projeto:</div>` : `<button class="pClientes" style="margin-bottom:10px;background:#1f5fbf;color:#fff;border-color:#1f5fbf">📋 Clientes e OSs (todos os projetos, na nuvem)</button>`}
-    ${D.planos.map(p => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee"><div style="flex:1"><b>${esc(p.nome)}</b><div class="hint">${p.n || 0} chapa(s)${p.pecas ? ' · ' + p.pecas + ' peças' : ''} · salvo ${esc(p.data || '')}</div></div>
+    ${D.planos.slice().sort((a, b) => (+a.ct || 0) - (+b.ct || 0)).map(p => `<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #eee"><div style="flex:1"><b>${esc(p.nome)}</b><div class="hint">${p.criado ? '🕓 criado ' + esc(p.criado) + ' · ' : ''}${p.n || 0} chapa(s)${p.pecas ? ' · ' + p.pecas + ' peças' : ''} · alterado ${esc(p.data || '')}</div></div>
       ${!inicio && !D.externo && p.id === (D.planoId || 'principal') ? '<span class="hint" style="color:#1d7a46">● aberto</span>' : ''}
       <button class="pri pAbrir" data-id="${esc(p.id)}">📂 Abrir</button>
       <button class="pExcluir" data-id="${esc(p.id)}" data-nome="${esc(p.nome)}" style="color:#c8102e;border-color:#c8102e">🗑 Excluir</button></div>`).join('') || '<div class="hint">Nenhum plano salvo neste projeto.</div>'}
