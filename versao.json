@@ -1,12 +1,21 @@
 {
  "tela": "2026-10-29.01",
- "plugin": "2026-10-29.01",
+ "plugin": "2026-10-30.01",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-10-29.01",
+   "plugin": "2026-10-30.01",
+   "data": "30/10",
+   "titulo": "Atualização chega em todos os PCs",
+   "itens": [
+    "Correção: cada PC perguntava ao GitHub a cada minuto qual era a última versão; com vários PCs na mesma internet o GitHub bloqueava (60 por hora) e a atualização não chegava. Agora cada PC pergunta no máximo a cada 15 min e, se o GitHub bloquear, espera liberar — no resto do tempo usa o endereço normal (a versão nova aparece em até 5 min)."
+   ]
+  },
   {
    "tela": "2026-10-29.01",
    "plugin": "2026-10-29.01",

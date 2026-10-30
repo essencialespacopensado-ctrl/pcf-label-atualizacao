@@ -1728,7 +1728,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-29.01'
+  PLUGIN_VERSAO = '2026-10-30.01'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1762,13 +1762,29 @@ module PCFLabel
   # pega o nº da última publicação (commit) para baixar a versão exata, sem esperar o cache de 5 min do GitHub
   def self.ultimo_commit(&fim)
     return fim.call(nil) unless defined?(Sketchup::Http::Request)
+    k0 = Sketchup.read_default('PCF_Ferramentas', 'nuvem_chave', '').to_s.strip
+    # sem chave o GitHub dá só 60 consultas/hora para TODOS os PCs da mesma internet: cada PC pergunta no máx. a cada 15 min
+    # e, se o GitHub recusar, espera liberar (o resto do tempo vale o endereço normal, que atualiza em até 5 min)
+    agora = Time.now.to_i
+    if k0.empty?
+      return fim.call(nil) if @api_bloq_ate && agora < @api_bloq_ate
+      return fim.call(nil) if @api_ultima && agora - @api_ultima < 900
+      @api_ultima = agora
+    end
     req = Sketchup::Http::Request.new('https://api.github.com/repos/essencialespacopensado-ctrl/pcf-label-atualizacao/commits/main', Sketchup::Http::GET)
     req.headers = { 'Accept' => 'application/vnd.github.sha', 'User-Agent' => 'PCF-Label' }
     # com a chave da nuvem (☁ Nuvem no Correr) o GitHub deixa conferir toda hora; sem ela, todos os PCs da empresa
     # dividem 60 consultas/hora (mesma internet) e a atualização atrasa
     k = Sketchup.read_default('PCF_Ferramentas', 'nuvem_chave', '').to_s.strip
     req.headers = req.headers.merge('Authorization' => "Bearer #{k}") unless k.empty?
-    req.start { |_r, res| sha = (res && res.status_code == 200) ? res.body.to_s.strip[/\A[0-9a-f]{40}\z/] : nil; fim.call(sha) rescue nil }
+    req.start do |_r, res|
+      if res && res.status_code.to_i == 403
+        rs = (res.headers['x-ratelimit-reset'] || res.headers['X-RateLimit-Reset']).to_i rescue 0
+        @api_bloq_ate = rs > 0 ? rs : Time.now.to_i + 1800
+      end
+      sha = (res && res.status_code == 200) ? res.body.to_s.strip[/\A[0-9a-f]{40}\z/] : nil
+      fim.call(sha) rescue nil
+    end
     (@reqs ||= []) << req; @reqs.shift while @reqs.size > 10
   rescue
     fim.call(nil) rescue nil
