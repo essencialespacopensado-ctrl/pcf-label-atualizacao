@@ -407,7 +407,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-27.01';
+const VERSAO = '2026-10-29.01';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -520,7 +520,7 @@ D.pecas.forEach((p, i) => {
   p.nome = p._nomeAuto ? (p.nomeInicial || '') : s.nome; p.cor = (p.corInicial && /mm$/.test(s.cor || '') ? '' : s.cor) || p.corInicial || ''; p.obs = s.obs || p.camadaMDF || ''; p.f = s.f || [0,0,0,0]; p.fc = s.fc || '';
   p.tipo = p.dentro ? (s.tipo || p.tipoInicial || '') : 'peca';
   p.prof = s.prof !== undefined && s.prof !== '' ? s.prof : (p.profInicial !== undefined ? p.profInicial : '');
-  p.lado = s.lado || p.ladoInicial || ''; p.pas = s.pas || p.pasInicial || 1; p.tipoOk = !!s.tipoOk || !!p.okInicial;
+  p.lado = s.lado || p.ladoInicial || ''; p.pas = s.pas || p.pasInicial || 1; p.espc = !!s.espc; p.espT = s.espT || ''; p.espProf = s.espProf !== undefined ? s.espProf : ''; p.tipoOk = !!s.tipoOk || !!p.okInicial;
   if (!s.obs && p.obsInicial) p.obs = p.obsInicial;
   if (p.dentro) p.on = p.tipo === 'peca';
   p.on = s.on !== undefined ? s.on : !p.dentro;
@@ -565,7 +565,7 @@ function sincronizarSketchUp(){
 function salvar(){
   sincronizarSketchUp();
   proj.pecas = {};
-  D.pecas.forEach(p => proj.pecas[p.k] = {tipoOk:!!p.tipoOk, lado:p.lado || '', pas:p.pas || 1, nome:(p._nomeAuto ? '' : p.nome), nomeDig:!p._nomeAuto && !!p.nome, cor:(p.corInicial && p.cor === p.corInicial ? '' : p.cor), obs:p.obs, on:p.on, f:p.f, fc:p.fc, tipo:p.tipo, prof:p.prof});
+  D.pecas.forEach(p => proj.pecas[p.k] = {tipoOk:!!p.tipoOk, lado:p.lado || '', pas:p.pas || 1, nome:(p._nomeAuto ? '' : p.nome), nomeDig:!p._nomeAuto && !!p.nome, cor:(p.corInicial && p.cor === p.corInicial ? '' : p.cor), obs:p.obs, on:p.on, f:p.f, fc:p.fc, tipo:p.tipo, prof:p.prof, espc:!!p.espc, espT:p.espT || '', espProf:p.espProf || ''});
   proj._t = Date.now(); ls.set(KP, proj); ls.set('etq_cores', cores);
   // configuração: se mudou, marca a hora e manda para a pasta comum (vale para todos os PCs)
   try { const sem = JSON.stringify(Object.assign({}, cfg, {_t: 0, aba: ''}));
@@ -716,6 +716,10 @@ const TIPOS = {peca:'Peça', usinagem:'Usinagem', rebaixo:'Rebaixo', furo:'Furo 
 const LADOS = {fora: 'por fora', dentro: 'por dentro', linha: 'na linha', bolsao: 'esvaziar (rebaixo)'};
 function ladoDe(p){ if (p.lado) return p.lado; if (!p.dentro || p.tipo === 'peca') return 'fora'; return p.tipo === 'furo' ? 'dentro' : p.tipo === 'usinagem' ? 'linha' : p.tipo === 'rebaixo' ? 'bolsao' : 'dentro' }
 // passadas: a peça com passadas próprias (mais de 1) mantém a dela; as outras seguem as passadas DESTE plano
+// ⚙ ESPECIAL: este contorno (peça ou furo) com fresa, passagens e profundidade próprias; sem especial vale o padrão (fresa de corte, T2 6 mm)
+const feDe = (p, fe0) => (p && p.espc && p.espT) ? ferr(p.espT) : fe0;
+const profEsp = p => (p && p.espc && +p.espProf > 0) ? +p.espProf : 0;   // 0 = atravessa a chapa
+const especialTxt = p => p && p.espc ? `⚙ especial: ${p.espT ? 'T' + ferr(p.espT).t + ' ' + ferr(p.espT).nome : 'fresa padrão'} · ${passesDe(p)}x · ${profEsp(p) ? 'prof. ' + fmt(profEsp(p)) + ' mm' : 'atravessa'}` : '';
 const passesDe = p => Math.max(1, Math.min(20, Math.round((+p.pas > 1 ? +p.pas : 0) || +PF.pas || +p.pas || 1)));
 
 // usinagens/rebaixos/furos que ficam dentro de uma peça
@@ -958,6 +962,36 @@ function orientarPP(pp, rot, esp){
   pp.rot = ((rot % 360) + 360) % 360; pp.esp = esp; pp.poly = orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, pp.rot, pp.esp);
   const c1 = cx0(polyFinal(pp)); pp.x += c0[0] - c1[0]; pp.y += c0[1] - c1[1];
 }
+// furos / recortes que vazam DENTRO desta peça (cada um com fresa, lado e passagens próprios)
+function furosDe(p){ return D.pecas.filter(q => q !== p && q.dentro && q.tipo === 'furo' && paiDe(q) === p) }
+// menu da fresa de um contorno: lado, passagens e ⚙ especial (fresa, passagens e profundidade só dele)
+function menuFresa(p, titulo, lados, x, y){
+  const ok = () => { salvar(); try { renderTabela() } catch (e) {} };
+  abrirMenu(titulo, [
+    ...lados.map(k => [(ladoDe(p) === k ? '✓ ' : '') + 'Fresa ' + LADOS[k], () => { p.lado = k; ok() }]),
+    ...[1, 2, 3, 4, 5, 6].map(n => [(passesDe(p) === n ? '✓ ' : '') + n + (n > 1 ? ' passadas' : ' passada'), () => { p.pas = n; ok() }]),
+    [p.espc ? '✓ ⚙ Especial… (' + especialTxt(p).replace('⚙ especial: ', '') + ')' : '⚙ Especial… (fresa, passagens e profundidade)', () => setTimeout(() => janelaEspecial(p, titulo), 0)],
+    ...(p.espc ? [['↺ Voltar para o padrão', () => { p.espc = false; ok() }]] : [])], x, y);
+}
+function janelaEspecial(p, titulo){
+  let bx = $('espBox'); if (bx) bx.remove();
+  bx = document.createElement('div'); bx.id = 'espBox';
+  bx.style.cssText = 'position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center';
+  const lin = 'display:flex;justify-content:space-between;align-items:center;gap:10px;margin:7px 0';
+  bx.innerHTML = `<div style="background:#fff;border-radius:12px;padding:16px 20px;width:340px;max-width:92%;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+    <h3 style="margin:0 0 8px">⚙ Especial · ${esc(titulo)}</h3>
+    <div style="${lin}"><span>Fresa</span><select id="eT"><option value="">Padrão (T${ferr(cfg.tCorte).t} · ${esc(ferr(cfg.tCorte).nome)})</option>${(cfg.mag || []).map(x => `<option value="${x.t}"${String(p.espT) === String(x.t) ? ' selected' : ''}>T${x.t} · ${esc(x.nome)}</option>`).join('')}</select></div>
+    <div style="${lin}"><span>Lado da fresa</span><select id="eL">${(p.dentro ? ['dentro', 'fora'] : ['fora', 'dentro', 'linha']).map(k => `<option value="${k}"${ladoDe(p) === k ? ' selected' : ''}>${LADOS[k]}</option>`).join('')}</select></div>
+    <div style="${lin}"><span>Passagens</span><input id="eP" type="number" min="1" max="20" value="${passesDe(p)}" style="width:70px"></div>
+    <div style="${lin}"><span>Profundidade (mm)</span><input id="eZ" type="number" min="0" step="0.5" value="${p.espProf}" placeholder="atravessa" style="width:90px"></div>
+    <div class="hint">Vazio = atravessa a chapa. Vale só para este contorno; o resto do plano continua no padrão.</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px"><button id="eNao">Cancelar</button><button id="eSim" class="pri">Aplicar</button></div></div>`;
+  document.body.appendChild(bx);
+  $('eNao').onclick = () => bx.remove();
+  $('eSim').onclick = () => { p.espc = true; p.espT = $('eT').value; p.lado = $('eL').value; p.pas = Math.max(1, Math.min(20, Math.round(+$('eP').value || 1)));
+    p.espProf = $('eZ').value === '' ? '' : Math.max(0, +$('eZ').value || 0); salvar(); try { renderTabela() } catch (e) {} bx.remove();
+    if ($('cncMsg')) { $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `⚙ ${titulo}: ${especialTxt(p).replace('⚙ especial: ', '')}. Gere o G-code de novo para usar.` } };
+}
 function menuPlano(fi, k, x, y){
   const pp = PLANO.folhas[fi].pos[k], p = pp.it.p, trava = temVeio(p) && !cfg.oRetalho, r = pp.rot || 0;
   abrirMenu(`Peça ${p.n}${p.nome ? ' · ' + esc(p.nome) : ''}`, [
@@ -966,9 +1000,8 @@ function menuPlano(fi, k, x, y){
     ['⇋ Espelhar na horizontal', () => { marcarP(); orientarPP(pp, -r, !pp.esp); girouSemBater(fi, pp) }],
     ['⇵ Espelhar na vertical', () => { marcarP(); orientarPP(pp, 180 - r, !pp.esp); girouSemBater(fi, pp) }],
     ['✎ Nome da peça', () => irParaNome(p)],
-    [`✂ Fresa: ${LADOS[ladoDe(p)]} · ${passesDe(p)}x`, () => setTimeout(() => abrirMenu(`Fresa da peça ${p.n}`, [
-      ...['fora', 'dentro', 'linha'].map(k => [(ladoDe(p) === k ? '✓ ' : '') + 'Fresa ' + LADOS[k], () => { p.lado = k; salvar(); renderTabela() }]),
-      ...[1, 2, 3, 4, 5, 6].map(n => [(passesDe(p) === n ? '✓ ' : '') + n + (n > 1 ? ' passadas' : ' passada'), () => { p.pas = n; salvar(); renderTabela() }])], x, y), 0)],
+    [`✂ Contorno: ${LADOS[ladoDe(p)]} · ${passesDe(p)}x${p.espc ? ' · ⚙' : ''}`, () => setTimeout(() => menuFresa(p, `Contorno da peça ${p.n}`, ['fora', 'dentro', 'linha'], x, y), 0)],
+    ...furosDe(p).map((h, j) => [`✂ Furo ${j + 1} (${fmt(h.w)}×${fmt(h.h)}): ${LADOS[ladoDe(h)]} · ${passesDe(h)}x${h.espc ? ' · ⚙' : ''}`, () => setTimeout(() => menuFresa(h, `Furo ${j + 1} da peça ${p.n}`, ['dentro', 'fora'], x, y), 0)]),
     [`🎨 Cor: ${esc(p.cor || '—')}`, () => setTimeout(() => abrirMenu(`Cor da peça ${p.n}`, [
       ...coresVisiveis().filter(c => c !== p.cor).sort((a, b) => (+(String(b).match(/([\d.]+)mm$/) || [0, 0])[1] === +p.esp) - (+(String(a).match(/([\d.]+)mm$/) || [0, 0])[1] === +p.esp)).map(c => [esc(c), () => trocarCor(p, c)]),
       ['➕ Nova cor…', () => novaCor(p, c => trocarCor(p, c))]], x, y), 0)],
@@ -1853,7 +1886,7 @@ function renderTabela(){
       <td class="n">${p.dentro ? `<select class="tipo${p.tipo?'':' falta'}" data-i="${i}" title="Este contorno está dentro de outra peça. O que ele é?">
         <option value=""${p.tipo?'':' selected'}>Dentro de outra: o que é?</option>
         ${Object.entries(TIPOS).map(([k,v]) => `<option value="${k}"${p.tipo===k?' selected':''}>${v}</option>`).join('')}
-      </select>${(p.tipo === 'rebaixo' || p.tipo === 'usinagem') ? `<input class="prof" type="number" step="0.5" data-i="${i}" value="${p.prof}" title="Profundidade (mm)"> mm ` : ''}${p.tipoOk ? '<span style="color:#1d7a46;font-weight:700;font-size:12px"> ✔ conferido</span>' : (p.tipo ? `<button class="tipoOk" data-i="${i}" style="background:#1d7a46;color:#fff;border-color:#1d7a46;padding:2px 8px;font-size:12px;font-weight:700">✔ Conferido</button>` : '')}` : ''}${(!p.dentro || p.tipo) ? `<div class="corteOpc" style="font-size:11px;margin-top:3px;white-space:nowrap" title="Como a fresa corta este contorno">✂ <select class="lado" data-i="${i}" style="font-size:11px;padding:1px 2px;width:auto">${Object.entries(LADOS).filter(([k]) => k !== 'bolsao' || p.tipo === 'rebaixo').map(([k, v]) => `<option value="${k}"${ladoDe(p) === k ? ' selected' : ''}>${v}</option>`).join('')}</select> <input class="pas" type="number" min="1" max="20" step="1" data-i="${i}" value="${passesDe(p)}" style="width:42px;font-size:11px;padding:1px 2px" title="Passadas (quantas vezes a fresa desce até a profundidade)">x</div>` : ''}${p.n}${pode3D(p) ? ` <button class="ver3d" data-i="${i}" title="Mostrar esta peça no 3D do SketchUp" style="padding:1px 5px;font-size:12px">🔍</button>` : ''}</td>
+      </select>${(p.tipo === 'rebaixo' || p.tipo === 'usinagem') ? `<input class="prof" type="number" step="0.5" data-i="${i}" value="${p.prof}" title="Profundidade (mm)"> mm ` : ''}${p.tipoOk ? '<span style="color:#1d7a46;font-weight:700;font-size:12px"> ✔ conferido</span>' : (p.tipo ? `<button class="tipoOk" data-i="${i}" style="background:#1d7a46;color:#fff;border-color:#1d7a46;padding:2px 8px;font-size:12px;font-weight:700">✔ Conferido</button>` : '')}` : ''}${(!p.dentro || p.tipo) ? `<div class="corteOpc" style="font-size:11px;margin-top:3px;white-space:nowrap" title="Como a fresa corta este contorno">✂ <select class="lado" data-i="${i}" style="font-size:11px;padding:1px 2px;width:auto">${Object.entries(LADOS).filter(([k]) => k !== 'bolsao' || p.tipo === 'rebaixo').map(([k, v]) => `<option value="${k}"${ladoDe(p) === k ? ' selected' : ''}>${v}</option>`).join('')}</select> <input class="pas" type="number" min="1" max="20" step="1" data-i="${i}" value="${passesDe(p)}" style="width:42px;font-size:11px;padding:1px 2px" title="Passadas (quantas vezes a fresa desce até a profundidade)">x <select class="espc" data-i="${i}" style="font-size:11px;padding:1px 2px;width:auto" title="Especial: escolher fresa, passagens e profundidade só deste contorno"><option value=""${p.espc ? '' : ' selected'}>padrão</option><option value="1"${p.espc ? ' selected' : ''}>⚙ especial</option></select>${p.espc ? `<br>⚙ <select class="espT" data-i="${i}" style="font-size:11px;padding:1px 2px;width:auto" title="Fresa deste contorno"><option value="">fresa padrão</option>${(cfg.mag || []).map(x => `<option value="${x.t}"${String(p.espT) === String(x.t) ? ' selected' : ''}>T${x.t} · ${esc(x.nome)}</option>`).join('')}</select> prof. <input class="espProf" type="number" min="0" step="0.5" data-i="${i}" value="${p.espProf}" placeholder="atravessa" style="width:64px;font-size:11px;padding:1px 2px" title="Profundidade em mm (vazio = atravessa a chapa)"> mm` : ''}</div>` : ''}${p.n}${pode3D(p) ? ` <button class="ver3d" data-i="${i}" title="Mostrar esta peça no 3D do SketchUp" style="padding:1px 5px;font-size:12px">🔍</button>` : ''}</td>
       <td>${esc(p.folha)}</td>
       <td class="n">${fmt(p.c)}</td>
       <td class="n">${fmt(p.l)}</td>
@@ -1966,6 +1999,9 @@ $('tb').addEventListener('change', e => {
   if (t.classList.contains('prof')) { p.prof = t.value; salvar(); renderFolhas(); return }
   if (t.classList.contains('lado')) { p.lado = t.value; salvar(); return }
   if (t.classList.contains('pas')) { p.pas = Math.max(1, Math.round(+t.value || 1)); t.value = p.pas; salvar(); return }
+  if (t.classList.contains('espc')) { p.espc = !!t.value; salvar(); renderTabela(); return }
+  if (t.classList.contains('espT')) { p.espT = t.value; salvar(); return }
+  if (t.classList.contains('espProf')) { p.espProf = t.value === '' ? '' : Math.max(0, +t.value || 0); salvar(); return }
   if (t.classList.contains('tipo')) { p.tipo = t.value; p.tipoOk = !!t.value; p.lado = ''; p.on = p.tipo === 'peca'; setTimeout(depoisDeConferir, 50); if (p.prof === '') p.prof = p.tipo === 'rebaixo' ? 6 : p.tipo === 'usinagem' ? 3 : ''; salvar(); renderTabela(); renderPrev(); renderMat(); renderFolhas(); return }
   if (t.classList.contains('on')) { p.on = t.checked; t.closest('tr').className = p.on ? '' : 'off' }
   salvar(); renderPrev(); renderMat(); renderFolhas();
@@ -3381,6 +3417,7 @@ function mostrarClientes(r){
         ${[...g].map(([o, ps]) => `<div style="margin:4px 0 4px 10px"><b>📁 ${esc(o)}</b>${ps.map(m => `<div class="cItem" data-busca="${esc((c + ' ' + o + ' ' + m.projeto + ' ' + m.nome).toLowerCase())}" style="display:flex;align-items:center;gap:8px;padding:5px 0 5px 12px;border-bottom:1px solid #f2f2f2">
           <div style="flex:1">${esc(m.nome || 'Plano')} <span class="hint">· ${esc(m.projeto || '')} · ${m.n || 0} chapa(s) · ${m.pecas || 0} peças · ${esc(m.data || '')}${m.pc ? ' · ' + esc(m.pc) : ''}</span>${m.atual ? ' <span class="hint" style="color:#1d7a46">● projeto aberto</span>' : ''}</div>
           <button class="pri cAbrir" data-k="${esc(m.k)}">📂 Abrir plano</button>
+          <button class="cExcl" data-k="${esc(m.k)}" data-chave="${esc(m.chave || '')}" data-id="${esc(m.id || '')}" data-skp="${esc(m.skp || '')}" data-nome="${esc((m.nome || 'Plano') + ' · ' + c)}" title="Excluir este plano (pede a senha da conta)" style="color:#b3261e">🗑</button>
           ${m.temSkp && !m.atual ? `<button class="cProj" data-k="${esc(m.k)}" data-skp="${esc(m.skp)}" title="Abre o projeto .skp no SketchUp">🗂 Abrir projeto</button>` : ''}</div>`).join('')}</div>`).join('')}</div>`).join('') || '<div class="hint">Nenhum plano na sua conta ainda. Cada plano que você salvar entra aqui sozinho.</div>'}</div>`;
   }
   bx.innerHTML = `<div style="background:#fff;border-radius:12px;padding:18px 22px;max-width:760px;width:94%;max-height:86vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.3)">${topo}${corpo}</div>`;
@@ -3391,7 +3428,36 @@ function mostrarClientes(r){
   if (bu) { bu.oninput = () => { const q = bu.value.trim().toLowerCase(); bx.querySelectorAll('.cItem').forEach(it => it.style.display = !q || it.dataset.busca.includes(q) ? '' : 'none');
     bx.querySelectorAll('.cCli').forEach(cl => cl.style.display = [...cl.querySelectorAll('.cItem')].some(it => it.style.display !== 'none') ? '' : 'none') }; setTimeout(() => bu.focus(), 50) }
   bx.querySelectorAll('.cAbrir').forEach(b => b.onclick = () => { b.textContent = 'abrindo…'; b.disabled = true; window.sketchup.pcf_selecionar('PLANO_NUVEM:' + b.dataset.k) });
+  bx.querySelectorAll('.cExcl').forEach(b => b.onclick = () => pedirSenhaExcluir(b));
   bx.querySelectorAll('.cProj').forEach(b => b.onclick = () => { b.textContent = 'abrindo…'; window.sketchup.pcf_selecionar('PROJETO_ABRIR:' + b.dataset.k + '|' + b.dataset.skp) });
+}
+// 🗑 EXCLUIR PLANO DA LISTA DE CLIENTES: só com a senha da conta PCF (o SketchUp confere no login; a senha não fica guardada)
+function pedirSenhaExcluir(btn){
+  let bx = $('exclBox'); if (bx) bx.remove();
+  bx = document.createElement('div'); bx.id = 'exclBox';
+  bx.style.cssText = 'position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center';
+  bx.innerHTML = `<div style="background:#fff;border-radius:12px;padding:18px 22px;width:360px;max-width:92%;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+    <h3 style="margin:0 0 6px;color:#b3261e">🗑 Excluir plano</h3>
+    <div style="margin-bottom:10px">${esc(btn.dataset.nome)}</div>
+    <label style="font-size:13px">Senha da sua conta PCF</label>
+    <input type="password" id="exclSenha" style="width:100%;padding:8px;box-sizing:border-box;margin:4px 0 8px" autocomplete="current-password">
+    <div id="exclMsg" class="hint" style="min-height:18px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px"><button id="exclNao">Cancelar</button><button id="exclSim" style="background:#b3261e;color:#fff;border-color:#b3261e">Excluir</button></div></div>`;
+  document.body.appendChild(bx);
+  const se = $('exclSenha'), ok = $('exclSim');
+  const ir = () => { if (!se.value) { $('exclMsg').textContent = 'Digite a senha.'; return }
+    ok.disabled = true; ok.textContent = 'conferindo…'; $('exclMsg').className = 'hint'; $('exclMsg').textContent = '';
+    window.EXCL_BTN = btn;
+    window.sketchup.pcf_selecionar('PLANO_NUVEM_EXCLUIR:' + JSON.stringify({k: btn.dataset.k, chave: btn.dataset.chave, id: btn.dataset.id, skp: btn.dataset.skp, senha: se.value}));
+    se.value = '' };
+  ok.onclick = ir; se.onkeydown = e => { if (e.key === 'Enter') ir(); if (e.key === 'Escape') bx.remove() };
+  $('exclNao').onclick = () => bx.remove(); setTimeout(() => se.focus(), 30);
+}
+function exclusaoResposta(r){
+  const bx = $('exclBox'); if (!bx) return;
+  if (r.ok) { bx.remove(); const it = window.EXCL_BTN && window.EXCL_BTN.closest('.cItem'); if (it) it.remove(); return }
+  const ok = $('exclSim'); ok.disabled = false; ok.textContent = 'Excluir';
+  $('exclMsg').className = 'hint erro'; $('exclMsg').textContent = r.msg || 'Não excluí.'; $('exclSenha').focus();
 }
 // ⚙ ferramenta e passadas SÓ DESTE plano de corte (gravadas junto do plano; os outros planos não mudam)
 function mostrarPF(){
@@ -4134,23 +4200,26 @@ function gerarGcodeDireto(){
     const mãeDe = it => c.itens.find(m => m.mae && it.pai === m.p);
     c.itens.forEach(it => {
       const p = it.p, N = passesDe(p);
+      // ⚙ especial: fresa (e o raio dela no deslocamento) e profundidade só deste contorno
+      const fp = feDe(p, fe), rp = fp.d / 2, pz = profEsp(p), zF = pz ? topo - pz : zFim;
       if (!it.mae && p.linha && it.ql && +p.fresaD > 0) { linhasF.push({a: it.ql[0], b: it.ql[1], d: +p.fresaD, N, passa: !!p.passa, prof: +p.prof, n: (paiDe(p) || p).n}); return }
-      if (!it.mae && p.tipo === 'vazado') { const q = gcOffset(it.q, r, -1); if (q) vazados.push({q, N: 1, n: p.n, lado: 'dentro'}); else avisos.push(`${c.nome}: vazado da peça nº ${p.n} menor que a fresa`); return }
+      if (!it.mae && p.tipo === 'vazado') { const q = gcOffset(it.q, rp, -1); if (q) vazados.push({q, N: p.espc ? N : 1, n: p.n, lado: 'dentro', fe: fp, zF}); else avisos.push(`${c.nome}: vazado da peça nº ${p.n} menor que a fresa`); return }
       if (!it.mae) {
-        const lado = ladoDe(p), prof = +p.prof;
-        if (p.tipo === 'furo' && furoComPeca(it)) { const q = gcCaminho(it.q, 'dentro', r); if (q) vazados.push({q, N: 1, n: (paiDe(p) || p).n, lado: 'dentro'}); else avisos.push(`${c.nome}: furo nº ${p.n} menor que a fresa`); return }
-        if (p.tipo === 'furo') { const q = gcCaminho(it.q, lado === 'bolsao' ? 'dentro' : lado, r); if (q) furos.push({q, N, n: (paiDe(p) || p).n, lado: lado === 'bolsao' ? 'dentro' : lado}); else avisos.push(`${c.nome}: furo nº ${p.n} menor que a fresa de ${fe.d} mm (não cortado)`) }
+        const lado = ladoDe(p); let prof = +p.prof;
+        if (p.tipo === 'furo' && furoComPeca(it)) { const q = gcCaminho(it.q, 'dentro', rp); if (q) vazados.push({q, N: p.espc ? N : 1, n: (paiDe(p) || p).n, lado: 'dentro', fe: fp, zF}); else avisos.push(`${c.nome}: furo nº ${p.n} menor que a fresa`); return }
+        if (p.tipo === 'furo') { const q = gcCaminho(it.q, lado === 'bolsao' ? 'dentro' : lado, rp); if (q) furos.push({q, N, n: (paiDe(p) || p).n, lado: lado === 'bolsao' ? 'dentro' : lado, fe: fp, zF}); else avisos.push(`${c.nome}: furo nº ${p.n} menor que a fresa de ${fe.d} mm (não cortado)`) }
         else if (p.tipo === 'rebaixo' || p.tipo === 'usinagem') {
+          if (pz) prof = pz;
           if (!(prof > 0)) { avisos.push(`${c.nome}: ${TIPOS[p.tipo]} nº ${p.n} sem profundidade (preencha na lista)`); return }
-          if (lado === 'bolsao') rebs.push({q: it.q, peca: it.paiQ || it.q, prof, N, n: p.n});
-          else { const q = gcCaminho(it.q, lado, r); if (q) usin.push({q, prof, N, n: p.n, lado, tipo: TIPOS[p.tipo]}); else avisos.push(`${c.nome}: ${TIPOS[p.tipo]} nº ${p.n} menor que a fresa`) }
+          if (lado === 'bolsao') rebs.push({q: it.q, peca: it.paiQ || it.q, prof, N, n: p.n, fe: fp});
+          else { const q = gcCaminho(it.q, lado, rp); if (q) usin.push({q, prof, N, n: p.n, lado, tipo: TIPOS[p.tipo], fe: fp}); else avisos.push(`${c.nome}: ${TIPOS[p.tipo]} nº ${p.n} menor que a fresa`) }
         }
         else avisos.push(`${c.nome}: contorno nº ${p.n} dentro de outra peça sem tipo (escolha na lista: Furo / Rebaixo / Usinagem / Peça)`);
         return }
       if (!p.on) return;
-      const q = gcCaminho(it.q, ladoDe(p), r); if (!q) { avisos.push(`${c.nome}: peça nº ${p.n} sem contorno válido`); return }
-      const o = {q, N, n: p.n, lado: ladoDe(p)};
-      if (dentroVz(it.q)) noVazado.push(o); else (pequena(p) ? peq : normais).push(o);
+      const q = gcCaminho(it.q, ladoDe(p), rp); if (!q) { avisos.push(`${c.nome}: peça nº ${p.n} sem contorno válido`); return }
+      const o = {q, N, n: p.n, lado: ladoDe(p), fe: fp, zF};
+      if (dentroVz(it.q)) noVazado.push(o); else (pequena(p) && !pz ? peq : normais).push(o);
     });
     { const ms = c.itens.filter(it => it.mae && it.p.on);
       for (let i = 0; i < ms.length; i++) for (let j = i + 1; j < ms.length; j++) if (sobrepoe(ms[i].q, ms[j].q) && !dentroVz(ms[i].q) && !dentroVz(ms[j].q)) avisos.push(`${c.nome}: peças nº ${ms[i].p.n} e ${ms[j].p.n} estão uma por cima da outra`) }
@@ -4173,18 +4242,26 @@ function gerarGcodeDireto(){
       if (atual.t !== fe.t) L.push(...gcTroca(fe, topo));
     }
     const PT = pontesCfg();
-    const cortaMiolo = (o, nome) => usaPontes(o.q) ? reg(o.n, `${nome} (com ${PT.qtd} pontes de ${fmt(PT.comp)} mm ${PT.inteira ? 'sem corte' : '× ' + fmt(PT.alt) + ' mm'})`, o.lado, o.N, passa, () => gcContornoNPontes(L, o.q, topo, zFim, fe, o.N, PT))
-                                                   : reg(o.n, nome, o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N));
-    furos.forEach(o => cortaMiolo(o, 'Furo / recorte'));
-    usin.forEach(o => reg(o.n, o.tipo, o.lado, o.N, o.prof, () => gcContornoN(L, o.q, topo, topo - o.prof, fe, o.N)));
+    // ⚙ fresa de cada operação: troca de ferramenta só quando muda (dentro de cada etapa, as da fresa atual vão primeiro)
+    let cur = fe;
+    const usa = o => { const f = o.fe || fe; if (+f.t !== +cur.t) { L.push(...gcTroca(f, topo)); cur = f } return f };
+    const tk = o => (o.fe || fe), ord = a => a.sort((x, y) => (+tk(x).t === +cur.t ? 0 : +tk(x).t + 1) - (+tk(y).t === +cur.t ? 0 : +tk(y).t + 1));
+    const nmF = (o, nome) => (o.fe && +o.fe.t !== +fe.t ? `${nome} · ⚙ T${o.fe.t}` : nome) + (o.zF != null && o.zF > zFim + 1e-6 ? ` · prof. ${fmt(topo - o.zF)} mm` : '');
+    const cortaMiolo = (o, nome) => { const f = usa(o), zf = o.zF != null ? o.zF : zFim;
+      if (zf > zFim + 1e-6) return reg(o.n, nmF(o, nome), o.lado, o.N, topo - zf, () => gcContornoN(L, o.q, topo, zf, f, o.N));
+      return usaPontes(o.q) ? reg(o.n, `${nmF(o, nome)} (com ${PT.qtd} pontes de ${fmt(PT.comp)} mm ${PT.inteira ? 'sem corte' : '× ' + fmt(PT.alt) + ' mm'})`, o.lado, o.N, passa, () => gcContornoNPontes(L, o.q, topo, zFim, f, o.N, PT))
+                            : reg(o.n, nmF(o, nome), o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, f, o.N)) };
+    const corta = (o, nome) => { const f = usa(o), zf = o.zF != null ? o.zF : zFim; reg(o.n, nmF(o, nome), o.lado, o.N, topo - zf, () => gcContornoN(L, o.q, topo, zf, f, o.N)) };
+    ord(furos).forEach(o => cortaMiolo(o, 'Furo / recorte'));
+    ord(usin).forEach(o => { const f = usa(o); reg(o.n, nmF(o, o.tipo), o.lado, o.N, o.prof, () => gcContornoN(L, o.q, topo, topo - o.prof, f, o.N)) });
     const rebDes = [];
-    rebs.forEach(o => reg(o.n, 'Rebaixo (esvaziar)', 'bolsao', o.N, o.prof, () => { const a = gcBolsao(L, o.q, o.peca, topo, topo - o.prof, fe, o.N); if (a) rebDes.push(...a); else avisos.push(`${c.nome}: rebaixo nº ${o.n} menor que a fresa`) }));
+    ord(rebs).forEach(o => { const f = usa(o); reg(o.n, nmF(o, 'Rebaixo (esvaziar)'), 'bolsao', o.N, o.prof, () => { const a = gcBolsao(L, o.q, o.peca, topo, topo - o.prof, f, o.N); if (a) rebDes.push(...a); else avisos.push(`${c.nome}: rebaixo nº ${o.n} menor que a fresa`) }) });
     const z1 = Math.round((topo - p1 * (topo - zFim)) * 100) / 100;
-    peq.forEach(o => reg(o.n, `Peça pequena — 1ª parte ${Math.round(p1 * 100)}% (deixa uma pele para não soltar; termina no fim)`, o.lado, o.N, topo - z1, () => gcContornoN(L, o.q, topo, z1, fe, o.N)));
-    noVazado.forEach(o => reg(o.n, 'Peça (dentro do vazado)', o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N)));
-    vazados.forEach(o => cortaMiolo(o, 'Vazado'));
-    normais.forEach(o => reg(o.n, 'Peça (contorno)', o.lado, o.N, passa, () => gcContornoN(L, o.q, topo, zFim, fe, o.N)));
-    peq.forEach(o => reg(o.n, 'Peça pequena — final (atravessa)', o.lado, 1, passa, () => gcContorno(L, o.q, z1, zFim, fe)));
+    ord(peq).forEach(o => { const f = usa(o); reg(o.n, nmF(o, `Peça pequena — 1ª parte ${Math.round(p1 * 100)}% (deixa uma pele para não soltar; termina no fim)`), o.lado, o.N, topo - z1, () => gcContornoN(L, o.q, topo, z1, f, o.N)) });
+    ord(noVazado).forEach(o => corta(o, 'Peça (dentro do vazado)'));
+    ord(vazados).forEach(o => cortaMiolo(o, 'Vazado'));
+    ord(normais).forEach(o => corta(o, 'Peça (contorno)'));
+    ord(peq).forEach(o => { const f = usa(o); reg(o.n, nmF(o, 'Peça pequena — final (atravessa)'), o.lado, 1, passa, () => gcContorno(L, o.q, z1, zFim, f)) });
     L.push(...gcRodape(topo));
     const nomeArq = `${String(seq + 1).padStart(2, '0')} - ${String(osCli() || 'PCF').replace(/[\\/:*?"<>|]/g, '_')} - ${c.nome}${c.cor ? ' - ' + c.cor.replace(/[\\/:*?"<>|]/g, '_') : ''}.tap`;
     const Q = a => a.map(o => o.q);

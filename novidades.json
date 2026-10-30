@@ -1,5 +1,18 @@
 [
  {
+  "tela": "2026-10-29.01",
+  "plugin": "2026-10-29.01",
+  "data": "29/10",
+  "titulo": "Excluir plano com senha · ⚙ Especial no furo e no contorno",
+  "itens": [
+   "🗑 Lista de Clientes: cada plano tem o botão 🗑 Excluir. Pede a senha da sua conta PCF; senha errada não exclui. O plano sai da lista e os arquivos dele vão para o histórico (dá para recuperar).",
+   "✂ Furo / recorte: escolha a fresa por dentro ou por fora (padrão: fresa T2 de 6 mm, por dentro).",
+   "⚙ Especial: no botão de seleção de cada contorno (na lista e no clique direito da peça no plano) escolha \"⚙ especial\" para dar fresa, passagens e profundidade só para aquele furo ou contorno — dá para ter fresas e passagens diferentes na mesma peça.",
+   "No clique direito da peça no plano aparecem separados: o Contorno e cada Furo dela.",
+   "G-code: troca de ferramenta automática quando um contorno especial usa outra fresa; a conferência mostra \"⚙ T…\" e a profundidade especial."
+  ]
+ },
+ {
   "tela": "2026-10-27.01",
   "plugin": "2026-10-28.02",
   "data": "28/10",

@@ -1030,6 +1030,7 @@ module PCFLabel
     if ref.start_with?('PLANO_ABRIR:') then UI.start_timer(0.1, false) { abrir_plano(ref.sub('PLANO_ABRIR:', '')) }; return true end
     # plano novo e lista de planos: lê de novo o que está visível AGORA (não o da hora que abriu a tela)
     if ref == 'PLANO_CLIENTES' then UI.start_timer(0.1, false) { nuvem_listar }; return true end
+    if ref.start_with?('PLANO_NUVEM_EXCLUIR:') then h = (JSON.parse(ref.sub('PLANO_NUVEM_EXCLUIR:', '')) rescue {}); UI.start_timer(0.1, false) { nuvem_excluir(h) }; return true end
     if ref.start_with?('PLANO_NUVEM:') then UI.start_timer(0.1, false) { nuvem_abrir(ref.sub('PLANO_NUVEM:', '')) }; return true end
     if ref.start_with?('PROJETO_ABRIR:') then k, skp = ref.sub('PROJETO_ABRIR:', '').split('|', 2); UI.start_timer(0.1, false) { abrir_projeto_lista(k, skp) }; return true end
     if ref == 'CONTA_LOGIN' then UI.start_timer(0.1, false) { f = conta_pcf; f ? f.conta_janela : UI.messagebox('O login ainda não está instalado neste PC. Atualize o PCF Ferramentas (⬆).') }; return true end
@@ -1446,6 +1447,47 @@ module PCFLabel
   rescue => e
     responder_clientes(ok: false, msg: "Erro: #{e.message}")
   end
+  # 🗑 exclui um plano da lista de clientes — só com a SENHA da conta PCF (conferida no login da conta, não fica guardada)
+  # na nuvem fica marcado como excluído; os arquivos do plano neste PC vão para o histórico (dá para recuperar)
+  def self.nuvem_excluir(h)
+    f = conta_pcf; c = conta_info
+    return responder_exclusao(false, 'Entre na sua conta primeiro.') unless f && c
+    k = h['k'].to_s; senha = h['senha'].to_s
+    return responder_exclusao(false, 'Digite a senha.') if senha.empty? || k.empty?
+    sc = f.singleton_class; url = "#{sc.const_get(:AUTH_URL)}signInWithPassword?key=#{sc.const_get(:FB_CHAVE)}"
+    f.http(Sketchup::Http::POST, url, { 'email' => c[:email].to_s, 'password' => senha, 'returnSecureToken' => false }) do |s, _d|
+      next responder_exclusao(false, s == 0 ? 'Sem internet: não deu para conferir a senha.' : 'Senha errada. O plano não foi excluído.') unless s == 200
+      f.fs_gravar("pcf_planos/#{c[:uid]}/itens/#{k}", { 'excluido' => true, 'excluido_em' => Time.now.strftime('%d/%m/%Y %H:%M') }, %w[excluido excluido_em]) do |s2, _d2|
+        next responder_exclusao(false, "A nuvem não respondeu (#{s2}). Tente de novo.") unless s2 == 200
+        (arquivar_plano_lista(h) rescue nil)
+        responder_exclusao(true, 'Plano excluído.')
+        UI.start_timer(0.3, false) { nuvem_listar }
+      end
+    end
+  rescue => e
+    responder_exclusao(false, "Erro: #{e.message}")
+  end
+  def self.responder_exclusao(ok, msg)
+    @dlg.execute_script("exclusaoResposta(#{JSON.generate(ok: ok, msg: msg)})") rescue nil
+  end
+  # tira o plano deste PC (vai para o histórico): o da pasta de planos e o que fica junto do projeto .skp
+  def self.arquivar_plano_lista(h)
+    require 'fileutils'
+    chave = h['chave'].to_s; id = id_plano(h['id']); suf = sufixo_plano(id); skp = h['skp'].to_s
+    return if chave.empty?
+    if chave == (nome_plano rescue nil) && @dlg && @dlg.visible? && @dados_vivos
+      excluir_plano(id) # é do projeto aberto: usa a exclusão normal (a tela se ajusta)
+      return
+    end
+    pd = pasta_planos; hist = File.join(pd, 'historico'); FileUtils.mkdir_p(hist)
+    carimbo = Time.now.strftime('%Y-%m-%d %H-%M-%S')
+    arqs = [File.join(pd, chave + suf + '.json')]
+    arqs << File.join(File.dirname(skp), File.basename(skp, '.*') + '.pcfplano' + suf + '.json') unless skp.empty?
+    arqs.each_with_index do |a, i|
+      next unless File.exist?(a)
+      FileUtils.mv(a, File.join(hist, chave + suf + ' ' + carimbo + (i > 0 ? " (excluído, cópia #{i})" : ' (excluído)') + '.json')) rescue nil
+    end
+  end
   # abre um plano da lista (de QUALQUER projeto, mesmo com outro projeto aberto)
   def self.nuvem_abrir(k)
     f = conta_pcf; c = conta_info
@@ -1686,7 +1728,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-28.02'
+  PLUGIN_VERSAO = '2026-10-29.01'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
