@@ -1,5 +1,15 @@
 [
  {
+  "tela": "2026-10-30.10",
+  "plugin": "2026-10-30.10",
+  "data": "30/10",
+  "titulo": "O outro PC abre o plano exatamente como ficou",
+  "itens": [
+   "Abrir num PC o plano feito em outro: vem tudo igual à tela de lá — chapas e posições, fresa e passadas do plano, ⚙ especial e lado de cada peça/furo, ferramentas (magazine), pontes, folga/margem e regras do corte.",
+   "Plano aberto de outro projeto: ao salvar, ele vai para a conta com o projeto certo (antes ia com o projeto que estava aberto no SketchUp)."
+  ]
+ },
+ {
   "tela": "2026-10-30.09",
   "plugin": "2026-10-30.09",
   "data": "30/10",

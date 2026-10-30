@@ -1205,7 +1205,7 @@ module PCFLabel
     File.binwrite(File.join(pd, nome_plano + suf + '.json'), txt.b)
     a = arq_plano_modelo(id)
     (File.binwrite(a, txt.b) rescue nil) if a
-    (nuvem_enfileirar(nome_plano, id, obj, txt, Sketchup.active_model.path.to_s) rescue nil) if obj   # ☁ lista de clientes/OSs na conta
+    (nuvem_enfileirar(nome_plano, id, obj, txt, caminho_projeto) rescue nil) if obj   # o projeto DO PLANO (aberto de outro projeto também)   # ☁ lista de clientes/OSs na conta
     (indice_atualizar_projeto(caminho_projeto) rescue nil)
     # histórico: uma cópia a cada 5 min, guarda as 40 últimas
     h = File.join(pd, 'historico')
@@ -1820,7 +1820,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.09'
+  PLUGIN_VERSAO = '2026-10-30.10'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

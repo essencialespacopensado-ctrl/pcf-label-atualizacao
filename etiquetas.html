@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.09';
+const VERSAO = '2026-10-30.10';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -486,7 +486,13 @@ function marcarCor(k, c, v){ cfg[k] = cfg[k] || {}; cfg.marcT = cfg.marcT || {};
 let proj = (() => { const pl = ls.get(KP, null), pa = AQ && AQ.proj;
   let kpl = null; try { kpl = ls.get('etq_plano_' + PROJK + ((D.planoId && D.planoId !== 'principal') ? '#' + D.planoId : ''), null) } catch (e) {}
   const arqMaisNovo = !!(D.planoArq && (+D.planoArq.t || 0) > (+(kpl && kpl.t) || 0));
+  window.PLANO_ARQ_NOVO = arqMaisNovo;
   if (pa && (arqMaisNovo || !pl || (+pa._t || 0) > (+pl._t || 0))) return pa; return pl || {cliente:'', pecas:{}} })();
+// o plano veio mais novo de outro PC: ferramentas, passadas, pontes e regras do corte ficam EXATAMENTE como lá
+if (window.PLANO_ARQ_NOVO && AQ && AQ.cfg) {
+  ['tCorte','tReb','t25','tMel','transp','pqArea','p1','melFinal','melPass','melSobrep','mag','oFolga','oMargem','oSepCor','oRot','oRetalho','oPeqRet','veioTudo','oEspelhar','ponteOn','ponteQtd','ponteComp','ponteAlt','ponteMin','soPCF']
+    .forEach(k => { if (AQ.cfg[k] !== undefined && AQ.cfg[k] !== null) cfg[k] = JSON.parse(JSON.stringify(AQ.cfg[k])) });
+}
 // cliente / OS / ambiente vazios: pega da pasta do projeto (ex.: "- 18. Fabrício e Aline\\26.146 - ESCADA")
 { const pi = D.pastaInfo || {}; if (!proj.cliente && pi.cliente) proj.cliente = pi.cliente; if (!proj.os && pi.os) proj.os = pi.os; if (!proj.amb && pi.amb) proj.amb = pi.amb }
 // códigos de material do SketchUp/Dinabox (ex.: DB1599755800) -> nome da cor que você escolheu
