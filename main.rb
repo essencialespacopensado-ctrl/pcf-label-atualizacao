@@ -1203,11 +1203,15 @@ module PCFLabel
     rescue
       nil
     end
-    File.binwrite(File.join(pd, nome_plano + suf + '.json'), txt.b)
-    a = arq_plano_modelo(id)
-    (File.binwrite(a, txt.b) rescue nil) if a
-    (nuvem_enfileirar(nome_plano, id, obj, txt, caminho_projeto) rescue nil) if obj   # o projeto DO PLANO (aberto de outro projeto também)   # ☁ lista de clientes/OSs na conta
-    (indice_atualizar_projeto(caminho_projeto) rescue nil)
+    File.binwrite(File.join(pd, nome_plano + suf + '.json'), txt.b)   # rascunho: só NESTE PC
+    # UM PC NÃO INTERFERE NO OUTRO: o que os outros PCs veem (arquivo na pasta do projeto/Dropbox, conta e Início)
+    # só muda quando você clica em 💾 Salvar plano ou gera o ⚡ G-code
+    if obj && obj['compartilhar']
+      a = arq_plano_modelo(id)
+      (File.binwrite(a, txt.b) rescue nil) if a
+      (nuvem_enfileirar(nome_plano, id, obj, txt, caminho_projeto) rescue nil)
+      (indice_atualizar_projeto(caminho_projeto) rescue nil)
+    end
     # histórico: uma cópia a cada 5 min, guarda as 40 últimas
     h = File.join(pd, 'historico')
     ult = Dir.glob(File.join(h, '*.json')).select { |x| File.basename(x).start_with?(nome_plano + suf + ' ') }.max_by { |x| File.mtime(x) }
@@ -1624,6 +1628,7 @@ module PCFLabel
     obj['pecas'] ||= JSON.parse(JSON.generate(@dados_atual[:pecas])) if @dados_atual && @dados_atual[:pecas]
     txt = JSON.generate(obj)
     File.binwrite(File.join(pasta_planos, ex[:chave] + sufixo_plano(ex[:id]) + '.json'), txt.b)
+    return unless obj['compartilhar']   # os outros PCs só veem quando você salvar (💾) ou gerar o G-code
     if !ex[:skp].to_s.empty? && File.exist?(ex[:skp].to_s)
       a = File.join(File.dirname(ex[:skp]), File.basename(ex[:skp], '.*') + '.pcfplano' + sufixo_plano(ex[:id]) + '.json')
       (File.binwrite(a, txt.b) rescue nil)
@@ -1840,7 +1845,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.12'
+  PLUGIN_VERSAO = '2026-10-30.13'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

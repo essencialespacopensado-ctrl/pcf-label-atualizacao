@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.12';
+const VERSAO = '2026-10-30.13';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -1071,7 +1071,7 @@ const mexeu = pp => !!(pp.mexida || pp.manual);   // só para mostrar (azul) at�
 const ajustada = pp => !!(PLANO && PLANO.gc && mexeu(pp));   // trava só no final (depois do G-code)
 // destaque azul / ✋ de peça mexida à mão: só até gerar o G-code (depois o plano fica limpo)
 const mostraMexida = () => !(PLANO && PLANO.gc);
-const marcaGcode = () => { if (PLANO) { PLANO.gc = Date.now(); salvarPlanoLocal(); renderPlano() } travaSaidas() };
+const marcaGcode = () => { if (PLANO) { PLANO.gc = Date.now(); window.COMPARTILHAR = true; salvarPlanoLocal(); renderPlano() } travaSaidas() };
 // ✔ PLANO GERADO = G-code gerado (e nada mexido depois). Antes disso o plano é 📝 rascunho (salva sozinho, mas
 // etiquetas, folhas, listas, PDFs e Excel ficam travados até gerar o G-code)
 const SAIDAS = ['btnEt', 'btnEtPdf', 'btnMat', 'btnCorte', 'btnLista', 'btnSalvar', 'btnCsv'];
@@ -1081,9 +1081,9 @@ function salvarPlanoBotao(){
   if (!PLANO) { $('cncMsg').className = 'hint erro'; $('cncMsg').textContent = 'Faça o plano de corte primeiro (🧩 Otimizar corte).'; return }
   const ag = new Date(), d2 = n => String(n).padStart(2, '0');
   PLANO.salvo = `${d2(ag.getDate())}/${d2(ag.getMonth() + 1)}/${ag.getFullYear()} ${d2(ag.getHours())}:${d2(ag.getMinutes())}`;
-  salvarPlanoLocal(); botaoSalvarPlano();
+  window.SIG_PLANO = null; window.COMPARTILHAR = true; salvarPlanoLocal(); botaoSalvarPlano();
   const p0 = (D.planos || []).find(p => p.id === (D.planoId || 'principal')); if (p0) p0.salvo = true;
-  $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `💾 ${D.planoNome || 'Plano'} salvo às ${d2(ag.getHours())}:${d2(ag.getMinutes())} — já aparece na tela principal (Início).`;
+  $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `💾 ${D.planoNome || 'Plano'} salvo às ${d2(ag.getHours())}:${d2(ag.getMinutes())} — agora aparece na tela principal (Início) e nos outros PCs. O que você mexer depois fica só neste PC até salvar de novo.`;
 }
 function botaoSalvarPlano(){ const b = $('btnSalvarPlano'); if (!b) return; const ok = !!(typeof PLANO !== 'undefined' && PLANO && PLANO.salvo);
   b.textContent = ok ? '✔ Plano salvo · salvar de novo' : '💾 Salvar plano'; b.style.display = D.origem === 'sketchup' ? '' : 'none' }
@@ -3194,6 +3194,7 @@ function salvarPlanoLocal(mapa){
   ls.set(KPL, obj); D.planoArq = obj;
   // também em ARQUIVO (ao lado do projeto .skp e em %APPDATA%\PCF Label\planos, com histórico) — não se perde ao fechar
   clearTimeout(salvarPlanoLocal.tm);
+  if (window.COMPARTILHAR) { obj.compartilhar = true; window.COMPARTILHAR = false }   // 💾 Salvar plano / ⚡ G-code: vai para os outros PCs
   salvarPlanoLocal.tm = setTimeout(() => { try { if (window.sketchup && (window.sketchup.pcf_salvar_plano || window.sketchup.pcf_selecionar)) { if (window.sketchup.pcf_salvar_plano) window.sketchup.pcf_salvar_plano(JSON.stringify(obj)); else window.sketchup.pcf_selecionar('PLANO:' + JSON.stringify(obj)); salvarPlanoLocal.ok = `${d2(agora.getHours())}:${d2(agora.getMinutes())}:${d2(agora.getSeconds())}` } } catch (e) {} mostrarBotaoPlano() }, 800);
   mostrarBotaoPlano();
 }

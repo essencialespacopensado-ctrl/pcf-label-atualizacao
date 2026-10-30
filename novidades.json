@@ -1,5 +1,16 @@
 [
  {
+  "tela": "2026-10-30.13",
+  "plugin": "2026-10-30.13",
+  "data": "30/10",
+  "titulo": "Um PC não interfere no outro",
+  "itens": [
+   "O que você mexe no plano fica só NESTE PC (salva sozinho como rascunho, não se perde).",
+   "Os outros PCs só recebem o plano quando você clica em 💾 Salvar plano ou gera o ⚡ G-code — aí vai inteiro (peças, fresas, passadas, ⚙ especial, regras).",
+   "Abrir um plano em outro PC não grava por cima do seu."
+  ]
+ },
+ {
   "tela": "2026-10-30.12",
   "plugin": "2026-10-30.12",
   "data": "30/10",
