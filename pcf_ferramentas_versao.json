@@ -1,7 +1,10 @@
 {
-  "versao": "3.5.0",
+  "versao": "3.5.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "💥 Barra PCF: botões novos DESAGRUPAR (tira o número/grupo das peças selecionadas) e EXPLODIR (explode o grupo/componente selecionado; Ctrl+Z desfaz).",
+    "📐 PCF · LayOut: seção 🎬 Mexer na cena — escolhe a cena, 🙈 oculta o selecionado só nessa cena (👁 Mostrar volta), 🗑 Excluir, 💥 Explodir e 🚪 Abrir / Fechar portas (selecionadas ou do projeto todo). Depois, no LayOut: Atualizar referência.",
+    "Painel de medidas: frente de gaveta (peça da Dinabox presa a fórmula) agora aceita medida independente — só a selecionada muda.",
     "⚡ Mais leve depois de cada alteração: a Peça Mãe confere todas de uma vez só (antes procurava uma por uma no projeto inteiro), os números ocultos não varrem mais o projeto todo a cada mudança, e a Colisão só recalcula as peças que mudaram.",
     "⬆ Atualizar: quando outro SketchUp aberto (ou o PCF Label) já instalou uma versão nova do PCF Label, o ⬆ acende e carrega ela na hora — sem esperar a internet.",
     "Painel de medidas: peça do Painel Auto selecionada mostra as MESMAS medidas da janela do Painel Auto (comprimento × largura × espessura) e, se você mudar ali, a peça muda. Na janela do Painel Auto, mudar um campo já aplica na peça selecionada; sem nada selecionado a caixa de medidas some (não fica mais presa na última peça).",
