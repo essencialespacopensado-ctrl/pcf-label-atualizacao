@@ -1,7 +1,8 @@
 {
-  "versao": "3.5.3",
+  "versao": "3.5.4",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "📐 PCF · LayOut faz tudo: 🎬 Criar cena (Planta, Frontal, Lateral esq./dir., Perspectiva) do selecionado ou do ambiente, com nome automático (móveis + vista) e opção de só o selecionado aparecer; ✏️ editar a cena (renomear, usar a vista atual, apagar); 🔍 Detalhe ampliado em 1 clique (cena fechada na peça, sem perspectiva, com as cotas da peça). O botão do PCF Prancha saiu da barra.",
     "📄 PCF · Prancha com ROTEIRO: as folhas seguem a ordem Capa → Planta baixa → Vistas dos móveis → Fotos, e cada etapa só libera a próxima quando estiver completa — a ferramenta diz o que falta. Capa: nomes + imagens em perspectiva. Planta: cotas automáticas de cada móvel (vermelho, em cm) e pé direito obrigatório. Vistas: relatório automático das peças de cada móvel (mesmas peças das etiquetas do PCF Label). Fotos da medição e renders (render mais velho que o projeto aparece como DESATUALIZADO). PDF com roteiro incompleto sai como RASCUNHO.",
     "📄 NOVO: PCF · Prancha — pranchas do projeto sem o LayOut: páginas A3 do jeito que saem impressas (criar, duplicar, excluir, mudar a ordem), capa com os nomes (cliente, obra, ambientes, projetista, data, revisão), vistas das cenas em escala (1:25, 1:20…), textos, carimbo automático e 📄 Gerar PDF. Cada prancha ganha nome automático: móveis que aparecem + tipo de vista (ex.: Balcão + Armário Superior — Vista frontal); dá para renomear. Botão na barra PCF e no PCF · LayOut.",
     "💥 Barra PCF: botões novos DESAGRUPAR (tira o número/grupo das peças selecionadas) e EXPLODIR (explode o grupo/componente selecionado; Ctrl+Z desfaz).",
