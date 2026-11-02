@@ -1,7 +1,8 @@
 {
-  "versao": "3.5.8",
+  "versao": "3.5.9",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "⚡ Gerar detalhamento mais rápido: lê as peças do projeto uma vez só (antes lia de novo para cada móvel).",
     "Correção: o 📐 Gerar detalhamento novo parava com \"Cannot convert argument to Geom::Vector3d\" ao montar a cena 3D de cada móvel (conta da direção da câmera). Corrigido.",
     "Correção: o 📐 Gerar detalhamento novo avisava \"Falta o arquivo detalhamento_modulos.rb\" em PCs onde o PCF Label veio sem ele — agora o PCF Ferramentas traz uma cópia e usa quando faltar.",
     "📐 Gerar detalhamento NOVO (painel PCF · LayOut), no padrão do projeto executivo, A4, com mais cor e organização: 1 Capa (OS + ambiente, perspectiva e índice colorido) · 2 Perspectiva do projeto com a chamada de cada móvel · 3 IDs do projeto (nº das peças na cor do móvel + legenda) · 4 Medidas do ambiente (cotas da obra em vermelho + pé direito) · 5 Medidas gerais (planta e frontal, cotas dos móveis em azul e alturas do chão) · 6+ Detalhamento de cada móvel (perspectiva, frontal externa, frontal interna sem portas com vãos em verde, lateral e notas coloridas). O antigo continua em Extensões → PCF · Detalhamento.",
