@@ -1,7 +1,8 @@
 {
-  "versao": "3.5.1",
+  "versao": "3.5.2",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "📄 NOVO: PCF · Prancha — pranchas do projeto sem o LayOut: páginas A3 do jeito que saem impressas (criar, duplicar, excluir, mudar a ordem), capa com os nomes (cliente, obra, ambientes, projetista, data, revisão), vistas das cenas em escala (1:25, 1:20…), textos, carimbo automático e 📄 Gerar PDF. Cada prancha ganha nome automático: móveis que aparecem + tipo de vista (ex.: Balcão + Armário Superior — Vista frontal); dá para renomear. Botão na barra PCF e no PCF · LayOut.",
     "💥 Barra PCF: botões novos DESAGRUPAR (tira o número/grupo das peças selecionadas) e EXPLODIR (explode o grupo/componente selecionado; Ctrl+Z desfaz).",
     "📐 PCF · LayOut: seção 🎬 Mexer na cena — escolhe a cena, 🙈 oculta o selecionado só nessa cena (👁 Mostrar volta), 🗑 Excluir, 💥 Explodir e 🚪 Abrir / Fechar portas (selecionadas ou do projeto todo). Depois, no LayOut: Atualizar referência.",
     "Painel de medidas: frente de gaveta (peça da Dinabox presa a fórmula) agora aceita medida independente — só a selecionada muda.",
