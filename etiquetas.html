@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-03.2';
+const VERSAO = '2026-11-03.3';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3005,7 +3005,8 @@ function svgPlano(f, idx){
     if (mexeu(pp) && mostraMexida()) g += `<path d="${dd(p)}" fill="rgba(60,130,255,.18)" stroke="#2f6fd6" stroke-width="7" stroke-dasharray="40 14"/>`;
     aberturas(p).forEach(h => { const dh = `M${tf(h).map(([a, b]) => `${a},${H - b}`).join('L')}Z`; usados.push('furo');
       g += `<path d="${dh}" fill="${TEC ? '#0b1220' : '#fff'}" stroke="${TEC ? '#3ee6ff' : HACH.furo.cor}" stroke-width="4" stroke-dasharray="18 10"/><path d="${dh}" fill="url(#hfuro${idx})" stroke="none"/>` });
-    (PLANO.filhosDe.get(p) || []).forEach(q => { const ht = hachTipo(q); if (ht) usados.push(ht);
+    // rebaixo/usinagem por baixo, furos por cima (o fundo branco do rebaixo grande escondia os furos dentro dele)
+    [...(PLANO.filhosDe.get(p) || [])].sort((a, b) => (a.tipo === 'furo' ? 1 : 0) - (b.tipo === 'furo' ? 1 : 0)).forEach(q => { const ht = hachTipo(q); if (ht) usados.push(ht);
       g += `<path d="${dd(q)}" fill="${TEC ? '#0b1220' : '#fff'}" stroke="${TEC ? '#5b8cff' : ht ? HACH[ht].cor : '#1f5fbf'}" stroke-width="4" stroke-dasharray="20 12"/>${ht ? `<path d="${dd(q)}" fill="url(#h${ht}${idx})" stroke="none"/>` : ''}` });
     const tag = (pp.rot ? ' ↻' + Math.round(pp.rot) + '°' : '') + (pp.esp ? ' ⇋' : '') + (mexeu(pp) && mostraMexida() ? ' ✋' : '');
     const nm = p.nome ? esc(p.nome.length > 24 ? p.nome.slice(0, 23) + '…' : p.nome) : '', fn = Math.max(60, Math.min(fs * 0.45, 95));

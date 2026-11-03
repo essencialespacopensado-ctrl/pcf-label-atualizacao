@@ -289,10 +289,23 @@ module PCFLabel
         paral = info.select { |x| (x[:n] % n).abs > 0.999 }
         esp_mm = esp
         fundos = paral.select { |x| dd = dep.(x[:pts][0]).to_mm; dd < -0.3 && dd > -(esp_mm - 0.3) }
+        # fundo com buraco no meio (rebaixo só na BORDA, moldura): a área do rebaixo é o contorno de fora MENOS o miolo.
+        # Vira um contorno só, com um "corte" de largura zero até o miolo (a fresa não passa no miolo)
+        moldura = lambda do |fc, ext|
+          ilhas = fc.loops.reject(&:outer?)
+          return ext if ilhas.empty? || ilhas.size > 60
+          ilhas.each do |lp|
+            ins = lp.vertices.map { |vv| vv.position.transform(t) }
+            bi = bj = 0; bd = nil
+            ext.each_with_index { |pa, i2| ins.each_with_index { |pb, j2| d2 = pa.distance(pb); (bd = d2; bi = i2; bj = j2) if bd.nil? || d2 < bd } }
+            ext = ext[0..bi] + ins.rotate(bj) + [ins[bj]] + ext[bi..-1]
+          end
+          ext
+        end
         rebs = fundos.map do |x|
           dd = -dep.(x[:pts][0]).to_mm                    # distância da face de cima
           de_cima = (x[:n] % n) > 0                        # fundo olhando para cima = rebaixo aberto em cima
-          { pts3: x[:pts], prof: (de_cima ? dd : esp_mm - dd).round(2), lado: de_cima ? 1 : -1 }
+          { pts3: moldura.(x[:f], x[:pts]), prof: (de_cima ? dd : esp_mm - dd).round(2), lado: de_cima ? 1 : -1 }
         end
         # usinagens da fresa do Dinabox (orgânico, ranhuras): contorno por fora, furos e rebaixos por dentro
         pl_cont = nil; pl_furos = []; pl_rebs = []; pl_linhas = []
@@ -1865,7 +1878,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-11-03.2'
+  PLUGIN_VERSAO = '2026-11-03.3'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)

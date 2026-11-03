@@ -1,12 +1,22 @@
 {
- "tela": "2026-11-03.2",
- "plugin": "2026-11-03.2",
+ "tela": "2026-11-03.3",
+ "plugin": "2026-11-03.3",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-03.3",
+   "plugin": "2026-11-03.3",
+   "data": "03/11",
+   "titulo": "Rebaixo só na borda (moldura)",
+   "itens": [
+    "Rebaixo só na BORDA da peça (moldura em volta) agora é lido certo: a fresa esvazia só a faixa da borda — antes o PCF achava que era a peça inteira.",
+    "No plano de corte os furos aparecem por cima do rebaixo (antes o rebaixo cobria os furos)."
+   ]
+  },
   {
    "tela": "2026-11-03.2",
    "plugin": "2026-11-03.2",
