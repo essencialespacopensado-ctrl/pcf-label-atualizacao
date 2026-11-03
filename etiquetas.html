@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-03.1';
+const VERSAO = '2026-11-03.2';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -2048,7 +2048,7 @@ $('tb').addEventListener('change', e => {
   if (t.classList.contains('espc')) { p.espc = !!t.value; salvar(); renderTabela(); return }
   if (t.classList.contains('espT')) { p.espT = t.value; salvar(); return }
   if (t.classList.contains('espProf')) { p.espProf = t.value === '' ? '' : Math.max(0, +t.value || 0); salvar(); return }
-  if (t.classList.contains('tipo')) { p.tipo = t.value; p.tipoOk = !!t.value; p.lado = ''; p.on = p.tipo === 'peca'; setTimeout(depoisDeConferir, 50); if (p.prof === '') p.prof = p.tipo === 'rebaixo' ? 6 : p.tipo === 'usinagem' ? 3 : ''; salvar(); renderTabela(); renderPrev(); renderMat(); renderFolhas(); return }
+  if (t.classList.contains('tipo')) { p.tipo = t.value; p.tipoOk = !!t.value; p.lado = ''; p.on = p.tipo === 'peca'; setTimeout(depoisDeConferir, 50); if (p.prof === '') p.prof = p.tipo === 'rebaixo' ? 6 : p.tipo === 'usinagem' ? 3 : ''; igualAosIguais(p); salvar(); renderTabela(); renderPrev(); renderMat(); renderFolhas(); return }
   if (t.classList.contains('on')) { p.on = t.checked; t.closest('tr').className = p.on ? '' : 'off' }
   salvar(); renderPrev(); renderMat(); renderFolhas();
 });
@@ -2060,7 +2060,16 @@ $('tb').addEventListener('keydown', e => {
   }
 });
 $('tb').addEventListener('click', e => { const b = e.target.closest('.ver3d'); if (b) mostrar3D(D.pecas[+b.dataset.i]);
-  const ok = e.target.closest('.tipoOk'); if (ok) { const p = D.pecas[+ok.dataset.i]; p.tipoOk = true; salvar(); renderTabela(); depoisDeConferir() } });
+  const ok = e.target.closest('.tipoOk'); if (ok) { const p = D.pecas[+ok.dataset.i]; p.tipoOk = true; igualAosIguais(p); salvar(); renderTabela(); depoisDeConferir() } });
+// confirmou (ou mudou o tipo de) um contorno: os IGUAIS ainda não conferidos da mesma peça (mesmo tamanho e mesmo tipo de origem) vão junto — 1 clique em vez de um por um
+function igualAosIguais(p){
+  if (!p || !p.dentro) return 0; const pa = paiDe(p); let n = 0;
+  D.pecas.forEach(q => { if (q === p || !q.dentro || q.tipoOk || paiDe(q) !== pa) return;
+    if ((q.tipoInicial || '') !== (p.tipoInicial || '') || Math.abs((+q.w || 0) - (+p.w || 0)) > 0.6 || Math.abs((+q.h || 0) - (+p.h || 0)) > 0.6) return;
+    q.tipo = p.tipo; q.tipoOk = p.tipoOk; q.on = p.on; q.lado = p.lado; if (p.prof !== '' && p.prof !== undefined) q.prof = p.prof; n++ });
+  if (n && $('cncMsg')) { $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `✔ ${n + 1} contornos iguais conferidos de uma vez.` }
+  return n;
+}
 $('folhas').addEventListener('click', e => {
   const g = e.target.closest('.pc'); if (!g || ARRASTOU) { ARRASTOU = false; return }
   if (e.detail !== 2) return;   // nome só com 2 cliques

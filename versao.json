@@ -1,12 +1,24 @@
 {
- "tela": "2026-11-03.1",
- "plugin": "2026-10-30.13",
+ "tela": "2026-11-03.2",
+ "plugin": "2026-11-03.2",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-03.2",
+   "plugin": "2026-11-03.2",
+   "data": "03/11",
+   "titulo": "Painel com muitos furos entra no plano",
+   "itens": [
+    "Painel com muitos furos/rasgos (colmeia, grade) não é mais descartado como “objeto detalhado” — antes dava “nenhuma peça encontrada”.",
+    "Furos que atravessam o fundo de um rebaixo (bandeja com furos) agora são lidos como FUROS (antes sumiam).",
+    "Conferir contornos: confirmou um furo, todos os IGUAIS da mesma peça são conferidos juntos (1 clique em vez de um por um).",
+    "Quando nada entra no plano, a mensagem diz qual objeto ficou de fora e por quê."
+   ]
+  },
   {
    "tela": "2026-11-03.1",
    "plugin": "2026-10-30.13",

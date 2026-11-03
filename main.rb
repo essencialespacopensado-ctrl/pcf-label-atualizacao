@@ -213,15 +213,26 @@ module PCFLabel
       faces = d.entities.grep(Sketchup::Face)
       nome = e.name.to_s.empty? ? d.name.to_s : e.name.to_s
       if faces.size >= 4 && filhos.empty?
-        # objeto muito detalhado (sofá, ferragem, puxador) não é chapa: descarta antes da conta pesada
-        next if faces.size > 1500
+        # objeto muito detalhado (sofá, ferragem, puxador) não é chapa: descarta antes da conta pesada.
+        # Mas painel com muitos furos/rasgos (colmeia, grade, ripado) TEM muitas faces e é chapa: entra se tiver formato de chapa
+        if faces.size > 1500
+          db1 = d.bounds; sc1 = [t.xaxis.length, t.yaxis.length, t.zaxis.length]
+          dd1 = [db1.width * sc1[0], db1.height * sc1[1], db1.depth * sc1[2]].map(&:to_mm).sort
+          unless dd1[0] >= 2.5 && dd1[0] <= 60 && dd1[1] >= 50
+            (@descartes ||= []) << "#{nome.empty? ? 'objeto sem nome' : nome} (#{faces.size} faces, #{dd1.map(&:round).reverse.join(' × ')} mm): muito detalhado e não tem formato de chapa"
+            next
+          end
+        end
         # ferragem pelo nome (dobradiça, puxador, corrediça…) não é chapa
         txt_f = "#{e.name} #{d.name} #{e.get_attribute('dynamic_attributes', 'descricao')} #{d.get_attribute('dynamic_attributes', 'descricao')}"
         next if txt_f =~ /dobradi|puxador|corredi|ferrage|parafus|cavilha|minifix|rodizi|p[eé] regul|trilho|fita led/i
         if orig
           db0 = d.bounds; sc = [t.xaxis.length, t.yaxis.length, t.zaxis.length]
           dd0 = [db0.width * sc[0], db0.height * sc[1], db0.depth * sc[2]].map(&:to_mm).sort
-          next if dd0[0] > 65   # mais grosso que chapa
+          if dd0[0] > 65   # mais grosso que chapa
+            (@descartes ||= []) << "#{nome.empty? ? 'objeto sem nome' : nome}: mais grosso que chapa (#{dd0[0].round} mm)"
+            next
+          end
         end
         # tudo no espaço do modelo (já com escala/rotação do grupo)
         vs = d.entities.grep(Sketchup::Edge).flat_map(&:vertices).uniq.map { |vv| vv.position.transform(t) }
@@ -241,12 +252,18 @@ module PCFLabel
         esp = ext.(nesp).to_mm.round(1)
         if orig
           dims = [ext.(Geom::Vector3d.new(1, 0, 0)), ext.(Geom::Vector3d.new(0, 1, 0)), ext.(Geom::Vector3d.new(0, 0, 1))].map(&:to_mm).sort
-          next if esp < 2.5 || esp > 60
+          if esp < 2.5 || esp > 60
+            (@descartes ||= []) << "#{nome.empty? ? 'objeto sem nome' : nome}: espessura #{esp} mm (chapa vai de 2,5 a 60 mm)"
+            next
+          end
         end
         # chapa é plana: as faces ficam paralelas ou em esquadro com a face grande; peça curva/torneada (dobradiça, puxador) não
         a_tot = info.sum { |x| x[:area] }
         a_torta = info.select { |x| c = (x[:n] % nesp).abs; c > 0.02 && c < 0.98 }.sum { |x| x[:area] }
-        next if a_tot > 0 && a_torta / a_tot > 0.03
+        if a_tot > 0 && a_torta / a_tot > 0.03
+          (@descartes ||= []) << "#{nome.empty? ? 'objeto sem nome' : nome}: não é plano (tem partes curvas/inclinadas)"
+          next
+        end
         fi = info.select { |x| (x[:n] % nesp).abs > 0.999 }.max_by { |x| x[:area] }
         n = fi[:n]; pts3 = fi[:pts]; f = fi[:f]
         # orientação como no projeto: vertical = altura do projeto; deitada = eixo X do modelo
@@ -365,8 +382,11 @@ module PCFLabel
         rebs3 = rebs2.map { |r| r.delete(:p3) }
         # furos com o contorno 3D junto (para mostrar no SketchUp qual recorte é qual)
         buracos3 = ->(fc) { fc ? fc.loops.reject(&:outer?).map { |lp| lp.vertices.map { |vv| vv.position.transform(t) } } : [] }
-        pares = (buracos3.(f) + buracos3.(f_baixo && f_baixo[:f])).map { |h3| [h3.map { |p| p2.(p) }, h3] }
-        pares = pares.reject { |h, _| c = cen.(h); rebs2.any? { |r| dentro2.(c, r[:pts]) } }
+        # buraco de uma face que fica dentro de um rebaixo aberto NESSA face é a boca do rebaixo (não é furo);
+        # buraco no fundo da peça debaixo de um rebaixo de cima (bandeja/colmeia com furos) atravessa: É furo
+        lado_cima = virar ? -1 : 1
+        boca = ->(lst, lado) { lst.map { |h3| [h3.map { |p| p2.(p) }, h3] }.reject { |h, _| c = cen.(h); rebs2.any? { |r| r[:lado] == lado && dentro2.(c, r[:pts]) } } }
+        pares = boca.(buracos3.(f), lado_cima) + boca.(buracos3.(f_baixo && f_baixo[:f]), -lado_cima)
         pares += pl_furos.map { |pp| [pp.map { |p| p2.(p) }, pp] }
         # o mesmo furo visto nas duas faces conta uma vez
         pares = pares.each_with_object([]) { |(h, h3), acc| c = cen.(h); acc << [h, h3] unless acc.any? { |g, _| g2 = cen.(g); (g2[0] - c[0]).abs < 1 && (g2[1] - c[1]).abs < 1 } }
@@ -1845,7 +1865,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-10-30.13'
+  PLUGIN_VERSAO = '2026-11-03.2'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2339,10 +2359,18 @@ module PCFLabel
   def self.enviar_ja
     m = Sketchup.active_model
     pecas = []
+    @descartes = []
     coletar(m.entities, Geom::Transformation.new, [], pecas)
     if pecas.empty?
       (@dlg.close rescue nil)
-      UI.messagebox('PCF Label: nenhuma peça encontrada.')
+      ds = (@descartes || []).uniq
+      msg = 'PCF Label: nenhuma peça entrou no plano.'
+      msg += if ds.empty?
+               "\n\nNão achei nenhum grupo ou componente visível com faces. A peça precisa ser um GRUPO (ou componente) e estar visível na tela."
+             else
+               "\n\nFicaram de fora:\n- " + ds.first(8).join("\n- ") + (ds.size > 8 ? "\n… e mais #{ds.size - 8}" : '')
+             end
+      UI.messagebox(msg)
       return
     end
     # só o que está na tela agora (cena/vista atual) — ou você escolhe
