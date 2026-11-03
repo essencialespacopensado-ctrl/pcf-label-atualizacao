@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-10-30.13';
+const VERSAO = '2026-11-03.1';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -528,8 +528,10 @@ D.pecas.forEach((p, i) => {
   const s = proj.pecas[k] || {};
   // nome automático (Fundo, Lateral, Painel N, "12 - …"): não conta como nome digitado — vira Painel N
   const ehAuto = n => !n || n === p.nomeInicial || /^(\d+\s*-\s*)?(tampo|base|prateleira|lateral( esquerda| direita)?|fundo|frente|pe[çc]a inclinada|painel|pe[çc]a)(\s+\d+)?(\s+-\s+.*)?$/i.test(String(n).trim());
-  p._nomeAuto = s.nomeDig ? false : ehAuto(s.nome);
-  p.nome = p._nomeAuto ? (p.nomeInicial || '') : s.nome; p.cor = (p.corInicial && /mm$/.test(s.cor || '') && !/^sobra/i.test(s.cor || '') ? '' : s.cor) || p.corInicial || ''; p.obs = s.obs || p.camadaMDF || ''; p.f = s.f || [0,0,0,0]; p.fc = s.fc || '';
+  // plano por LISTA (Excel): o nome da planilha é o nome da peça (só muda se você digitar outro)
+  const daLista = !!(D.lista && p.nomeInicial && !s.nomeDig);
+  p._nomeAuto = daLista ? false : (s.nomeDig ? false : ehAuto(s.nome));
+  p.nome = daLista ? p.nomeInicial : (p._nomeAuto ? (p.nomeInicial || '') : s.nome); p.cor = (p.corInicial && /mm$/.test(s.cor || '') && !/^sobra/i.test(s.cor || '') ? '' : s.cor) || p.corInicial || ''; p.obs = s.obs || p.camadaMDF || ''; p.f = s.f || [0,0,0,0]; p.fc = s.fc || '';
   p.tipo = p.dentro ? (s.tipo || p.tipoInicial || '') : 'peca';
   p.prof = s.prof !== undefined && s.prof !== '' ? s.prof : (p.profInicial !== undefined ? p.profInicial : '');
   p.lado = s.lado || p.ladoInicial || ''; p.pas = s.pas || p.pasInicial || 1; p.espc = !!s.espc; p.espT = s.espT || ''; p.espProf = s.espProf !== undefined ? s.espProf : ''; p.tipoOk = !!s.tipoOk || !!p.okInicial;
@@ -3728,6 +3730,9 @@ function perguntarVeios(){
 }
 function perguntarMateriais(sempre){
   if (!sempre) autoMateriais();
+  // plano por LISTA (Excel): material da planilha não é lâmina natural, a não ser que o nome diga "lâmina"
+  if (D.lista) { let mudouL = false; linhasMateriais().forEach(r => { if (!r.cod) return; const nome = (cfg.nomeCod[r.cod] || ((D.materiais || {})[r.cod] || {}).nome || '').trim();
+    coresDaLinha(r, nome).forEach(c => { if (!(cfg.marcT || {})['lamina|' + c]) { marcarCor('lamina', c, /l[aâ]mina/i.test(nome)); mudouL = true } }) }); if (mudouL) salvar() }
   const L = linhasMateriais(), falta = L.filter(r => !cfg.matOk[r.key] || nomeDesconhecido(r) || !lamRespondida(r));
   if (!L.length || (!sempre && !falta.length)) return Promise.resolve(true);
   return new Promise(res => {

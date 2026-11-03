@@ -1,5 +1,5 @@
 {
- "tela": "2026-10-30.13",
+ "tela": "2026-11-03.1",
  "plugin": "2026-10-30.13",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-03.1",
+   "plugin": "2026-10-30.13",
+   "data": "03/11",
+   "titulo": "📊 Plano por lista (Excel)",
+   "itens": [
+    "Peças vindas de uma lista do Excel mantêm o NOME da planilha no plano de corte (antes virava “Painel N”).",
+    "Material da lista entra com o nome certo, já cadastrado (não pergunta “de que material é?” nem se é lâmina)."
+   ]
+  },
   {
    "tela": "2026-10-30.13",
    "plugin": "2026-10-30.13",
