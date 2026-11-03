@@ -1,8 +1,8 @@
 {
-  "versao": "3.6.4",
+  "versao": "3.6.5",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "Correção: os números não mexem mais nas cenas prontas — ao trocar de cena, as peças aparecem exatamente como a cena guardou (antes o PCF escondia de novo as peças que o botão Grupos tinha ocultado).",
+    "🎨 Destacar grupo: o destaque agora é uma MOLDURA colorida em cada face da peça (meio aberto) — o número da peça continua aparecendo, e fica bem visível também de cima / em 2D (antes a cor ficava encostada na peça e 'piscava').",
     "🎨 Botão novo DESTACAR GRUPO: janela com os grupos (igual à PCF · Grupos). Abra a cena, marque o grupo e as peças dele ficam coloridas (cada grupo uma cor) SÓ nessa cena — aparece no LayOut (Atualizar referência). Desmarcar ou Nenhum tira. Não mexe nas peças e não entra no corte.",
     "🔢 Mostrar os números: corrigido — números de peças recriadas pela Dinabox (que perdiam a ligação com a peça) agora acham a peça pela posição e somem junto com ela quando a peça está oculta na cena.",
     "🔢 Mostrar os números: aparecem só os das peças não ocultas — agora também ao TROCAR DE CENA (peça escondida pela cena perde o número; voltou a aparecer, o número volta) e na hora em que você liga \"Mostrar os números\".",
