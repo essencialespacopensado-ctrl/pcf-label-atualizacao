@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.9",
+  "versao": "3.6.10",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "📊 Plano por lista: reconhece sozinho a coluna 'Designação' como nome da peça e 'Nome do Material' como material (antes trocava as duas).",
     "📊 Plano de corte por LISTA (Excel .xlsx ou .csv): botão novo 'Plano por lista (Excel)'. Abre a planilha, reconhece as colunas (nome, comprimento, largura, espessura, quantidade, material, veio, móvel), você confere e o PCF Label monta o plano de corte com as mesmas regras de sempre. O plano fica salvo ao lado da planilha.",
     "🔢 Peça renumerada com dois números (o velho e o novo, um em cima do outro): agora aparece só o número de verdade da peça. Nenhum número é apagado.",
     "🎨 Destacar grupo: interruptor DESTAQUES LIGADOS na janela — desliga/liga todos os destaques de uma vez (o que você marcou continua guardado; vale também no LayOut).",
