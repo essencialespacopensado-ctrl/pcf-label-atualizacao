@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.2",
+  "versao": "3.6.3",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🎨 Botão novo DESTACAR GRUPO: janela com os grupos (igual à PCF · Grupos). Abra a cena, marque o grupo e as peças dele ficam coloridas (cada grupo uma cor) SÓ nessa cena — aparece no LayOut (Atualizar referência). Desmarcar ou Nenhum tira. Não mexe nas peças e não entra no corte.",
     "🔢 Mostrar os números: corrigido — números de peças recriadas pela Dinabox (que perdiam a ligação com a peça) agora acham a peça pela posição e somem junto com ela quando a peça está oculta na cena.",
     "🔢 Mostrar os números: aparecem só os das peças não ocultas — agora também ao TROCAR DE CENA (peça escondida pela cena perde o número; voltou a aparecer, o número volta) e na hora em que você liga \"Mostrar os números\".",
     "📏 O botão do LayOut agora é só COTAR: você coloca a cena no LayOut, abre a mesma cena no SketchUp e clica em 📏 Cotar — as cotas (gerais + em corrente) entram só nessa cena. Clicar de novo refaz (não duplica). Selecionou algo: cota só o selecionado. Depois salve o SketchUp e, no LayOut, Atualizar referência.",
