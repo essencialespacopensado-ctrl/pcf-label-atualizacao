@@ -1,7 +1,9 @@
 {
-  "versao": "3.5.9",
+  "versao": "3.6.0",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "📏 O botão do LayOut agora é só COTAR: você coloca a cena no LayOut, abre a mesma cena no SketchUp e clica em 📏 Cotar — as cotas (gerais + em corrente) entram só nessa cena. Clicar de novo refaz (não duplica). Selecionou algo: cota só o selecionado. Depois salve o SketchUp e, no LayOut, Atualizar referência.",
+    "Saíram, como você pediu: o painel PCF · LayOut (gerar detalhamento novo, criar/mexer em cenas, detalhe ampliado, portas, vista explodida no painel) e o PCF Prancha. Seus projetos e arquivos não são tocados.",
     "⚡ Gerar detalhamento mais rápido: lê as peças do projeto uma vez só (antes lia de novo para cada móvel).",
     "Correção: o 📐 Gerar detalhamento novo parava com \"Cannot convert argument to Geom::Vector3d\" ao montar a cena 3D de cada móvel (conta da direção da câmera). Corrigido.",
     "Correção: o 📐 Gerar detalhamento novo avisava \"Falta o arquivo detalhamento_modulos.rb\" em PCs onde o PCF Label veio sem ele — agora o PCF Ferramentas traz uma cópia e usa quando faltar.",
