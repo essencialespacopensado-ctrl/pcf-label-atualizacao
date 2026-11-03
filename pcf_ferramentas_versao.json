@@ -1,12 +1,13 @@
 {
-  "versao": "3.6.6",
+  "versao": "3.6.7",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "🎨 Destacar grupo: destaque CHEIO (peça inteira colorida) e os números das peças destacadas ficam 5 mm à frente da cor — aparecem por cima. Desmarcou, o número volta exatamente para onde estava.",
-    "🎨 Cada destaque aparece só na cena onde foi marcado — também em cenas criadas depois (antes uma cena nova mostrava a cor de destaques de outras cenas).",
-    "🔢 Número sem peça (peça apagada ou refeita) não aparece mais solto no ar. Nenhum número é apagado.",
+    "🎨 Destacar grupo: interruptor DESTAQUES LIGADOS na janela — desliga/liga todos os destaques de uma vez (o que você marcou continua guardado; vale também no LayOut).",
+    "🎨 Correção: ao abrir uma cena, o destaque dela às vezes não aparecia (o PCF olhava a cena anterior). Agora aparece certo, com vários grupos por cena, cada um com sua cor.",
+    "🎨 Destaque cheio com os números das peças 5 mm à frente da cor. Cada destaque só na cena onde foi marcado.",
+    "⚡ Trocar de cena ficou bem mais leve: a conferência dos números caiu de ~1 s para menos de 0,01 s.",
+    "🔢 Número sem peça (peça apagada ou refeita) não aparece mais solto no ar.",
     "🎨 Botão novo DESTACAR GRUPO: janela com os grupos (igual à PCF · Grupos). Abra a cena, marque o grupo e as peças dele ficam coloridas (cada grupo uma cor) SÓ nessa cena — aparece no LayOut (Atualizar referência). Desmarcar ou Nenhum tira. Não mexe nas peças e não entra no corte.",
-    "🔢 Mostrar os números: corrigido — números de peças recriadas pela Dinabox (que perdiam a ligação com a peça) agora acham a peça pela posição e somem junto com ela quando a peça está oculta na cena.",
-    "🔢 Mostrar os números: aparecem só os das peças não ocultas — agora também ao TROCAR DE CENA (peça escondida pela cena perde o número; voltou a aparecer, o número volta) e na hora em que você liga \"Mostrar os números\"."
+    "🔢 Mostrar os números: corrigido — números de peças recriadas pela Dinabox (que perdiam a ligação com a peça) agora acham a peça pela posição e somem junto com ela quando a peça está oculta na cena."
   ]
 }
