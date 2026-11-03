@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.0",
+  "versao": "3.6.1",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🔢 Mostrar os números: aparecem só os das peças não ocultas — agora também ao TROCAR DE CENA (peça escondida pela cena perde o número; voltou a aparecer, o número volta) e na hora em que você liga \"Mostrar os números\".",
     "📏 O botão do LayOut agora é só COTAR: você coloca a cena no LayOut, abre a mesma cena no SketchUp e clica em 📏 Cotar — as cotas (gerais + em corrente) entram só nessa cena. Clicar de novo refaz (não duplica). Selecionou algo: cota só o selecionado. Depois salve o SketchUp e, no LayOut, Atualizar referência.",
     "Saíram, como você pediu: o painel PCF · LayOut (gerar detalhamento novo, criar/mexer em cenas, detalhe ampliado, portas, vista explodida no painel) e o PCF Prancha. Seus projetos e arquivos não são tocados.",
     "⚡ Gerar detalhamento mais rápido: lê as peças do projeto uma vez só (antes lia de novo para cada móvel).",
