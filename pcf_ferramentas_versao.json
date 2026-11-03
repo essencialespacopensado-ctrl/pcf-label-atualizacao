@@ -1,11 +1,12 @@
 {
-  "versao": "3.6.5",
+  "versao": "3.6.6",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
-    "🎨 Destacar grupo: o destaque agora é uma MOLDURA colorida em cada face da peça (meio aberto) — o número da peça continua aparecendo, e fica bem visível também de cima / em 2D (antes a cor ficava encostada na peça e 'piscava').",
+    "🎨 Destacar grupo: destaque CHEIO (peça inteira colorida) e os números das peças destacadas ficam 5 mm à frente da cor — aparecem por cima. Desmarcou, o número volta exatamente para onde estava.",
+    "🎨 Cada destaque aparece só na cena onde foi marcado — também em cenas criadas depois (antes uma cena nova mostrava a cor de destaques de outras cenas).",
+    "🔢 Número sem peça (peça apagada ou refeita) não aparece mais solto no ar. Nenhum número é apagado.",
     "🎨 Botão novo DESTACAR GRUPO: janela com os grupos (igual à PCF · Grupos). Abra a cena, marque o grupo e as peças dele ficam coloridas (cada grupo uma cor) SÓ nessa cena — aparece no LayOut (Atualizar referência). Desmarcar ou Nenhum tira. Não mexe nas peças e não entra no corte.",
     "🔢 Mostrar os números: corrigido — números de peças recriadas pela Dinabox (que perdiam a ligação com a peça) agora acham a peça pela posição e somem junto com ela quando a peça está oculta na cena.",
-    "🔢 Mostrar os números: aparecem só os das peças não ocultas — agora também ao TROCAR DE CENA (peça escondida pela cena perde o número; voltou a aparecer, o número volta) e na hora em que você liga \"Mostrar os números\".",
-    "📏 O botão do LayOut agora é só COTAR: você coloca a cena no LayOut, abre a mesma cena no SketchUp e clica em 📏 Cotar — as cotas (gerais + em corrente) entram só nessa cena. Clicar de novo refaz (não duplica). Selecionou algo: cota só o selecionado. Depois salve o SketchUp e, no LayOut, Atualizar referência."
+    "🔢 Mostrar os números: aparecem só os das peças não ocultas — agora também ao TROCAR DE CENA (peça escondida pela cena perde o número; voltou a aparecer, o número volta) e na hora em que você liga \"Mostrar os números\"."
   ]
 }
