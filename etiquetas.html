@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-03.3';
+const VERSAO = '2026-11-06.1';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -530,7 +530,8 @@ D.pecas.forEach((p, i) => {
   const ehAuto = n => !n || n === p.nomeInicial || /^(\d+\s*-\s*)?(tampo|base|prateleira|lateral( esquerda| direita)?|fundo|frente|pe[çc]a inclinada|painel|pe[çc]a)(\s+\d+)?(\s+-\s+.*)?$/i.test(String(n).trim());
   // plano por LISTA (Excel): o nome da planilha é o nome da peça (só muda se você digitar outro)
   const daLista = !!(D.lista && p.nomeInicial && !s.nomeDig);
-  p._nomeAuto = daLista ? false : (s.nomeDig ? false : ehAuto(s.nome));
+  // nome dado no Nomear do SketchUp: vale sobre o nome guardado no plano (só perde para o que você digitou aqui no Label)
+  p._nomeAuto = daLista ? false : (s.nomeDig ? false : (p.nomeManual ? true : ehAuto(s.nome)));
   p.nome = daLista ? p.nomeInicial : (p._nomeAuto ? (p.nomeInicial || '') : s.nome); p.cor = (p.corInicial && /mm$/.test(s.cor || '') && !/^sobra/i.test(s.cor || '') ? '' : s.cor) || p.corInicial || ''; p.obs = s.obs || p.camadaMDF || ''; p.f = s.f || [0,0,0,0]; p.fc = s.fc || '';
   p.tipo = p.dentro ? (s.tipo || p.tipoInicial || '') : 'peca';
   p.prof = s.prof !== undefined && s.prof !== '' ? s.prof : (p.profInicial !== undefined ? p.profInicial : '');

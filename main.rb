@@ -414,7 +414,8 @@ module PCFLabel
         topo_nm = mod ? "Módulo Dinabox #{mod}" : (cam.first || nome).to_s
         pai_nome = cam.reverse.find { |c| !nome_limpo(c).empty? }
         auto = "#{auto} - #{nome_limpo(pai_nome)}" if pai_nome
-        pecas << { sk: e.persistent_id.to_s, skpath: (pids + [e.persistent_id]).join('.'), cam: (cam + [nome]).join(' > '), nome: nome, auto: auto, mat: (mat || 'sem material').to_s, esp: esp_padrao(esp), contorno: contorno, furos: furos, rebaixos: rebs2, linhas: linhas2, virada: virar, origem: orig || 'SketchUp', topo: topo_id, topo_nome: topo_nm }
+        manual = e.get_attribute('pcf', 'nome_manual').to_s.strip   # nome dado no Nomear (PCF Ferramentas): é o que vai na etiqueta
+        pecas << { sk: e.persistent_id.to_s, skpath: (pids + [e.persistent_id]).join('.'), cam: (cam + [nome]).join(' > '), nome: nome, manual: manual, auto: auto, mat: (mat || 'sem material').to_s, esp: esp_padrao(esp), contorno: contorno, furos: furos, rebaixos: rebs2, linhas: linhas2, virada: virar, origem: orig || 'SketchUp', topo: topo_id, topo_nome: topo_nm }
       elsif !filhos.empty?
         bb = Geom::BoundingBox.new; d.bounds.then { |b| 8.times { |k| bb.add(b.corner(k).transform(t)) } }
         coletar(d.entities, t, cam + [nome], pecas, bb, pids + [e.persistent_id], (e.material && e.material.display_name) || herd, orig, gira_e)
@@ -1878,7 +1879,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-11-03.3'
+  PLUGIN_VERSAO = '2026-11-06.1'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2407,7 +2408,7 @@ module PCFLabel
       folha_txt = mv ? "Móvel #{mv}" : 'Avulsa'
       mae = { id: 'sk' + p[:sk], skpath: p[:skpath], folha: folha_txt, movel: mv, movelNome: (mv ? nome_limpo(p[:topo_nome]) : ''), origem: p[:origem], camada: p[:cam], c: [w, h].max.round(1), l: [w, h].min.round(1), dentro: false,
         x: 0, y: 0, w: w, h: h, pts: p[:contorno].map { |a, b| [(a - mx).round(2), (b - my).round(2)] }, furos: [],
-        esp: p[:esp], mat: p[:mat], corInicial: "#{p[:mat]} #{p[:esp].to_s.sub(/\.0$/, '')}mm", nomeInicial: nome_limpo(p[:nome]), funcao: p[:auto].to_s, virada: p[:virada] }
+        esp: p[:esp], mat: p[:mat], corInicial: "#{p[:mat]} #{p[:esp].to_s.sub(/\.0$/, '')}mm", nomeInicial: (p[:manual].to_s.empty? ? nome_limpo(p[:nome]) : p[:manual].to_s), nomeManual: !p[:manual].to_s.empty?, funcao: p[:auto].to_s, virada: p[:virada] }
       # furos e rebaixos viram "contornos dentro da peça": na lista você escolhe Furo / Rebaixo / Usinagem / Peça
       filho = lambda do |pts, k, tipo, prof, obs|
         q = pts.map { |a, b| [(a - mx).round(2), (b - my).round(2)] }

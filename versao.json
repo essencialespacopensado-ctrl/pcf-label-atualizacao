@@ -1,12 +1,21 @@
 {
- "tela": "2026-11-03.3",
- "plugin": "2026-11-03.3",
+ "tela": "2026-11-06.1",
+ "plugin": "2026-11-06.1",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-06.1",
+   "plugin": "2026-11-06.1",
+   "data": "06/11",
+   "titulo": "Nome do Nomear vai para a etiqueta",
+   "itens": [
+    "O nome que você dá no Nomear (PCF Ferramentas) agora sai na etiqueta e no plano, mesmo que o plano já tivesse outro nome guardado para a peça. Só perde para um nome que você digitar no próprio Label."
+   ]
+  },
   {
    "tela": "2026-11-03.3",
    "plugin": "2026-11-03.3",
