@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.19",
+  "versao": "3.6.20",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🎨 Destaque some junto com a peça: cada peça tem a sua capa; ocultou a peça (à mão, pela cena ou pela etiqueta), só a capa dela some. Os destaques antigos são refeitos sozinhos no formato novo.",
     "⌖ Centralizar e Espelhar subiram para logo abaixo das Medidas. Centralizar agora acha as chapas vizinhas (laterais, divisórias, base, topo) e funciona em peça interna do Dinabox: prateleira muda a altura no vão, divisória muda a largura do vão (p1h, p2h…), e outras peças ajustam a fórmula — o Dinabox não volta a peça.",
     "🎨 Painel Auto: prévia verde = prateleira, azul = divisória, roxo = peça externa.",
     "📏 Medidas: agora aplica também ao sair do campo (Tab ou clicar fora), não só no Enter — e só na mesma peça em que você começou a digitar. Esc cancela.",
