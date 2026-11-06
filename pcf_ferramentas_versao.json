@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.15",
+  "versao": "3.6.16",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🔢 Agrupar peças sem botões repetidos: Agrupar (grupo novo), ➕ Agregar / ➖ Desagregar lado a lado, Ver grupo e Apagar TODOS. Saiu o 'Apagar números da seleção' (era igual ao Desagregar). Ver grupo também usa o grupo escolhido na lista.",
     "🔢 Grupos: botões ➕ AGREGAR (adiciona a seleção a um grupo que já existe — escolha o grupo na lista) e ➖ DESAGREGAR (tira o número das peças selecionadas). Também na janela PCF · Grupos (＋ em cada grupo).",
     "🪵 Inverter veio agora REDESENHA a peça: o comprimento vira largura (500×300 → 300×500), no mesmo lugar e do mesmo tamanho no móvel. Vale igual no Dinabox (relatório) e no PCF Label. Clique de novo para voltar. Peça presa ao módulo do Dinabox ou com usinagem dentro: avisa e não mexe.",
     "📊 Plano por lista: a janela não passa mais da tela (encolhe e centraliza se ficou grande).",
