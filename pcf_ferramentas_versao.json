@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.21",
+  "versao": "3.6.22",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🗄 Altura de cada frente de gaveta: digite a altura da frente que quiser — as que você não mexer dividem o resto da altura útil por igual (antes dava 'passou X mm' e não aplicava).",
     "🗄 Aba Interno: tamanho da FRENTE da gaveta (inclusive gaveta interna/invisível) — largura da frente e ajuste em cada lado (esq., dir., cima, baixo; + = maior, − = menor), nos campos do próprio Dinabox. A altura de cada gaveta também aparece para editar.",
     "🛡 Destaque: não refaz mais sozinho os destaques antigos (podia travar o SketchUp). Eles passam para o formato novo quando você marca/desmarca o grupo.",
     "🎨 Destaque some junto com a peça: cada peça tem a sua capa; ocultou a peça (à mão, pela cena ou pela etiqueta), só a capa dela some. Os destaques antigos são refeitos sozinhos no formato novo.",
