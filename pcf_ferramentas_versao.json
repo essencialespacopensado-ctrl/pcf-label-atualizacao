@@ -1,7 +1,9 @@
 {
-  "versao": "3.6.22",
+  "versao": "3.6.23",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "📏 Medidas de grupo que já foi esticado: o painel mostrava a medida antiga (sem a escala) e a medida digitada ia para o lado errado. Agora lê a medida real.",
+    "🗄 Altura das FRENTES de gaveta: mudar a frente não mexe mais nas caixas nem nas corrediças (ficam onde estão). Coluna renomeada para FRENTE.",
     "🗄 Altura de cada frente de gaveta: digite a altura da frente que quiser — as que você não mexer dividem o resto da altura útil por igual (antes dava 'passou X mm' e não aplicava).",
     "🗄 Aba Interno: tamanho da FRENTE da gaveta (inclusive gaveta interna/invisível) — largura da frente e ajuste em cada lado (esq., dir., cima, baixo; + = maior, − = menor), nos campos do próprio Dinabox. A altura de cada gaveta também aparece para editar.",
     "🛡 Destaque: não refaz mais sozinho os destaques antigos (podia travar o SketchUp). Eles passam para o formato novo quando você marca/desmarca o grupo.",
