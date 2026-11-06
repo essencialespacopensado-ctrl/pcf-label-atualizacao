@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.13",
+  "versao": "3.6.14",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🔢 Grupos: pôr peças num grupo que JÁ EXISTE ou tirar do grupo. No painel (Agrupar peças): lista 'Grupo existente' + ➕ Pôr a seleção no grupo / ➖ Tirar a seleção do grupo. Na janela PCF · Grupos: botão ＋ em cada grupo e ➖ Tirar a seleção do grupo.",
     "🪵 Inverter veio agora REDESENHA a peça: o comprimento vira largura (500×300 → 300×500), no mesmo lugar e do mesmo tamanho no móvel. Vale igual no Dinabox (relatório) e no PCF Label. Clique de novo para voltar. Peça presa ao módulo do Dinabox ou com usinagem dentro: avisa e não mexe.",
     "📊 Plano por lista: a janela não passa mais da tela (encolhe e centraliza se ficou grande).",
     "⚡ Recorte orgânico mais rápido: o molde do tamponamento é procurado primeiro nas pastas de sempre do Dropbox; a busca na pasta inteira (que podia levar vários segundos) agora só acontece 1 vez por sessão.",
