@@ -1,7 +1,9 @@
 {
-  "versao": "3.6.17",
+  "versao": "3.6.18",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "📏 Medidas: agora aplica também ao sair do campo (Tab ou clicar fora), não só no Enter — e só na mesma peça em que você começou a digitar. Esc cancela.",
+    "🔢 Grupo em laranja só aparece ao clicar no NÚMERO do grupo (clicar na peça não acende mais). Ver grupo seleciona o número, e clicar fora apaga.",
     "👁 Ver grupo: o laranja agora some ao clicar fora (antes ficava preso quando nada estava selecionado).",
     "🔢 Agrupar peças sem botões repetidos: Agrupar (grupo novo), ➕ Agregar / ➖ Desagregar lado a lado, Ver grupo e Apagar TODOS. Saiu o 'Apagar números da seleção' (era igual ao Desagregar). Ver grupo também usa o grupo escolhido na lista.",
     "🔢 Grupos: botões ➕ AGREGAR (adiciona a seleção a um grupo que já existe — escolha o grupo na lista) e ➖ DESAGREGAR (tira o número das peças selecionadas). Também na janela PCF · Grupos (＋ em cada grupo).",
