@@ -1,7 +1,9 @@
 {
-  "versao": "3.6.20",
+  "versao": "3.6.21",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🗄 Aba Interno: tamanho da FRENTE da gaveta (inclusive gaveta interna/invisível) — largura da frente e ajuste em cada lado (esq., dir., cima, baixo; + = maior, − = menor), nos campos do próprio Dinabox. A altura de cada gaveta também aparece para editar.",
+    "🛡 Destaque: não refaz mais sozinho os destaques antigos (podia travar o SketchUp). Eles passam para o formato novo quando você marca/desmarca o grupo.",
     "🎨 Destaque some junto com a peça: cada peça tem a sua capa; ocultou a peça (à mão, pela cena ou pela etiqueta), só a capa dela some. Os destaques antigos são refeitos sozinhos no formato novo.",
     "⌖ Centralizar e Espelhar subiram para logo abaixo das Medidas. Centralizar agora acha as chapas vizinhas (laterais, divisórias, base, topo) e funciona em peça interna do Dinabox: prateleira muda a altura no vão, divisória muda a largura do vão (p1h, p2h…), e outras peças ajustam a fórmula — o Dinabox não volta a peça.",
     "🎨 Painel Auto: prévia verde = prateleira, azul = divisória, roxo = peça externa.",
