@@ -1,7 +1,9 @@
 {
-  "versao": "3.6.12",
+  "versao": "3.6.13",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🪵 Inverter veio agora REDESENHA a peça: o comprimento vira largura (500×300 → 300×500), no mesmo lugar e do mesmo tamanho no móvel. Vale igual no Dinabox (relatório) e no PCF Label. Clique de novo para voltar. Peça presa ao módulo do Dinabox ou com usinagem dentro: avisa e não mexe.",
+    "📊 Plano por lista: a janela não passa mais da tela (encolhe e centraliza se ficou grande).",
     "⚡ Recorte orgânico mais rápido: o molde do tamponamento é procurado primeiro nas pastas de sempre do Dropbox; a busca na pasta inteira (que podia levar vários segundos) agora só acontece 1 vez por sessão.",
     "📊 Plano por lista: cada material com o NOME da planilha e uma COR diferente no plano (amadeirado em tom de madeira, branco, grafite…); nome com madeira (amadeirado, carvalho, nogueira…) já vem COM VEIO (não gira); o nome de cada peça da planilha aparece no plano.",
     "📊 Plano por lista: reconhece sozinho a coluna 'Designação' como nome da peça e 'Nome do Material' como material (antes trocava as duas).",
