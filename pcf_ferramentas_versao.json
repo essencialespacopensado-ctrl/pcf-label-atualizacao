@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.23",
+  "versao": "3.6.24",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🔢 Números: peça com grupo que estava SEM o número 3D (ex.: copiada de outro projeto) ganha o número de novo ao ligar 'Mostrar números'. Os números que já existem não mudam.",
     "📏 Medidas de grupo que já foi esticado: o painel mostrava a medida antiga (sem a escala) e a medida digitada ia para o lado errado. Agora lê a medida real.",
     "🗄 Altura das FRENTES de gaveta: mudar a frente não mexe mais nas caixas nem nas corrediças (ficam onde estão). Coluna renomeada para FRENTE.",
     "🗄 Altura de cada frente de gaveta: digite a altura da frente que quiser — as que você não mexer dividem o resto da altura útil por igual (antes dava 'passou X mm' e não aplicava).",
