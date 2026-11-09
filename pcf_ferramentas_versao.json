@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.26",
+  "versao": "3.6.27",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🗄 Nova coluna Z FRENTE na tabela de gavetas (aba Interno): digite onde fica a borda de baixo de cada frente (0 = a de baixo). Só a frente que você mudar anda; as outras e as caixas não saem do lugar. Se uma frente encostar em outra, avisa e não aplica.",
     "🗄 Altura de cada FRENTE de gaveta: agora só a frente que você digita muda (cresce ou diminui por cima). As outras frentes não mudam de altura nem de lugar. Se a frente não couber, avisa o máximo. ⇕ Igualar frentes volta todas iguais e empilhadas.",
     "🏷 Nome da peça: embaixo do painel aparece o nome da peça selecionada sempre que ela tiver um (o do Nomear; senão o do Dinabox; senão o nome do SketchUp), com o grupo. Várias peças selecionadas: mostra os nomes.",
     "🔢 Números: peça com grupo que estava SEM o número 3D (ex.: copiada de outro projeto) ganha o número de novo ao ligar 'Mostrar números'. Os números que já existem não mudam.",
