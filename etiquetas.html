@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-09.1';
+const VERSAO = '2026-11-09.2';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -4428,7 +4428,15 @@ function conferirCortes(op){
     c.querySelectorAll('button').forEach(b => b.remove());
     c.style.cssText = 'font-family:Arial;font-size:11px';
     c.querySelectorAll('table').forEach(t => { t.style.fontSize = '10px' });
-    imprimir(`<div style="font-family:Arial">${c.innerHTML}</div>`, 'size:A4 portrait;margin:8mm', 'Conferência dos cortes');
+    // folha própria, sem o estilo da tela (o estilo da tela espremia/cortava a tabela): A4 deitada, tabela na largura da folha
+    if (window.sketchup && window.sketchup.pcf_selecionar) {
+      const css = '@page{size:A4 landscape;margin:8mm}html,body{margin:0;background:#fff}body{font:11px Arial,sans-serif;color:#000;-webkit-print-color-adjust:exact;print-color-adjust:exact}h2{font-size:16px;margin:0 0 4px}table{width:100%;border-collapse:collapse;font-size:10px;margin-bottom:6px}th,td{border-bottom:1px solid #bbb;padding:2px 4px;text-align:left;vertical-align:top;white-space:normal}th{background:#eee}tr{break-inside:avoid}img,svg{max-height:18px}';
+      const tit = nomeBase() + ' - Conferência dos cortes';
+      const doc = `<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>${esc(tit)}</title><style>${css}</style></head><body>${c.innerHTML}<script>window.onload=()=>setTimeout(()=>window.print(),400)<\/script></body></html>`;
+      window.sketchup.pcf_selecionar('IMPR:' + JSON.stringify({nome: 'Conferencia dos cortes', html: doc}));
+      return;
+    }
+    imprimir(`<div style="font-family:Arial">${c.innerHTML}</div>`, 'size:A4 landscape;margin:8mm', 'Conferência dos cortes');
   };
 }
 // ---- simulação do corte: lê o próprio G-code e anima a fresa na chapa ----

@@ -1,5 +1,5 @@
 {
- "tela": "2026-11-09.1",
+ "tela": "2026-11-09.2",
  "plugin": "2026-11-06.1",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,15 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-09.2",
+   "plugin": "2026-11-06.1",
+   "data": "09/11",
+   "titulo": "Conferência dos cortes: impressão arrumada",
+   "itens": [
+    "A impressão da conferência dos cortes sai em folha A4 deitada, com a tabela inteira na largura da folha (antes cortava a coluna Linhas)."
+   ]
+  },
   {
    "tela": "2026-11-09.1",
    "plugin": "2026-11-06.1",
