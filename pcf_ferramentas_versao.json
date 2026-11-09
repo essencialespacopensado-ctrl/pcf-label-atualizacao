@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.24",
+  "versao": "3.6.25",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🏷 Nome da peça: embaixo do painel aparece o nome da peça selecionada sempre que ela tiver um (o do Nomear; senão o do Dinabox; senão o nome do SketchUp), com o grupo. Várias peças selecionadas: mostra os nomes.",
     "🔢 Números: peça com grupo que estava SEM o número 3D (ex.: copiada de outro projeto) ganha o número de novo ao ligar 'Mostrar números'. Os números que já existem não mudam.",
     "📏 Medidas de grupo que já foi esticado: o painel mostrava a medida antiga (sem a escala) e a medida digitada ia para o lado errado. Agora lê a medida real.",
     "🗄 Altura das FRENTES de gaveta: mudar a frente não mexe mais nas caixas nem nas corrediças (ficam onde estão). Coluna renomeada para FRENTE.",
