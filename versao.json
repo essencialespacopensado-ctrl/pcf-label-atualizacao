@@ -1,5 +1,5 @@
 {
- "tela": "2026-11-06.1",
+ "tela": "2026-11-09.1",
  "plugin": "2026-11-06.1",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,15 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-09.1",
+   "plugin": "2026-11-06.1",
+   "data": "09/11",
+   "titulo": "Imprimir a conferência dos cortes",
+   "itens": [
+    "Conferir cortes (profundidades): o botão 🖨 Imprimir agora funciona dentro do SketchUp — abre a lista no navegador em folha A4 e já chama a impressão."
+   ]
+  },
   {
    "tela": "2026-11-06.1",
    "plugin": "2026-11-06.1",

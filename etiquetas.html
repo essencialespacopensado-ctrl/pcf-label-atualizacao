@@ -408,7 +408,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-06.1';
+const VERSAO = '2026-11-09.1';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -4422,7 +4422,14 @@ function conferirCortes(op){
   document.body.appendChild(bx);
   $('confFechar').onclick = () => bx.remove();
   if ($('confOk')) $('confOk').onclick = () => { CONF_OK = op.pedirOk; bx.remove(); if (op.depois) op.depois() };
-  $('confImp').onclick = () => { const w = window.open('', '_blank'); if (!w) return; w.document.write(`<html><head><meta charset="utf-8"><title>Conferência dos cortes</title></head><body style="font-family:Arial">${bx.firstElementChild.innerHTML}</body></html>`); w.document.close(); w.print() };
+  // imprimir: dentro do SketchUp a janela nova (window.open) não abre — usa a mesma impressão das etiquetas/plano (abre no navegador em A4)
+  $('confImp').onclick = () => {
+    const c = bx.firstElementChild.cloneNode(true);
+    c.querySelectorAll('button').forEach(b => b.remove());
+    c.style.cssText = 'font-family:Arial;font-size:11px';
+    c.querySelectorAll('table').forEach(t => { t.style.fontSize = '10px' });
+    imprimir(`<div style="font-family:Arial">${c.innerHTML}</div>`, 'size:A4 portrait;margin:8mm', 'Conferência dos cortes');
+  };
 }
 // ---- simulação do corte: lê o próprio G-code e anima a fresa na chapa ----
 function lerGcode(txt){
