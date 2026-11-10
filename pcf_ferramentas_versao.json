@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.31",
+  "versao": "3.6.32",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🧱 Painel Auto: DIVISÓRIA dentro de módulo do Dinabox agora é divisória DO DINABOX (como a prateleira): divide o vão em dois no lugar clicado, então as portas saem uma para cada vão. Antes entrava como 'Divisória avulsa' e o Dinabox continuava vendo um vão só.",
     "🛠 Painel Auto — medida do Dinabox errada: a guarda de cor voltava a medida de OUTRA peça (cópias levavam a 'foto' da original) e o Dinabox ficava mostrando um número diferente da chapa. Agora a guarda só vale para a própria peça, e ao abrir o projeto o PCF corrige sozinho toda peça do Painel Auto cuja medida do Dinabox não bate com a chapa (fica a medida real, a da trena).",
     "🎨 Painel Auto: não usa mais de molde um tamponamento que tenha recorte/desenho (ex.: recorte orgânico). Antes o painel novo podia sair com o desenho do molde esticado (um oval no rodapé). Agora usa sempre um tamponamento liso.",
     "🗄 Gavetas sem travas: altura e Z das frentes, altura e Z das caixas e profundidade são aplicados exatamente como você digitar (mesmo encostando ou passando). Se uma frente for encostar em outra, aparece só um aviso — não bloqueia mais.",
