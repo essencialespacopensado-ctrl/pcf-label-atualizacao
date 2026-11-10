@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.34",
+  "versao": "3.6.35",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🗄 Gavetas: depois de editar as frentes na tabela (altura/Z de cada uma), os ajustes CIMA e BAIXO da frente voltaram a funcionar — Baixo aumenta/diminui a frente de baixo (ela desce/sobe), Cima aumenta/diminui a de cima. Antes gravavam o número mas a frente não mexia.",
     "🧮 Contas nos campos de medida do painel: digite 211+21, 600-18*2 ou (900-36)/3 e, ao dar Enter ou sair do campo, vira o resultado. Vale para soma, subtração, multiplicação (* ou x) e divisão. Os campos de nome e o 'Camadas' (ex.: 9+9) continuam como estão.",
     "🗄 Gavetas sem avisos e sem travas: a tabela das gavetas não mostra mais aviso vermelho nem 'passou X mm', e nenhum campo de gaveta (quantidade, folga, alturas, Z, caixa, corrediça, espessuras, recuos, largura e ajustes da frente) recusa a medida — aplica exatamente o que você digitar.",
     "🧱 Painel Auto: DIVISÓRIA dentro de módulo do Dinabox agora é divisória DO DINABOX (como a prateleira): divide o vão em dois no lugar clicado, então as portas saem uma para cada vão. Antes entrava como 'Divisória avulsa' e o Dinabox continuava vendo um vão só.",

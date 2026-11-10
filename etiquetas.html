@@ -379,7 +379,7 @@ td.fita input{width:auto;margin:0}
   </div>
 </aside>
 <section>
-  <div class="abas" id="abas"><button data-aba="plano" class="ativa">🧩 Plano de corte</button><button data-aba="lista">📋 Lista de peças <span id="abaQtd"></span></button><span style="flex:1"></span><button id="avisoFilhos" style="display:none;background:#e69500;color:#fff;border-color:#e69500;font-weight:700;border-radius:8px;margin-bottom:4px"></button></div>
+  <div class="abas" id="abas"><button data-aba="plano" class="ativa">🧩 Plano de corte</button><button data-aba="lista">📋 Lista de peças <span id="abaQtd"></span></button><button data-aba="cores">🎨 Cadastro de cores</button><span style="flex:1"></span><button id="avisoFilhos" style="display:none;background:#e69500;color:#fff;border-color:#e69500;font-weight:700;border-radius:8px;margin-bottom:4px"></button></div>
   <div id="abaLista">
   <div class="bar">
     <label style="margin:0;display:flex;gap:6px;align-items:center;color:var(--ink);font-size:14px"><input type="checkbox" id="todas" style="width:auto"> Marcar todas</label>
@@ -392,6 +392,14 @@ td.fita input{width:auto;margin:0}
     <thead><tr><th></th><th>Nº</th><th>Folha</th><th>Compr. (mm)</th><th>Larg. (mm)</th><th>Esp. (mm)</th><th>Fita</th><th>Nome da peça</th><th>Cor</th><th>Obs.</th></tr></thead>
     <tbody id="tb"></tbody>
   </table>
+  </div>
+  <div id="abaCores" style="display:none">
+  <h2 class="sec" style="margin-top:4px">Cadastro de cores</h2>
+  <div class="hint" style="margin:4px 0 10px">Cada cor com a espessura, o tamanho da chapa e se tem veio. O que está aqui <b>vale no plano de corte</b> (chapa e veio) e é igual em todos os PCs. Comprimento = lado do veio (2750) · largura = 1850.</div>
+  <table style="max-width:900px"><thead><tr><th>Cor</th><th>Espessura (mm)</th><th>Chapa: comprimento (mm)</th><th>× largura (mm)</th><th>Veio</th><th></th></tr></thead><tbody id="cadTb"></tbody></table>
+  <div style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap"><button id="cadNova" class="pri">+ Nova cor</button><span id="cadMsg" class="hint"></span></div>
+  <div id="cadFalta" style="margin-top:14px"></div>
+  <datalist id="cadNomes"></datalist>
   </div>
   <div id="abaPlano">
   <h2 class="sec">Folha de corte <span class="hint" style="text-transform:none;letter-spacing:0">· duplo clique: nome da peça · arraste para mover (pode soltar em outra folha) · botão direito: girar / espelhar · o número é o mesmo da etiqueta</span></h2>
@@ -408,7 +416,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-09.2';
+const VERSAO = '2026-11-10.1';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -656,8 +664,54 @@ if (chW > chH) [chW, chH] = [chH, chW];
 const CH0 = [chW, chH];
 // lâmina de madeira usa chapa 2720 × 1820 (na mesma direção da chapa padrão); o resto usa a chapa do projeto
 function chapaDe(cor){
+  const rc = cadDe(cor); if (rc && +rc.comp > 50 && +rc.larg > 50) { const a = +rc.comp, b = +rc.larg; return [Math.min(a, b), Math.max(a, b)] }
   if (cor && cfg.lamina && cfg.lamina[cor]) return CH0[1] >= CH0[0] ? [1820, 2720] : [2720, 1820];
   return CH0.slice();
+}
+// ---- Cadastro de cores (aba 🎨): [{cor, esp, comp, larg, veio}] — vale para chapa e veio no plano; arquivo na pasta comum (todos os PCs) ----
+let CAD = (() => { let l = null; try { l = JSON.parse(localStorage.getItem('etq_cadcores') || 'null') } catch (e) {}
+  const a = D.cadCores && Array.isArray(D.cadCores.cores) ? D.cadCores : null;
+  const v = (a && (!l || (+a.t || 0) >= (+l.t || 0))) ? a : l; return {t: +(v && v.t) || 0, cores: ((v && v.cores) || []).filter(x => x && typeof x === 'object')} })();
+const cadNum = v => { const n = parseFloat(String(v == null ? '' : v).replace(',', '.')); return isFinite(n) ? n : NaN };
+const cadNorm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim().replace(/(\d+(?:[.,]\d+)?)\s*mm$/, (m, n) => cadNum(n) + 'mm');
+const cadChave = r => cadNorm(`${String(r.cor || '').trim()} ${cadNum(r.esp)}mm`);
+function cadDe(cor){ if (!cor || !CAD.cores.length) return null; const k = cadNorm(cor);
+  return CAD.cores.find(r => String(r.cor || '').trim() && cadChave(r) === k) || (/mm$/i.test(k) ? null : CAD.cores.find(r => cadNorm(r.cor) === k)) || null }
+// veio do cadastro manda: marca nas cores do projeto que estão cadastradas
+function aplicarCadastro(){ try { const cs = new Set([...(typeof cores !== 'undefined' ? cores : []), ...D.pecas.map(p => p.cor).filter(Boolean)]);
+  let mudou = false; cs.forEach(c => { const r = cadDe(c); if (r && (r.veio === true || r.veio === false) && (cfg.veio[c] !== r.veio || !(c in cfg.veio))) { marcarCor('veio', c, r.veio); mudou = true } }); return mudou } catch (e) { return false } }
+function salvarCadastro(){ CAD.t = Date.now(); const txt = JSON.stringify(CAD);
+  try { localStorage.setItem('etq_cadcores', txt) } catch (e) {}
+  try { if (window.sketchup && window.sketchup.pcf_selecionar) window.sketchup.pcf_selecionar('CADCORES:' + txt) } catch (e) {} }
+function cadMudou(afetaPlano){ salvarCadastro(); const m = aplicarCadastro(); if (m) salvar(); try { renderCores() } catch (e) {}
+  const msg = $('cadMsg'); if (!msg) return; msg.className = 'hint ok';
+  if (PLANO && afetaPlano) { msg.innerHTML = '✔ Salvo. <button id="cadRefaz" style="margin-left:6px">🧩 Refazer o plano com o cadastro</button>'; $('cadRefaz').onclick = () => { mostrarAba('plano'); try { renderTudo() } catch (e) {} $('btnOtim') && $('btnOtim').click() } }
+  else msg.textContent = '✔ Salvo (vale em todos os PCs).' }
+function renderCadastro(){
+  const tb = $('cadTb'); if (!tb) return;
+  const nomes = new Set(Object.values(cfg.nomeCod || {}).map(n => String(n || '').trim()).filter(Boolean)); CAD.cores.forEach(r => r.cor && nomes.add(r.cor));
+  $('cadNomes').innerHTML = [...nomes].sort().map(n => `<option value="${esc(n)}">`).join('');
+  tb.innerHTML = CAD.cores.map((r, i) => `<tr data-i="${i}"><td><input data-k="cor" list="cadNomes" value="${esc(r.cor || '')}" placeholder="Ex.: Carvalho Castelli" style="min-width:220px"></td>
+    <td><input data-k="esp" value="${esc(r.esp == null ? '' : String(r.esp))}" style="width:70px"></td>
+    <td><input data-k="comp" value="${esc(r.comp == null ? '' : String(r.comp))}" style="width:80px"></td>
+    <td><input data-k="larg" value="${esc(r.larg == null ? '' : String(r.larg))}" style="width:80px"></td>
+    <td><select data-k="veio"><option value="1"${r.veio ? ' selected' : ''}>Com veio</option><option value="0"${r.veio ? '' : ' selected'}>Sem veio</option></select></td>
+    <td><button data-x="${i}" title="Excluir esta cor do cadastro">✕</button></td></tr>`).join('') || '<tr><td colspan="6" class="hint">Nenhuma cor cadastrada. Clique em + Nova cor.</td></tr>';
+  // cores deste projeto que ainda não estão no cadastro: 1 clique cadastra
+  const falta = (typeof materiaisDoProjeto === 'function' ? materiaisDoProjeto() : []).filter(c => c !== '(sem cor)' && !cadDe(c));
+  $('cadFalta').innerHTML = falta.length ? `<div class="hint" style="margin-bottom:6px">Cores deste projeto que ainda não estão no cadastro (clique para cadastrar):</div><div class="chips">${falta.map(c => `<button class="cadAdd" data-c="${esc(c)}">+ ${esc(c)}</button>`).join('')}</div>` : '';
+}
+function cadIniciar(){
+  const tb = $('cadTb'); if (!tb || tb.dataset.ok) return; tb.dataset.ok = '1';
+  tb.addEventListener('change', e => { const el = e.target, tr = el.closest('tr[data-i]'); if (!tr || !el.dataset.k) return; const r = CAD.cores[+tr.dataset.i]; if (!r) return;
+    const k = el.dataset.k; if (k === 'veio') r.veio = el.value === '1'; else if (k === 'cor') r.cor = el.value.trim(); else { const n = cadNum(el.value); r[k] = isFinite(n) ? n : el.value.trim() }
+    cadMudou(true); renderCadastro() });
+  tb.addEventListener('click', e => { const x = e.target.closest('button[data-x]'); if (!x) return; const r = CAD.cores[+x.dataset.x];
+    if (!confirm(`Excluir "${(r && r.cor) || 'cor'} ${(r && r.esp) || ''}mm" do cadastro?`)) return; CAD.cores.splice(+x.dataset.x, 1); cadMudou(true); renderCadastro() });
+  $('cadNova').onclick = () => { CAD.cores.push({cor: '', esp: Math.round((+D.espessura || 18.3) * 10) / 10, comp: 2750, larg: 1850, veio: false}); renderCadastro();
+    const ins = tb.querySelectorAll('input[data-k="cor"]'); if (ins.length) ins[ins.length - 1].focus() };
+  $('cadFalta').addEventListener('click', e => { const b = e.target.closest('.cadAdd'); if (!b) return; const c = b.dataset.c, m = c.match(/^(.*?)\s*(\d+(?:[.,]\d+)?)\s*mm$/i);
+    CAD.cores.push({cor: m ? m[1].trim() : c, esp: m ? cadNum(m[2]) : Math.round((+D.espessura || 18.3) * 10) / 10, comp: 2750, larg: 1850, veio: !!cfg.veio[c]}); cadMudou(true); renderCadastro() });
 }
 // folha de sobra tem o tamanho dela
 const dimF = f => (f && f.dim) ? f.dim.slice() : chapaDe(f && f.cor);
@@ -1887,6 +1941,7 @@ function aplicarMaterial(){
   if ($('amMat').value === '__nova') novaCor(null, c => { if (c) { renderAplicarMat(); fazer(c) } }); else if ($('amMat').value) fazer($('amMat').value);
 }
 function renderCores(){
+  aplicarCadastro();
   renderAplicarMat();
   const vis = new Set(coresVisiveis());
   $('chips').innerHTML = cores.map((c, i) => !vis.has(c) ? '' : `<span class="chip${cfg.veio[c]?'':' semveio'}"><span class="nm" data-v="${i}" title="Clique para trocar com/sem veio">${esc(c)}<span class="vt">${cfg.veio[c]?'com veio':'sem veio'}</span></span><span class="df" data-d="${i}" title="Clique para trocar: dupla face (pode virar a peça) ou 1 face" style="cursor:pointer;font-size:11px;padding:1px 6px;border-radius:8px;margin-left:4px;background:${duplaFace({cor:c})?'#1d7a46':'#bbb'};color:#fff">${duplaFace({cor:c})?'2 faces':'1 face'}</span><button title="Remover" data-i="${i}">×</button></span>`).join('') || '<span class="hint">Nenhuma cor cadastrada.</span>';
@@ -1911,7 +1966,8 @@ function depoisDeConferir(){
   if (PLANO) refazerPlanoSeTiver(); else if (D.origem === 'sketchup' && $('btnOtim')) $('btnOtim').click();
 }
 function mostrarAba(a){
-  cfg.aba = a; ['lista', 'plano'].forEach(k => { const el = $(k === 'lista' ? 'abaLista' : 'abaPlano'); if (el) el.style.display = k === a ? '' : 'none' });
+  cfg.aba = a; ['lista', 'plano', 'cores'].forEach(k => { const el = $(k === 'lista' ? 'abaLista' : k === 'cores' ? 'abaCores' : 'abaPlano'); if (el) el.style.display = k === a ? '' : 'none' });
+  if (a === 'cores') { try { cadIniciar(); renderCadastro() } catch (e) {} }
   document.querySelectorAll('#abas button').forEach(b => b.classList.toggle('ativa', b.dataset.aba === a));
   try { localStorage.setItem('etq_aba', a) } catch (e) {}
 }
@@ -2091,7 +2147,7 @@ $('chips').addEventListener('click', e => {
   const df = e.target.closest('.df');
   if (df) { const c = cores[df.dataset.d]; marcarCor('dupla', c, !duplaFace({cor: c})); salvar(); renderCores(); refazerPlanoSeTiver(); return }
   const nv = e.target.closest('.nm');
-  if (nv) { const c = cores[nv.dataset.v]; marcarCor('veio', c, !cfg.veio[c]); salvar(); renderCores(); renderTudo(); refazerPlanoSeTiver(); return }
+  if (nv) { const c = cores[nv.dataset.v]; marcarCor('veio', c, !cfg.veio[c]); { const rc = cadDe(c); if (rc) { rc.veio = !!cfg.veio[c]; salvarCadastro() } } salvar(); renderCores(); renderTudo(); refazerPlanoSeTiver(); return }
   const i = e.target.dataset.i; if (i === undefined) return;
   cores.splice(i, 1); salvar(); renderCores();
 });

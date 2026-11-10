@@ -1044,6 +1044,11 @@ module PCFLabel
       end
       return true
     end
+    # aba Cadastro de cores: cor + espessura + chapa + veio (vale em todos os PCs, pasta comum do Dropbox)
+    if ref.start_with?('CADCORES:')
+      begin; salvar_cadastro_cores(JSON.parse(ref[9..-1].dup.force_encoding('UTF-8'))); rescue; end
+      return true
+    end
     if ref.start_with?('CORES:')
       begin; gravar_cores(JSON.parse(ref[6..-1].dup.force_encoding('UTF-8'))); rescue; end
       return true
@@ -1328,6 +1333,7 @@ module PCFLabel
     dados[:projetoChave] = dados[:extChave] || (nome_plano rescue nil)
     @externo = dados[:externo].is_a?(Hash) ? dados[:externo] : nil   # plano aberto da lista da nuvem (Hash); true = aberto pelo Início
     dados[:cfgComum] = (JSON.parse(File.read(File.join(pasta_comum, 'config.json'), encoding: 'UTF-8')) rescue nil)
+    dados[:cadCores] = (cadastro_cores rescue [])
     (checar_atualizacao(true) rescue nil)   # se tiver versão nova, instala sozinho
     (checar_online rescue nil)              # e pela internet, na hora
     (espalhar_versao rescue nil)            # se este PC tiver a mais nova, põe no Dropbox para os outros
@@ -1879,7 +1885,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-11-06.1'
+  PLUGIN_VERSAO = '2026-11-10.1'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2143,6 +2149,39 @@ module PCFLabel
   rescue => e
     log_atu("ERRO: #{e.class} #{e.message}")
     UI.messagebox("Não consegui atualizar: #{e.message}") rescue nil
+  end
+  # ---- Cadastro de cores (aba própria): [{cor, esp, comp, larg, veio}] ----
+  def self.cadastro_arquivo
+    File.join(pasta_comum, 'cadastro_cores.json')
+  end
+  # 1ª vez: o banco de cores antigo (cores.json) é apagado, como o Paulo pediu, mas antes vai uma cópia para cores_backup_<data>.json
+  def self.cadastro_cores
+    f = cadastro_arquivo
+    unless File.exist?(f)
+      require 'fileutils'; FileUtils.mkdir_p(File.dirname(f))
+      b = banco_arquivo
+      if File.exist?(b)
+        bk = File.join(File.dirname(b), "cores_backup_#{Time.now.strftime('%Y%m%d_%H%M%S')}.json")
+        FileUtils.cp(b, bk)
+        File.binwrite(b, '{}') if File.exist?(bk) && File.size(bk) == File.size(b)
+      end
+      File.binwrite(f, JSON.pretty_generate({ 't' => 0, 'cores' => [] }).b)
+    end
+    j = JSON.parse(File.read(f, encoding: 'UTF-8'))
+    j.is_a?(Hash) ? j : { 't' => 0, 'cores' => (j.is_a?(Array) ? j : []) }
+  rescue
+    { 't' => 0, 'cores' => [] }
+  end
+  # grava só se for mais novo que o que está no arquivo (um PC com a tela velha não apaga o cadastro novo)
+  def self.salvar_cadastro_cores(obj)
+    return unless obj.is_a?(Hash) && obj['cores'].is_a?(Array)
+    atual = cadastro_cores
+    return if (obj['t'].to_f) < (atual['t'].to_f)
+    require 'fileutils'; f = cadastro_arquivo; FileUtils.mkdir_p(File.dirname(f))
+    tmp = f + '.tmp'; File.binwrite(tmp, JSON.pretty_generate({ 't' => obj['t'].to_f, 'cores' => obj['cores'] }).b)
+    File.rename(tmp, f) rescue (File.binwrite(f, File.binread(tmp)); File.delete(tmp) rescue nil)
+  rescue
+    nil
   end
   def self.banco_cores
     f = banco_arquivo

@@ -1,12 +1,23 @@
 {
- "tela": "2026-11-09.2",
- "plugin": "2026-11-06.1",
+ "tela": "2026-11-10.1",
+ "plugin": "2026-11-10.1",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-10.1",
+   "plugin": "2026-11-10.1",
+   "data": "10/11",
+   "titulo": "Aba Cadastro de cores",
+   "itens": [
+    "Nova aba 🎨 Cadastro de cores: cadastre cada cor com espessura, tamanho da chapa (comprimento × largura) e se tem veio. É esse cadastro que vale no plano de corte (tamanho da chapa e veio) e ele é igual em todos os PCs.",
+    "As cores do projeto que ainda não estão no cadastro aparecem embaixo: 1 clique cadastra.",
+    "O banco de cores antigo foi zerado (fica uma cópia de segurança cores_backup na pasta do PCF Label)."
+   ]
+  },
   {
    "tela": "2026-11-09.2",
    "plugin": "2026-11-06.1",
