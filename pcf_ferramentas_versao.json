@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.28",
+  "versao": "3.6.29",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🗄 Gavetas sem travas: altura e Z das frentes, altura e Z das caixas e profundidade são aplicados exatamente como você digitar (mesmo encostando ou passando). Se uma frente for encostar em outra, aparece só um aviso — não bloqueia mais.",
     "🗄 Frentes de gaveta: se a altura digitada fizer a frente encostar na de cima, o campo fica VERMELHO na hora e aparece o máximo que ela pode ter (antes o aviso sumia em 3 s e parecia que não editava). As outras frentes continuam sem andar.",
     "🗄 Nova coluna Z FRENTE na tabela de gavetas (aba Interno): digite onde fica a borda de baixo de cada frente (0 = a de baixo). Só a frente que você mudar anda; as outras e as caixas não saem do lugar. Se uma frente encostar em outra, avisa e não aplica.",
     "🗄 Altura de cada FRENTE de gaveta: agora só a frente que você digita muda (cresce ou diminui por cima). As outras frentes não mudam de altura nem de lugar. Se a frente não couber, avisa o máximo. ⇕ Igualar frentes volta todas iguais e empilhadas.",
