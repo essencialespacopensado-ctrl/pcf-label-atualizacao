@@ -1885,7 +1885,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-11-10.1'
+  PLUGIN_VERSAO = '2026-11-10.2'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -2396,11 +2396,12 @@ module PCFLabel
   end
 
   # o que NÃO está na tela agora não entra no plano — ou você escolhe (Sim = só as da tela; Não = todas; Cancelar = nada)
-  def self.filtrar_na_tela(m, pecas)
+  def self.filtrar_na_tela(m, pecas, perguntar = true)
     fora = pecas.reject { |p| na_tela?(m, p[:skpath]) }
     return pecas if fora.empty?
     dentro = pecas.size - fora.size
     return pecas if dentro.zero?   # nenhuma na tela: faz com todas (antes o "Sim" fazia um plano vazio e a tela fechava)
+    return pecas - fora unless perguntar   # abrir plano salvo (página inicial): só para ver, sem pergunta
     nomes = fora.map { |p| nome_limpo(p[:nome]).then { |x| x.empty? ? p[:nome].to_s : x } }.uniq.first(6).join(', ')
     msg = "#{fora.size} peça(s) não estão na tela agora (fora da vista ou de outra cena):\n#{nomes}#{fora.size > 6 ? '…' : ''}\n\n" \
           "Sim = plano só com as #{dentro} peça(s) que estão na tela\nNão = plano com todas as #{pecas.size}\nCancelar = não fazer o plano"
@@ -2427,7 +2428,7 @@ module PCFLabel
       return
     end
     # só o que está na tela agora (cena/vista atual) — ou você escolhe
-    pecas = filtrar_na_tela(m, pecas)
+    pecas = filtrar_na_tela(m, pecas, !@pedido_plano)   # Abrir na página inicial: não pergunta (Paulo 10/11)
     if pecas.nil? || pecas.empty?
       (@dlg.close rescue nil)
       return
@@ -2631,7 +2632,8 @@ module PCFLabel
     @dlg_inicio = UI::HtmlDialog.new(dialog_title: 'PCF Label - Início', preferences_key: 'PCFLabel.inicio', scrollable: true,
                                      resizable: true, width: 1100, height: 700, style: UI::HtmlDialog::STYLE_DIALOG)
     d = @dlg_inicio
-    d.add_action_callback('novo') { |_c| (d.close rescue nil); enviar(true) }
+    # ➕ Fazer novo plano de corte: projeto que já tem plano vai direto para um plano NOVO (não volta para a lista)
+    d.add_action_callback('novo') { |_c| (d.close rescue nil); @pedido_novo = true unless (listar_planos rescue []).empty?; enviar(true) }
     d.add_action_callback('abrir') do |_c, skp, id|
       begin
         skp = caminho_local(skp)
@@ -2804,7 +2806,7 @@ module PCFLabel
       <div class="topo"><h2>PCF Label — Início</h2>
         <input id="busca" placeholder="Buscar cliente, OS, ambiente, projeto…">
         <button id="abrirTodos" title="Abrir/fechar todos os clientes">⇕ Todos</button>
-        <button class="p" id="novo">➕ Plano do projeto aberto</button>
+        <button class="p" id="novo">➕ Fazer novo plano de corte</button>
         <button id="rasc" title="Planos que você não salvou (💾) nem gerou o G-code — o PCF guarda sozinho">📝 Rascunhos</button>
         <button id="reindexar" title="Varre todas as pastas da empresa (demora alguns segundos)">🔄 Reindexar</button>
       </div>

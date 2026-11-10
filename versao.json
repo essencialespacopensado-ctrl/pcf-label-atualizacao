@@ -1,12 +1,22 @@
 {
  "tela": "2026-11-10.1",
- "plugin": "2026-11-10.1",
+ "plugin": "2026-11-10.2",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-10.1",
+   "plugin": "2026-11-10.2",
+   "data": "10/11",
+   "titulo": "Página inicial: abrir plano só para ver",
+   "itens": [
+    "PCF · Nesting abre a página inicial com todos os planos. Clicar num plano abre ele só para ver, sem a pergunta das peças fora da tela.",
+    "Botão ➕ Fazer novo plano de corte: faz um plano novo (aí sim pergunta das peças fora da tela)."
+   ]
+  },
   {
    "tela": "2026-11-10.1",
    "plugin": "2026-11-10.1",
