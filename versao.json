@@ -1,5 +1,5 @@
 {
- "tela": "2026-11-10.1",
+ "tela": "2026-11-10.2",
  "plugin": "2026-11-10.2",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,15 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-10.2",
+   "plugin": "2026-11-10.2",
+   "data": "10/11",
+   "titulo": "Veio bem marcado no plano de corte",
+   "itens": [
+    "Nas cores com veio, cada peça do plano ganha riscas no sentido do COMPRIMENTO da chapa (lado dos 2750), por cima da foto do material, e a chapa mostra uma seta VEIO ↕ do lado direito."
+   ]
+  },
   {
    "tela": "2026-11-10.1",
    "plugin": "2026-11-10.2",

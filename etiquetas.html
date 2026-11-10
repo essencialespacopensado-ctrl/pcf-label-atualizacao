@@ -416,7 +416,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-10.1';
+const VERSAO = '2026-11-10.2';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -3039,7 +3039,7 @@ function svgPlano(f, idx){
   let g = `<rect x="${mg}" y="${mg}" width="${W - 2 * mg}" height="${H - 2 * mg}" fill="none" stroke="${TEC ? '#2fd0ff' : '#bbb'}" stroke-opacity="${TEC ? .45 : 1}" stroke-dasharray="20 14" stroke-width="3"/>`;
   const ruins = PLANO.ruins || new Set(), usados = [];
   // cada peça com a cor/textura do MATERIAL dela no projeto (não a da chapa — chapa de sobra ou cor trocada não muda o desenho)
-  const pats = {}; let defsP = '';
+  const pats = {}; let defsP = '', temV = false;
   const pintaP = p => { const m = (D.materiais || {})[p.mat] || null; if (!m || (!m.foto && !m.rgb)) return pinta;
     if (!m.foto) return `rgb(${m.rgb.join(',')})`;
     if (!pats[p.mat]) { const id = 'pm' + idx + '_' + Object.keys(pats).length; pats[p.mat] = id;
@@ -3059,6 +3059,8 @@ function svgPlano(f, idx){
     // peça pequena: só o número, do tamanho que cabe dentro dela (nada de texto encavalado)
     const fs = Math.max(28, Math.min(best[2] * 0.9, 200)), peq = best[2] < 120;
     g += TEC ? `<path d="${dd(p)}" fill="${defs ? pintaP(p) : 'rgba(62,230,255,.14)'}" fill-opacity="${defs ? .82 : 1}" stroke="#3ee6ff" stroke-width="6" filter="url(#glow${idx})"/>` : `<path d="${dd(p)}" fill="${pintaP(p)}" stroke="#000" stroke-width="5"/>`;
+    // VEIO bem marcado: riscas no sentido do COMPRIMENTO da chapa (lado dos 2750), por cima da foto do material
+    if (temVeio(p)) { temV = true; g += `<path d="${dd(p)}" fill="url(#veioL${idx})" stroke="none" pointer-events="none"/>` }
     if (mexeu(pp) && mostraMexida()) g += `<path d="${dd(p)}" fill="rgba(60,130,255,.18)" stroke="#2f6fd6" stroke-width="7" stroke-dasharray="40 14"/>`;
     aberturas(p).forEach(h => { const dh = `M${tf(h).map(([a, b]) => `${a},${H - b}`).join('L')}Z`; usados.push('furo');
       g += `<path d="${dh}" fill="${TEC ? '#0b1220' : '#fff'}" stroke="${TEC ? '#3ee6ff' : HACH.furo.cor}" stroke-width="4" stroke-dasharray="18 10"/><path d="${dh}" fill="url(#hfuro${idx})" stroke="none"/>` });
@@ -3076,6 +3078,14 @@ function svgPlano(f, idx){
       + (cabeNome ? `<text x="${best[0]}" y="${H - best[1] + fs * 0.35 - sobe + fn * 1.1}" font-size="${fn}" text-anchor="middle" font-family="${TEC ? MONO : 'Arial'}" fill="${TEC ? '#cfe3ff' : '#222'}" pointer-events="none" stroke="${TEC ? '#06101f' : '#fff'}" stroke-width="${fn * 0.25}" paint-order="stroke" stroke-linejoin="round">${nm}</text>` : '')
       + (cabeMed ? `<text x="${best[0]}" y="${H - best[1] + fs * 0.35 - sobe + (cabeNome ? fn * 1.1 : 0) + fd * 1.25}" font-size="${fd}" font-weight="700" text-anchor="middle" font-family="${TEC ? MONO : 'Arial'}" fill="${TEC ? '#7fffd4' : '#0b4f8a'}" pointer-events="none" stroke="${TEC ? '#06101f' : '#fff'}" stroke-width="${fd * 0.3}" paint-order="stroke" stroke-linejoin="round">${med}</text>` : '') + `</g>`;
   });
+  if (temV) {
+    const vh = H >= W;   // chapa em pé: o comprimento (2750) é o Y → riscas em pé
+    defsP += `<pattern id="veioL${idx}" patternUnits="userSpaceOnUse" x="0" y="0" width="${vh ? 36 : 400}" height="${vh ? 400 : 36}"><path d="${vh ? 'M9,0 v400 M27,40 v320' : 'M0,9 h400 M40,27 h320'}" stroke="${TEC ? 'rgba(62,230,255,.55)' : 'rgba(70,45,15,.55)'}" stroke-width="3" fill="none"/></pattern>`;
+    // seta VEIO na lateral da chapa, no sentido do comprimento
+    const xa = W + 80;   // lado direito (o esquerdo tem a cota de 2750)
+    g += vh ? `<g pointer-events="none"><path d="M${xa},${H * 0.75} V${H * 0.25} M${xa - 30},${H * 0.25 + 50} L${xa},${H * 0.25} L${xa + 30},${H * 0.25 + 50} M${xa - 30},${H * 0.75 - 50} L${xa},${H * 0.75} L${xa + 30},${H * 0.75 - 50}" stroke="#8a5a1c" stroke-width="10" fill="none"/><text x="${xa + 20}" y="${H / 2}" font-size="70" font-weight="700" font-family="Arial" fill="#8a5a1c" text-anchor="middle" transform="rotate(90 ${xa + 20} ${H / 2})" stroke="#fff" stroke-width="10" paint-order="stroke">VEIO</text></g>`
+            : `<g pointer-events="none"><path d="M${W * 0.25},-80 H${W * 0.75}" stroke="#8a5a1c" stroke-width="10"/><text x="${W / 2}" y="-100" font-size="70" font-weight="700" font-family="Arial" fill="#8a5a1c" text-anchor="middle">VEIO ↔</text></g>`;
+  }
   if (defsP) g = `<defs>${defsP}</defs>` + g;
   // SOBRA: o que fica livre da chapa (as peças encostam no batente, em cima à direita): faixa da esquerda e o pedaço embaixo das peças
   if (!f.naoCoube && f.pos.length) {
