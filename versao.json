@@ -1,5 +1,5 @@
 {
- "tela": "2026-11-13.1",
+ "tela": "2026-11-13.2",
  "plugin": "2026-11-13.1",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,17 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-13.2",
+   "plugin": "2026-11-13.1",
+   "data": "13/11",
+   "titulo": "Plano de corte usa o mínimo do lado de 1850",
+   "itens": [
+    "Cada chapa agora fica com o arranjo que ocupa a MENOR faixa possível no lado de 1850: as peças sobem no comprimento (2750) antes de abrir para o lado, e a sobra fica uma tira inteira de 2750.",
+    "Vale no plano novo, no Refazer e no botão Organizar da chapa. Plano já salvo não muda sozinho.",
+    "Mesmas regras de sempre: veio não gira, folga, margem, batente em cima à direita e o mesmo número de chapas."
+   ]
+  },
   {
    "tela": "2026-11-13.1",
    "plugin": "2026-11-13.1",

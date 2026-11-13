@@ -416,7 +416,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-13.1';
+const VERSAO = '2026-11-13.2';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -1269,9 +1269,10 @@ function colunasDireita(f){
 // usa a arrumação em colunas quando ela deixa a sobra inteira tão boa quanto o encaixe pela forma (senão fica o encaixe, que aproveita melhor)
 function colunasSeMelhor(f){
   const antes = f.pos.map(pp => ({rot: pp.rot, esp: pp.esp, poly: pp.poly, x: pp.x, y: pp.y}));
-  const a0 = maiorSobraArea(f);
+  const a0 = maiorSobraArea(f), u0 = faixaX1850(f.pos);
   if (!colunasDireita(f)) return false;
-  if (maiorSobraArea(f) >= a0 * 0.97) return true;
+  const u1 = faixaX1850(f.pos);
+  if (u1 < u0 || (u1 === u0 && maiorSobraArea(f) >= a0 * 0.97)) return true;   // 1º a menor faixa no 1850; igual: a sobra inteira
   f.pos.forEach((pp, k) => Object.assign(pp, antes[k])); return false;
 }// peça dentro do furo (ou vazado) de outra: não é "peça em cima de peça"
 function noFuroDe(qa, ppB){ return livresDe(ppB.it.p).map(h => transfPeca(ppB)(h)).some(h => qa.every(pt => dentroPoly(pt[0], pt[1], h)) && !qa.some((pt, i) => h.some((u, j) => segCruza(pt, qa[(i + 1) % qa.length], u, h[(j + 1) % h.length])))) }
@@ -1317,6 +1318,28 @@ function encherFuros(f){
   }
   return mov;
 }
+// faixa ocupada no lado de 1850 (X da chapa em pé), em células do encaixe
+function faixaX1850(pos){
+  let x0 = Infinity, x1 = -Infinity;
+  pos.forEach(pp => polyFinal(pp).forEach(v => { if (v[0] < x0) x0 = v[0]; if (v[0] > x1) x1 = v[0] }));
+  return x1 > x0 ? Math.round((x1 - x0) / RES_ENC) : 0;
+}
+// procura a MENOR faixa no 1850 em que todas as peças cabem (mesmas regras de veio/giro, folga e margem): encaixa numa chapa
+// mais estreita e vai apertando. Cada arranjo que couber entra como candidato (avalia). Devolve quantas tentativas fez.
+function faixaMinima(itens, W, H, gap, marg, sobra, uxAtual, avalia){
+  const R = RES_ENC, area = itens.reduce((s, it) => s + Math.abs(areaPoly(polyPts(it.p))), 0);
+  let lo = Math.max(1, Math.floor(area / Math.max(1, H - 2 * marg) / R)), hi = uxAtual, tent = 0;   // em células
+  const modos = [['area', 'yx'], ['real', 'xy'], ['area', 'topo'], ['real', 'yx']];
+  let voltas = 0;
+  while (hi - lo > 1 && voltas++ < 8) {
+    const meio = Math.floor((lo + hi) / 2), Wf = Math.min(W, meio * R + 2 * marg);
+    let coube = null;
+    for (const [o, modo] of modos) { const r = encaixar(itens, Wf, H, gap, marg, o, modo, sobra); tent++;
+      if (r.chapas.length === 1 && !r.grandes.length) { coube = r; break } }
+    if (coube) { coube.faixa = true; avalia(coube); hi = Math.min(meio, faixaX1850(coube.chapas[0].pos)) } else lo = meio;
+  }
+  return tent;
+}
 function organizarCore(f){
   const gap = +cfg.oFolga || 0, marg = +cfg.oMargem || 0, [W, H] = dimF(f);
   CACHE_MASK = CACHE_MASK || new Map(); PLANO_FILHOS = PLANO_FILHOS || new Map();
@@ -1332,12 +1355,16 @@ function organizarCore(f){
   const avalia = r => { if (r.chapas.length !== 1 || r.grandes.length) return;
     const ch = r.chapas[0]; let mx = 0, my = 0;
     ch.pos.forEach(pp => { const tf = transfPeca(pp); tf(polyPts(pp.it.p)).forEach(([x, y]) => { mx = Math.max(mx, x); my = Math.max(my, y) }) });
-    const nota = -maiorLivre(ch.occ) * 1e6 + mx * my / 1e3;   // maior sobra inteira; empate: menor área ocupada
-    cands.push({pos: ch.pos, nota});
-    if (!melhor || nota < melhor.nota) melhor = {pos: ch.pos, nota} };
+    // Paulo (13/11): usar o MENOR tamanho de chapa possível no lado de 1850 (X) — a sobra fica uma tira inteira de 2750.
+    // 1º a menor faixa ocupada no X; empate: maior sobra inteira; depois menor área ocupada
+    const ux = faixaX1850(ch.pos), livreCh = r.faixa ? 0 : maiorLivre(ch.occ);
+    const nota = ux * 1e12 - livreCh * 1e6 + mx * my / 1e3;
+    cands.push({pos: ch.pos, nota, ux});
+    if (!melhor || nota < melhor.nota) melhor = {pos: ch.pos, nota, ux} };
   for (const o of Object.keys(ORDENS)) for (const modo of ['yx', 'xy', 'topo']) { avalia(encaixar(itens, W, H, gap, marg, o, modo, !!f.dim)); tent++ }
   for (let n = 1; n <= 24; n++) { avalia(encaixar(embaralhar(itens, n * 7919 + 13), W, H, gap, marg, 'nenhuma', ['yx', 'topo', 'xy'][n % 3], !!f.dim)); tent++ }
   avalia(encaixar(itens, W, H, gap, marg, 'real', 'chapa', !!f.dim));
+  if (melhor) tent += faixaMinima(itens, W, H, gap, marg, !!f.dim, melhor.ux, avalia);
   // não coube com as regras: cada peça também pode ficar no giro em que está agora (ex.: peça que você trouxe de outra chapa)
   if (!melhor) {
     const uniq = a => a.filter((o, i) => a.findIndex(q => q[0] === o[0] && q[1] === o[1]) === i);
@@ -1345,6 +1372,7 @@ function organizarCore(f){
     for (const o of Object.keys(ORDENS)) for (const modo of ['yx', 'xy', 'topo']) { avalia(encaixar(itens2, W, H, gap, marg, o, modo, !!f.dim)); tent++ }
     for (let n = 1; n <= 24; n++) { avalia(encaixar(embaralhar(itens2, n * 7919 + 13), W, H, gap, marg, 'nenhuma', ['yx', 'topo', 'xy'][n % 3], !!f.dim)); tent++ }
     avalia(encaixar(itens2, W, H, gap, marg, 'real', 'chapa', !!f.dim));
+    if (melhor) tent += faixaMinima(itens2, W, H, gap, marg, !!f.dim, melhor.ux, avalia);
   }
   // escolhe entre as melhores a que, encostada no batente (superior direito), deixa a maior sobra no canto do zero
   if (cands.length > 1) {
@@ -1354,8 +1382,9 @@ function organizarCore(f){
       const P0 = c.pos.map(polyFinal), q = P0.flat(), dx = Math.floor(W - marg - Math.max(...q.map(v => v[0]))), dy = Math.floor(H - marg - Math.max(...q.map(v => v[1])));
       const P1 = P0.map(pl => pl.map(([x, y]) => [x + dx, y + dy])), r2 = empurrarCD(P1);
       if (!r2.every(d => d)) return;
-      const n2 = -sobraNoZero(r2.occ) * 1e6 - maiorLivre(r2.occ);
-      if (melhor.n2 === undefined || n2 < melhor.n2) melhor = {pos: c.pos, nota: c.nota, n2} });
+      let x0 = Infinity, x1 = -Infinity; P1.forEach((pl, k) => pl.forEach(v => { const x = v[0] + r2[k][0]; if (x < x0) x0 = x; if (x > x1) x1 = x }));
+      const n2 = Math.round((x1 - x0) / RES_ENC) * 1e12 - sobraNoZero(r2.occ) * 1e6 - maiorLivre(r2.occ);
+      if (melhor.n2 === undefined || n2 < melhor.n2) melhor = {pos: c.pos, nota: c.nota, ux: c.ux, n2} });
     usarChapa(null);
   }
   usarChapa(null);
@@ -1707,7 +1736,7 @@ function organizarChapaPlano(fi){
     semProblema = !!g && P.every(q => q.every(([x, y]) => x > mg - 5.5 && y > mg - 5.5 && x < W0 - mg + 5.5 && y < H0 - mg + 5.5));
     for (let i = 0; semProblema && i < P.length; i++) for (let j = i + 1; j < P.length; j++) if (sobrepoe(P[i], P[j])) { semProblema = false; break } }
   if ($('cncMsg')) { $('cncMsg').className = r.ok || semProblema ? 'hint ok' : 'hint erro';
-    $('cncMsg').textContent = r.ok ? `🧲 Chapa ${nCh(fi)} organizada (${r.tent} arrumações testadas, ficou a de maior sobra inteira).`
+    $('cncMsg').textContent = r.ok ? `🧲 Chapa ${nCh(fi)} organizada (${r.tent} arrumações testadas, ficou a que usa menos do lado de 1850).`
       : semProblema ? `✔ Chapa ${nCh(fi)} ficou como você ajustou (está certa, sem peça encostando). O Organizar automático não acha outro jeito de caber todas, por isso não mexeu.`
       : `⚠ Chapa ${nCh(fi)}: não cabem todas as peças nesta chapa. Não coube: nº ${r.fora.map(p => p.n).join(', ') || '?'} — arraste para outra chapa ou gire (botão direito). Nada foi mudado.` }
 }
