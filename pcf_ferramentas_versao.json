@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.36",
+  "versao": "3.6.37",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "⚡ Painel de medidas e cotas mais leves: trocar a seleção de móvel/peça atualiza as medidas e os afastamentos (chão, teto, esquerda, direita) em ~0,1 s em vez de ~0,9 s em projeto grande, e o painel e as cotas usam a mesma medição (antes mediam duas vezes). Digitar largura, altura, elevação ou posição também não refaz mais a medição de afastamentos. Os números continuam exatamente os mesmos.",
     "🗄 Gavetas mais compactas: as configurações (folga, corrediça, caixa, espessuras, folgas da caixa e fundo) aparecem UMA vez só, no topo, e valem para todos os vãos. Cada vão mostra só o nº de gavetas, a largura, o recuo da frente (esq./dir./cima/baixo) e a tabela das gavetas. Mudar a folga reempilha as frentes sozinho. E o Aplicar funciona mesmo depois de clicar fora do móvel (antes dava 'Selecione o móvel' e não fazia nada).",
     "🗄 Gavetas: depois de editar as frentes na tabela (altura/Z de cada uma), os ajustes CIMA e BAIXO da frente voltaram a funcionar — Baixo aumenta/diminui a frente de baixo (ela desce/sobe), Cima aumenta/diminui a de cima. Antes gravavam o número mas a frente não mexia.",
     "🧮 Contas nos campos de medida do painel: digite 211+21, 600-18*2 ou (900-36)/3 e, ao dar Enter ou sair do campo, vira o resultado. Vale para soma, subtração, multiplicação (* ou x) e divisão. Os campos de nome e o 'Camadas' (ex.: 9+9) continuam como estão.",
