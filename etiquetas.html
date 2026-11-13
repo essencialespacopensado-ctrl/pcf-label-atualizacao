@@ -416,7 +416,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-13.2';
+const VERSAO = '2026-11-13.3';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -4361,6 +4361,17 @@ function gcBolsao(L, poly, pecaQ, zTopo, zFundo, fe, N){
   // anéis do centro da fresa
   const aneis = []; let atual = off(livre, -r), k = 0;
   while (atual.length && k < 400) { atual.forEach(pp => { if (Math.abs(C.Clipper.Area(pp)) > (S * 0.5) ** 2) aneis.push(pp.map(o => [o.X / S, o.Y / S])) }); atual = off(atual, -passo); k++ }
+  // RANHURA DA LARGURA DA FRESA (ex.: ranhura de 6 mm com a fresa de 6): não sobra anel para esvaziar — vai UMA passada pelo meio
+  // (Paulo 13/11: painel com 42 ranhuras de 6 mm saía sem corte, com o aviso "menor que a fresa"). Mais estreita que a fresa continua avisando.
+  if (!aneis.length) off(livre, -(r - 0.05)).forEach(pp => { const a = pp.map(o => [o.X / S, o.Y / S]); if (a.length < 2) return;
+    let bi = 0, bj = 0, bd = -1;
+    for (let i = 0; i < a.length; i++) for (let j = i + 1; j < a.length; j++) { const dd = (a[i][0] - a[j][0]) ** 2 + (a[i][1] - a[j][1]) ** 2; if (dd > bd) { bd = dd; bi = i; bj = j } }
+    if (bd < 1) return;   // menor que 1 mm: não é ranhura
+    const A = a[bi], B = a[bj], comp = Math.sqrt(bd), meio = a.slice(bi, bj + 1);
+    const reta = a.every(([x, y]) => Math.abs((B[0] - A[0]) * (A[1] - y) - (A[0] - x) * (B[1] - A[1])) / comp < 0.6);
+    // ponta da ranhura reta: a média dos pontos da ponta cai no MEIO da ranhura (a fresa passa centrada)
+    const ponta = pt => { const v = a.filter(([x, y]) => Math.hypot(x - pt[0], y - pt[1]) < 1.5); return [v.reduce((t, q) => t + q[0], 0) / v.length, v.reduce((t, q) => t + q[1], 0) / v.length] };
+    const m = reta ? [ponta(A), ponta(B)] : meio; m.aberto = true; aneis.push(m) });
   if (!aneis.length) return false;
   aneis.reverse();   // de dentro para fora
   const f4 = GC.f4, zs = zSegura(zTopo);
@@ -4369,7 +4380,7 @@ function gcBolsao(L, poly, pecaQ, zTopo, zFundo, fe, N){
     const z = zTopo - (zTopo - zFundo) * pz / N;
     let ultimo = null;
     aneis.forEach(a => {
-      const q = a.concat([a[0]]);
+      const q = a.aberto ? a : a.concat([a[0]]);
       const perto = ultimo && Math.hypot(q[0][0] - ultimo[0], q[0][1] - ultimo[1]) < passo * 1.6;
       if (!perto) { L.push(`G0   Z${f4(zs)}`, `G0 X${f4(q[0][0])} Y${f4(q[0][1])}`, `G0   Z${f4(Math.max(zA, GC.topoChapa != null ? GC.topoChapa : zA) + 5)}`, `G1   Z${f4(zA)} F${fe.p.toFixed(1)}`, `G1   Z${f4(z)}`) }
       else L.push(`G1 X${f4(q[0][0])} Y${f4(q[0][1])} Z${f4(z)}`);

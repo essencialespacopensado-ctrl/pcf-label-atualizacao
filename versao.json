@@ -1,5 +1,5 @@
 {
- "tela": "2026-11-13.2",
+ "tela": "2026-11-13.3",
  "plugin": "2026-11-13.1",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-13.3",
+   "plugin": "2026-11-13.1",
+   "data": "13/11",
+   "titulo": "Ranhura da largura da fresa agora é cortada",
+   "itens": [
+    "Ranhura ou rebaixo com a MESMA largura da fresa (ex.: ranhura de 6 mm com a T2 de 6 mm) agora sai no G-code: uma passada pelo meio da ranhura, na profundidade e nas passadas escolhidas. Antes não gerava corte e dava o aviso 'rebaixo menor que a fresa' (painel da Sala de Estar do Parque das Emas, 42 ranhuras).",
+    "Rebaixo mais largo que a fresa continua sendo esvaziado como antes. Ranhura mais estreita que a fresa continua dando o aviso."
+   ]
+  },
   {
    "tela": "2026-11-13.2",
    "plugin": "2026-11-13.1",
