@@ -1,5 +1,5 @@
 {
- "tela": "2026-11-10.2",
+ "tela": "2026-11-13.1",
  "plugin": "2026-11-10.2",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-13.1",
+   "plugin": "2026-11-10.2",
+   "data": "13/11",
+   "titulo": "Fresa padrão de corte não volta mais para T1",
+   "itens": [
+    "Abrir um plano salvo (de outro PC ou antigo) não troca mais a fresa padrão de corte, de peça grossa, de rebaixo e de melamina: vale sempre a que você escolher em ⚙ Ferramentas e usinagem. Antes, um plano antigo com T1 voltava a configuração de todos os PCs para T1.",
+    "Fresa só de um plano continua em ⚙ Só neste plano."
+   ]
+  },
   {
    "tela": "2026-11-10.2",
    "plugin": "2026-11-10.2",

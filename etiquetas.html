@@ -416,7 +416,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-10.2';
+const VERSAO = '2026-11-13.1';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -496,9 +496,11 @@ let proj = (() => { const pl = ls.get(KP, null), pa = AQ && AQ.proj;
   const arqMaisNovo = !!(D.planoArq && (D.forcarArq || (+D.planoArq.t || 0) > (+(kpl && kpl.t) || 0)));
   window.PLANO_ARQ_NOVO = arqMaisNovo;
   if (pa && (arqMaisNovo || !pl || (+pa._t || 0) > (+pl._t || 0))) return pa; return pl || {cliente:'', pecas:{}} })();
-// o plano veio mais novo de outro PC: ferramentas, passadas, pontes e regras do corte ficam EXATAMENTE como lá
+// o plano veio mais novo de outro PC: passadas, pontes e regras do corte ficam EXATAMENTE como lá.
+// A FRESA PADRÃO (corte, peça grossa, rebaixo, melamina) NÃO vem do plano: vale a da configuração geral (Paulo 13/11 —
+// um plano antigo com T1 trocava a fresa de todos os PCs). Fresa só de um plano = "⚙ Só neste plano".
 if (window.PLANO_ARQ_NOVO && AQ && AQ.cfg) {
-  ['tCorte','tReb','t25','tMel','transp','pqArea','p1','melFinal','melPass','melSobrep','mag','oFolga','oMargem','oSepCor','oRot','oRetalho','oPeqRet','veioTudo','oEspelhar','ponteOn','ponteQtd','ponteComp','ponteAlt','ponteMin','soPCF']
+  ['transp','pqArea','p1','melFinal','melPass','melSobrep','mag','oFolga','oMargem','oSepCor','oRot','oRetalho','oPeqRet','veioTudo','oEspelhar','ponteOn','ponteQtd','ponteComp','ponteAlt','ponteMin','soPCF']
     .forEach(k => { if (AQ.cfg[k] !== undefined && AQ.cfg[k] !== null) cfg[k] = JSON.parse(JSON.stringify(AQ.cfg[k])) });
 }
 // cliente / OS / ambiente vazios: pega da pasta do projeto (ex.: "- 18. Fabrício e Aline\\26.146 - ESCADA")
