@@ -1,12 +1,21 @@
 {
  "tela": "2026-11-13.1",
- "plugin": "2026-11-10.2",
+ "plugin": "2026-11-13.1",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-13.1",
+   "plugin": "2026-11-13.1",
+   "data": "13/11",
+   "titulo": "Ranhura sem face no fundo",
+   "itens": [
+    "Ranhura ou rebaixo desenhado só com as linhas do fundo (a face do fundo não foi criada) agora entra no plano. Antes só entravam as ranhuras que tinham a face do fundo (ex.: painel da Sala de Estar do Parque das Emas com 42 ranhuras saía com 1)."
+   ]
+  },
   {
    "tela": "2026-11-13.1",
    "plugin": "2026-11-10.2",

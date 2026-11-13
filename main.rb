@@ -307,6 +307,45 @@ module PCFLabel
           de_cima = (x[:n] % n) > 0                        # fundo olhando para cima = rebaixo aberto em cima
           { pts3: moldura.(x[:f], x[:pts]), prof: (de_cima ? dd : esp_mm - dd).round(2), lado: de_cima ? 1 : -1 }
         end
+        # FUNDO SEM FACE: ranhura/rebaixo desenhado só com as linhas do fundo (a face não foi criada).
+        # Paulo 13/11: painel com 42 ranhuras e só 1 tinha a face do fundo -> o plano saía com 1 ranhura.
+        # Acha os laços fechados de linhas ABERTAS (com 1 face só) no meio da espessura, sem face paralela encostada.
+        # Linha dividindo a lateral (2 faces) não entra.
+        begin
+          par_f = ->(fc) { nn = fc.normal.transform(t); nn.length > 0 && (nn.normalize % n).abs > 0.999 }
+          soltas = d.entities.grep(Sketchup::Edge).select do |ed|
+            da = dep.(ed.start.position.transform(t)).to_mm; db = dep.(ed.end.position.transform(t)).to_mm
+            ed.faces.size <= 1 && (da - db).abs < 0.05 && da < -0.3 && da > -(esp_mm - 0.3) && ed.faces.none? { |fc| par_f.(fc) }   # só linha de borda ABERTA (falta a face)
+          end
+          unless soltas.empty? || soltas.size > 4000
+            eh_solta = soltas.each_with_object({}) { |ed, hh| hh[ed] = true }
+            usadas = {}
+            soltas.each do |ed0|
+              next if usadas[ed0]
+              lp = [ed0.start]; eds = [ed0]; cur = ed0.end; usadas[ed0] = true; fechou = false
+              2000.times do
+                if cur == lp[0] then fechou = true; break end
+                lp << cur
+                prox = cur.edges.find { |x| !usadas[x] && eh_solta[x] }
+                break unless prox
+                usadas[prox] = true; eds << prox; cur = prox.other_vertex(cur)
+              end
+              next unless fechou && lp.size >= 3
+              da = dep.(lp[0].position.transform(t)).to_mm
+              # lado aberto: para onde vão as paredes da ranhura (a tampa da ponta atravessa a peça toda e não conta)
+              sobe = desce = 0
+              eds.flat_map(&:faces).uniq.each do |fc|
+                ds = fc.vertices.map { |vv| dep.(vv.position.transform(t)).to_mm }
+                sobe += 1 if ds.max > da + 0.1 && ds.min > da - 0.1
+                desce += 1 if ds.min < da - 0.1 && ds.max < da + 0.1
+              end
+              de_cima = sobe == desce ? da > -esp_mm / 2.0 : sobe > desce
+              rebs << { pts3: lp.map { |vv| vv.position.transform(t) }, prof: (de_cima ? -da : esp_mm + da).round(2), lado: de_cima ? 1 : -1 }
+            end
+          end
+        rescue StandardError
+          nil
+        end
         # usinagens da fresa do Dinabox (orgânico, ranhuras): contorno por fora, furos e rebaixos por dentro
         pl_cont = nil; pl_furos = []; pl_rebs = []; pl_linhas = []
         pl_pontes = {} # trechos do corte de dentro com pontes (PCF Ferramentas): juntam de volta num furo só
@@ -1885,7 +1924,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-11-10.2'
+  PLUGIN_VERSAO = '2026-11-13.1'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
