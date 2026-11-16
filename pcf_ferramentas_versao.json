@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.41",
+  "versao": "3.6.42",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🧩 Peça Mãe em grade: frentes em colunas e fileiras (ex.: 2 colunas × 2 fileiras de um balcão) agora viram uma peça mãe na mesma arrumação do móvel — colunas lado a lado, frentes empilhadas em cada coluna, com a fresa entre elas nos dois sentidos. Antes saíam todas numa fila só. Fila só lado a lado ou só empilhada continua igual.",
     "⇕ Igualar alturas (frentes marcadas / todas as gavetas do gaveteiro): agora conta as folgas. O que se divide é o espaço entre as duas extremidades menos a folga entre cada frente, e cada frente vai para o lugar certo com a folga. Antes fazia só a média das alturas e as frentes ficavam uma em cima da outra.",
     "⇕ Igualar frentes (gavetas do mesmo gaveteiro): as duas extremidades ficam onde estão — o baixo da 1ª frente e o topo da última — e só o meio é dividido por igual. Antes ele voltava para a altura padrão do Dinabox e a frente que você tinha aumentado encolhia.",
     "📏 Painel Auto — medida maior que a chapa: digitar comprimento acima de 2740 ou largura acima de 1850 fazia o Dinabox mostrar o número digitado (ex.: 3000) enquanto a chapa desenhada ficava 2740. Agora o Dinabox mostra sempre a mesma medida da chapa e aparece um aviso de que passou do máximo.",
