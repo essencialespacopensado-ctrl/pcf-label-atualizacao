@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.43",
+  "versao": "3.6.44",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🧩 Peça Mãe: as marcações/cortes entre as frentes e o contorno agora aparecem na peça. Em projeto cujo tamponamento de molde tem o painel em pé (espessura no eixo X), as linhas ficavam esmagadas na espessura: não aparecia marcação nenhuma e o plano de corte lia a peça errada.",
     "🧩 Peça Mãe com os dados certos no Dinabox: quando o material das frentes vinha por fórmula do móvel, a peça mãe saía no relatório com medida, fita e material errados (ex.: 2668 × 320 em vez de 706 × 862). Agora ela sai com a medida real, sem fita e com o material das frentes.",
     "🧩 Peça Mãe em grade: frentes em colunas e fileiras (ex.: 2 colunas × 2 fileiras de um balcão) agora viram uma peça mãe na mesma arrumação do móvel — colunas lado a lado, frentes empilhadas em cada coluna, com a fresa entre elas nos dois sentidos. Antes saíam todas numa fila só. Fila só lado a lado ou só empilhada continua igual.",
     "⇕ Igualar alturas (frentes marcadas / todas as gavetas do gaveteiro): agora conta as folgas. O que se divide é o espaço entre as duas extremidades menos a folga entre cada frente, e cada frente vai para o lugar certo com a folga. Antes fazia só a média das alturas e as frentes ficavam uma em cima da outra.",
