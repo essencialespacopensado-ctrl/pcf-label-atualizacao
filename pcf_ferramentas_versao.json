@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.42",
+  "versao": "3.6.43",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🧩 Peça Mãe com os dados certos no Dinabox: quando o material das frentes vinha por fórmula do móvel, a peça mãe saía no relatório com medida, fita e material errados (ex.: 2668 × 320 em vez de 706 × 862). Agora ela sai com a medida real, sem fita e com o material das frentes.",
     "🧩 Peça Mãe em grade: frentes em colunas e fileiras (ex.: 2 colunas × 2 fileiras de um balcão) agora viram uma peça mãe na mesma arrumação do móvel — colunas lado a lado, frentes empilhadas em cada coluna, com a fresa entre elas nos dois sentidos. Antes saíam todas numa fila só. Fila só lado a lado ou só empilhada continua igual.",
     "⇕ Igualar alturas (frentes marcadas / todas as gavetas do gaveteiro): agora conta as folgas. O que se divide é o espaço entre as duas extremidades menos a folga entre cada frente, e cada frente vai para o lugar certo com a folga. Antes fazia só a média das alturas e as frentes ficavam uma em cima da outra.",
     "⇕ Igualar frentes (gavetas do mesmo gaveteiro): as duas extremidades ficam onde estão — o baixo da 1ª frente e o topo da última — e só o meio é dividido por igual. Antes ele voltava para a altura padrão do Dinabox e a frente que você tinha aumentado encolhia.",
