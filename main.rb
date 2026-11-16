@@ -265,6 +265,20 @@ module PCFLabel
           next
         end
         fi = info.select { |x| (x[:n] % nesp).abs > 0.999 }.max_by { |x| x[:area] }
+        # a face de referência tem que ser uma das duas de FORA da chapa. Fundo de rebaixo de borda (moldura) tem o mesmo contorno
+        # da peça e empatava com a face de fora: a peça era lida a partir do fundo do rebaixo (miolo virava furo e o canal sumia)
+        begin
+          par0 = info.select { |x| (x[:n] % nesp).abs > 0.999 }
+          dn0 = ->(x) { q = x[:pts][0]; q.x * nesp.x + q.y * nesp.y + q.z * nesp.z }
+          lo0, hi0 = par0.map { |x| dn0.(x) }.minmax
+          de_fora = ->(x) { (dn0.(x) - lo0).abs < 0.3.mm || (dn0.(x) - hi0).abs < 0.3.mm }
+          unless de_fora.(fi)
+            fora0 = par0.select { |x| de_fora.(x) }
+            fi = fora0.max_by { |x| x[:area] } unless fora0.empty?
+          end
+        rescue StandardError
+          nil
+        end
         n = fi[:n]; pts3 = fi[:pts]; f = fi[:f]
         # orientação como no projeto: vertical = altura do projeto; deitada = eixo X do modelo
         z = Geom::Vector3d.new(0, 0, 1)
@@ -879,6 +893,9 @@ module PCFLabel
         end
         # peça do Dinabox: o número NUNCA fica dentro dela (o Dinabox lê tudo que está dentro como usinagem e dá erro)
         dentro_db = c[0].any? { |x| dinabox?(x, x.definition) }
+        # número antigo que ficou DENTRO da peça (ex.: peça copiada: o número velho vem junto com outra referência): sai antes de pôr o novo
+        velhos = e.definition.entities.select { |x| (x.is_a?(Sketchup::Group) || x.is_a?(Sketchup::ComponentInstance)) && x.name == 'PCF Nome' }
+        e.definition.entities.erase_entities(velhos) unless velhos.empty?
         if e.definition.count_instances == 1 && !dentro_db
           texto3d(e.definition.entities, e, c[1], nome, tag, mt, ref, pc)
         else
@@ -1321,7 +1338,7 @@ module PCFLabel
     ids = []
     unless pth.empty?
       base = File.basename(pth, '.*') + '.pcfplano'
-      Dir.children(File.dirname(pth)).each { |n| next unless n.start_with?(base) && n.end_with?('.json'); meio = n[base.size...-5]; ids << (meio.empty? ? 'principal' : meio.sub(/^\./, '')) }
+      (Dir.children(File.dirname(pth)) rescue []).each { |n| next unless n.start_with?(base) && n.end_with?('.json'); meio = n[base.size...-5]; ids << (meio.empty? ? 'principal' : meio.sub(/^\./, '')) }
     end
     pd = pasta_planos
     Dir.children(pd).each { |n| next unless n.start_with?(nome_plano) && n.end_with?('.json'); meio = n[nome_plano.size...-5]; ids << (meio.empty? ? 'principal' : meio.sub(/^\./, '')) if meio.empty? || meio.start_with?('.') } rescue nil
@@ -1422,7 +1439,7 @@ module PCFLabel
     unless pth.empty?
       base = File.basename(pth, '.*') + '.pcfplano'
       re2 = /\A#{Regexp.escape(base)}(\.[\w\-]+)?\.json\z/
-      arqs += Dir.children(File.dirname(pth)).select { |n| n =~ re2 }.map { |n| File.join(File.dirname(pth), n) }
+      arqs += (Dir.children(File.dirname(pth)) rescue []).select { |n| n =~ re2 }.map { |n| File.join(File.dirname(pth), n) }
     end
     (listar_planos.each { |x| nuvem_enfileirar(nome_plano, x[:id], nil, nil, nil, { 'excluido' => true }) } rescue nil)
     arqs.each_with_index do |f, i|
@@ -1924,7 +1941,7 @@ module PCFLabel
   end
 
   # ---- atualização automática: arquivos novos na pasta do Dropbox "PCF Label\atualizacao" ----
-  PLUGIN_VERSAO = '2026-11-13.1'
+  PLUGIN_VERSAO = '2026-11-16.1'
   BARRA = 'PCF'   # uma barra só: ferramentas + PCF Label
   # ícone do botão: icones/<nome>.svg (vem pela atualização); sem ele, o .png antigo
   def self.por_icone(cmd, nome, png_antigo)
@@ -1956,7 +1973,23 @@ module PCFLabel
     fim.call(nil) rescue nil
   end
   # pega o nº da última publicação (commit) para baixar a versão exata, sem esperar o cache de 5 min do GitHub
+  # sem a chave da nuvem: pergunta o último commit pela lista de commits do site (commits/main.atom), que não tem o limite
+  # de 60 consultas/hora nem o cache de 5 min — a atualização aparece em ~1 min. Se falhar, vale o jeito antigo (abaixo).
   def self.ultimo_commit(&fim)
+    return fim.call(nil) unless defined?(Sketchup::Http::Request)
+    k0 = Sketchup.read_default('PCF_Ferramentas', 'nuvem_chave', '').to_s.strip
+    return ultimo_commit_api(&fim) unless k0.empty?
+    req = Sketchup::Http::Request.new("https://github.com/essencialespacopensado-ctrl/pcf-label-atualizacao/commits/main.atom?t=#{Time.now.to_i}", Sketchup::Http::GET)
+    req.headers = { 'Accept' => 'application/atom+xml', 'User-Agent' => 'PCF-Label' }
+    req.start do |_r, res|
+      sha = (res && res.status_code.to_i == 200) ? res.body.to_s[/Commit\/([0-9a-f]{40})/, 1] : nil
+      if sha then (fim.call(sha) rescue nil) else (ultimo_commit_api(&fim) rescue (fim.call(nil) rescue nil)) end
+    end
+    (@reqs ||= []) << req; @reqs.shift while @reqs.size > 10
+  rescue
+    ultimo_commit_api(&fim) rescue (fim.call(nil) rescue nil)
+  end
+  def self.ultimo_commit_api(&fim)
     return fim.call(nil) unless defined?(Sketchup::Http::Request)
     k0 = Sketchup.read_default('PCF_Ferramentas', 'nuvem_chave', '').to_s.strip
     # sem chave o GitHub dá só 60 consultas/hora para TODOS os PCs da mesma internet: cada PC pergunta no máx. a cada 15 min
