@@ -416,7 +416,7 @@ td.fita input{width:auto;margin:0}
 </script>
 <script>
 const D = __DADOS__;
-const VERSAO = '2026-11-13.3';
+const VERSAO = '2026-11-16.1';
 const $ = id => document.getElementById(id);
 const ls = {
   get(k, d){ try{ const v = localStorage.getItem(k); return v ? JSON.parse(v) : d }catch(e){ return d } },
@@ -736,7 +736,7 @@ function materiais(){
   });
   const perda = 1 + (Number(cfg.fitaPerda) || 0) / 100;
   return {
-    chapas: Object.values(ch).map(o => { const fp = PLANO && PLANO.folhas ? PLANO.folhas.filter(f => f.cor === o.cor) : null;
+    chapas: Object.values(ch).map(o => { const fp = PLANO && PLANO.folhas ? PLANO.folhas.filter(f => f.cor === o.cor && f.pos.length) : null;
       const nf = fp && fp.length ? fp.length : o.folhas.size;
       const areaCh = fp && fp.length ? fp.reduce((s2, f) => s2 + dimF(f)[0] * dimF(f)[1] / 1e6, 0) : o.folhas.size * chapaDe(o.cor)[0] * chapaDe(o.cor)[1] / 1e6;
       if (D.origem === 'sketchup' && !(fp && fp.length)) return {...o, nf: 0, aprov: null};
@@ -1014,13 +1014,13 @@ function organizarFolha(nome){
 }
 // ---- mesmas ferramentas na prévia do encaixe (plano vindo do otimizador / SketchUp) ----
 let HISTP = [], REDOP = [];
-const fotoP = () => JSON.stringify(PLANO.folhas.map(f => ({cor: f.cor, naoCoube: f.naoCoube, dim: f.dim, trava: f.trava || undefined, pos: f.pos.map(pp => { const p = pp.it.p;
+const fotoP = () => JSON.stringify(PLANO.folhas.map(f => ({cor: f.cor, naoCoube: f.naoCoube, dim: f.dim, trava: f.trava || undefined, nova: f.nova || undefined, espN: f.nova ? f.espN : undefined, pos: f.pos.map(pp => { const p = pp.it.p;
   return {id: p.id, sig: [Math.round(Math.max(p.w, p.h)), Math.round(Math.min(p.w, p.h)), Math.round(Math.abs(areaPoly(polyPts(p))) / 1000)].join('x'), x: pp.x, y: pp.y, rot: pp.rot || 0, esp: !!pp.esp, fv: !!pp.fv, m: !!pp.manual, mx: !!pp.mexida, n: p.n} })})));
 function marcarP(){ if (!PLANO) return; HISTP.push(fotoP()); if (HISTP.length > 200) HISTP.shift(); REDOP = []; ULTIMO = 'plano' }
 function voltarFotoP(txt){
   let voltouP = false;
   const its = new Map(); D.pecas.forEach(p => its.set(p.id, {p})); PLANO.folhas.forEach(f => f.pos.forEach(pp => its.set(pp.it.p.id, pp.it)));
-  PLANO.folhas = JSON.parse(txt).map(f => ({cor: f.cor, naoCoube: f.naoCoube, dim: f.dim, trava: f.trava, pos: f.pos.filter(o => its.has(o.id)).map(o => { const it = its.get(o.id), p = it.p;
+  PLANO.folhas = JSON.parse(txt).map(f => ({cor: f.cor, naoCoube: f.naoCoube, dim: f.dim, trava: f.trava, nova: f.nova, espN: f.espN, pos: f.pos.filter(o => its.has(o.id)).map(o => { const it = its.get(o.id), p = it.p;
     if (!p.on && !p.dentro) { p.on = true; voltouP = true }
     return {it, x: o.x, y: o.y, rot: o.rot, esp: o.esp, fv: !!o.fv, manual: !!o.m, mexida: !!o.mx, poly: orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, o.rot, o.esp)} })}));
   if (voltouP) { salvar(); renderTabela() }
@@ -1114,7 +1114,7 @@ function girarParaCaber(fi){
       res.push(feito ? `nº ${p.n} → ${feito}${pp2 && pp2.rot % 180 && temVeio(p) ? ' (girou contra o veio)' : ''}` : `nº ${p.n} não cabe nem girando (${fmt(Math.max(p.w, p.h))} × ${fmt(Math.min(p.w, p.h))} mm)`);
     });
   });
-  PLANO.folhas = PLANO.folhas.filter(f => f.pos.length);
+  PLANO.folhas = semVazias(PLANO.folhas);
   depoisDeMover(true);
   if ($('cncMsg')) { const ruim = res.some(t => t.includes('não cabe')); $('cncMsg').className = ruim ? 'hint erro' : 'hint ok'; $('cncMsg').textContent = '↻ ' + res.join(' · ') }
 }
@@ -1682,7 +1682,7 @@ function atualizarPlanoCores(){
       const mg0 = +cfg.oMargem || 0;
       r.grandes.forEach(({p}) => PLANO.folhas.push({cor, naoCoube: true, pos: [{it: {p}, x: mg0, y: mg0, rot: 0, esp: false, poly: orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, 0, false)}]})) }
   });
-  PLANO.folhas = PLANO.folhas.filter(f => f.pos.length);
+  PLANO.folhas = semVazias(PLANO.folhas);
   if (PLANO.folhas.some(f => f.naoCoube)) girarGrandesAuto();
   novas.forEach(f => organizarCore(f));
   if (!trocadas && !movidas.length) return null;
@@ -2301,8 +2301,9 @@ $('btnLista').onclick = () => {
 };
 $('btnCorte').onclick = () => {
   if (PLANO && PLANO.folhas && PLANO.folhas.length) {
-    const tot = PLANO.folhas.length;
+    const tot = nChapasCheias();
     const html = PLANO.folhas.map((f, i) => {
+      if (!f.pos.length) return '';
       const ps = f.pos.map(pp => pp.it.p).sort((a, b) => a.n - b.n);
       const svg = svgPlano(f, i).replace(/<button[\s\S]*?<\/button>/g, '').replace(/^<div class="folha[^"]*"/, '<div class="folhaInt"');
       const vz = x => !x || x === '—' || x === '-';
@@ -2786,7 +2787,7 @@ async function preencherVaos(limMs, doadoras){
       }
       if (mudou) break;
     }
-    PLANO.folhas = PLANO.folhas.filter(f => f.pos.length);
+    PLANO.folhas = semVazias(PLANO.folhas);
     await pausa();
   }
   return mov;
@@ -2796,7 +2797,7 @@ async function reempacotar(limMs){
   const gap = +cfg.oFolga || 0, marg = +cfg.oMargem || 0, t0 = performance.now();
   const areaP = pp => Math.abs(areaPoly(polyPts(pp.it.p)));
   const usado = f => f.pos.reduce((s, pp) => s + areaP(pp), 0);
-  const livre = f => !f.naoCoube && !f.dim && !f.trava && !f.pos.some(ajustada);
+  const livre = f => !f.naoCoube && !f.dim && !f.trava && !f.pos.some(ajustada) && f.pos.length;
   const chave = f => chaveChapa(f);
   const combos = (arr, k) => { const out = []; const rec = (i, a) => { if (a.length === k) { out.push(a.slice()); return } for (let j = i; j < arr.length; j++) { a.push(arr[j]); rec(j + 1, a); a.pop() } }; rec(0, []); return out };
   let ganhos = 0, melhorou = true;
@@ -2843,7 +2844,7 @@ function consolidarChapas(){
   const gap = +cfg.oFolga || 0, marg = +cfg.oMargem || 0;
   const areaP = pp => Math.abs(areaPoly(polyPts(pp.it.p)));
   const usado = f => f.pos.reduce((s, pp) => s + areaP(pp), 0);
-  const livre = f => !f.naoCoube && !f.dim && !f.trava && !f.pos.some(ajustada);
+  const livre = f => !f.naoCoube && !f.dim && !f.trava && !f.pos.some(ajustada) && f.pos.length;
   const chave = f => chaveChapa(f);
   let mov = 0;
   // 1) juntar chapas
@@ -2881,7 +2882,7 @@ function consolidarChapas(){
       }
     });
   });
-  PLANO.folhas = PLANO.folhas.filter(f => f.pos.length);
+  PLANO.folhas = semVazias(PLANO.folhas);
   return mov;
 }
 async function otimizar(segundosExtra){
@@ -2996,6 +2997,7 @@ async function otimizar(segundosExtra){
   await preencherVaos(6000);   // de novo, depois de reorganizar
   PLANO.folhas.forEach(f => { if (f.trava) return; try { batenteCanto(f) } catch (e) {} });   // no fim: tudo encostado em cima à direita
   PLANO.consolidou = movidas ? {pecas: movidas, chapas: nAntes - PLANO.folhas.length} : null;
+  if (ANT && ANT.folhas) PLANO.folhas.push(...ANT.folhas.filter(chapaVazia));
   HISTP = []; REDOP = [];
   renderPlano(); salvarPlanoLocal();
 }
@@ -3050,7 +3052,11 @@ function corReal(p){
   return c.slice(0, m.index).trimEnd() + ' ' + String(Math.round(e * 10) / 10) + 'mm';
 }
 // cor + espessura + tamanho da chapa: só junta / troca peças entre chapas com a MESMA chave
-const espChapa = f => { const es = [...new Set((f.pos || []).map(pp => Math.round((+pp.it.p.esp || 0) * 10) / 10))]; return es.length === 1 ? es[0] : es.sort().join('/') };
+// ➕ Nova chapa: chapa vazia criada à mão (f.nova) — não some sozinha, fica no fim do plano e não entra em G-code / listas enquanto estiver vazia
+function chapaVazia(f){ return !!f && !!f.nova && !f.pos.length }
+function semVazias(fs){ return fs.filter(f => f.pos.length).concat(fs.filter(chapaVazia)) }
+function nChapasCheias(){ return PLANO ? PLANO.folhas.filter(f => f.pos.length).length : 0 }
+const espChapa = f => { if (chapaVazia(f) && f.espN != null) return f.espN; const es = [...new Set((f.pos || []).map(pp => Math.round((+pp.it.p.esp || 0) * 10) / 10))]; return es.length === 1 ? es[0] : es.sort().join('/') };
 const chaveChapa = f => (f.cor || '') + '|' + espChapa(f) + '|' + dimF(f).join('x') + (f.dim ? '|sobra' : '') + (!juntaFV() && ladoFolha(f) === 'verso' ? '|verso' : '');
 const mesmaChapa = (a, b) => !!a && !!b && a.cor === b.cor && espChapa(a) === espChapa(b) && dimF(a).join() === dimF(b).join() && (juntaFV() || (ladoFolha(a) === 'verso') === (ladoFolha(b) === 'verso'));
 const veioGirado = (f, pp) => !f.dim && !cfg.oRetalho && temVeio(pp.it.p) && ((pp.rot || 0) % 180 !== 0);
@@ -3117,6 +3123,7 @@ function svgPlano(f, idx){
     g += vh ? `<g pointer-events="none"><path d="M${xa},${H * 0.75} V${H * 0.25} M${xa - 30},${H * 0.25 + 50} L${xa},${H * 0.25} L${xa + 30},${H * 0.25 + 50} M${xa - 30},${H * 0.75 - 50} L${xa},${H * 0.75} L${xa + 30},${H * 0.75 - 50}" stroke="#8a5a1c" stroke-width="10" fill="none"/><text x="${xa + 20}" y="${H / 2}" font-size="70" font-weight="700" font-family="Arial" fill="#8a5a1c" text-anchor="middle" transform="rotate(90 ${xa + 20} ${H / 2})" stroke="#fff" stroke-width="10" paint-order="stroke">VEIO</text></g>`
             : `<g pointer-events="none"><path d="M${W * 0.25},-80 H${W * 0.75}" stroke="#8a5a1c" stroke-width="10"/><text x="${W / 2}" y="-100" font-size="70" font-weight="700" font-family="Arial" fill="#8a5a1c" text-anchor="middle">VEIO ↔</text></g>`;
   }
+  if (chapaVazia(f)) g += `<text x="${W / 2}" y="${H / 2}" font-size="110" font-weight="700" text-anchor="middle" font-family="Arial" fill="${TEC ? '#7fffd4' : '#1d7a46'}" pointer-events="none">CHAPA VAZIA</text><text x="${W / 2}" y="${H / 2 + 130}" font-size="80" text-anchor="middle" font-family="Arial" fill="${TEC ? '#cfe3ff' : '#555'}" pointer-events="none">arraste peças para cá</text>`;
   if (defsP) g = `<defs>${defsP}</defs>` + g;
   // SOBRA: o que fica livre da chapa (as peças encostam no batente, em cima à direita): faixa da esquerda e o pedaço embaixo das peças
   if (!f.naoCoube && f.pos.length) {
@@ -3159,7 +3166,7 @@ function svgPlano(f, idx){
   }
   const area = f.pos.reduce((s, {it}) => s + Math.abs(areaPoly(polyPts(it.p))) - aberturas(it.p).reduce((a, h) => a + Math.abs(areaPoly(h)), 0), 0) / (W * H) * 100;
   usarChapa(null);
-  return `<div class="folha${TEC ? ' tec' : ''}" data-folha="${idx}"><h3><span><button class="btnCheia" data-cheia="${idx}" title="Ver esta chapa em tela cheia (Esc fecha)">⛶ Tela cheia</button>${f.retalho ? '<b style="background:#1f5fbf;color:#fff;padding:1px 8px;border-radius:4px;margin-right:6px">♻ CORTAR DE RETALHO</b>' : ''}${f.naoCoube ? `<button class="girarCaber" data-f="${idx}" style="background:#c8102e;color:#fff;border-color:#c8102e;margin:0 6px 4px 0;padding:4px 10px">↻ Girar para caber</button>` : ''}${f.naoCoube && f.pos.some(pp => ruins.has(pp)) ? '<b style="color:#c8102e">NÃO COUBE · </b>' : ''}${miniFoto(f.cor, 34)}${f.pos.some(pp => veioGirado(f, pp)) ? `<b style="background:#c8102e;color:#fff;padding:1px 6px;border-radius:4px;margin-right:4px" title="Peça maior que a chapa no sentido do veio: foi girada contra o veio">⚠ VEIO GIRADO: nº ${f.pos.filter(pp => veioGirado(f, pp)).map(pp => pp.it.p.n).join(', ')}</b>` : ''}Chapa ${nCh(idx)} · ${esc(f.cor)} · <b>${fmt(Math.max(W, H))} × ${fmt(Math.min(W, H))} mm</b>${f.dim ? ` · <b style="color:#8a5a00">SOBRA ${Math.max(W, H)} × ${Math.min(W, H)}</b>` : (cfg.lamina && cfg.lamina[f.cor] ? ` · lâmina natural ${Math.max(W, H)} × ${Math.min(W, H)}` : '')}${f.dim ? ' · <b>sobra: gira e espelha à vontade</b>' : f.pos.some(pp => temVeio(pp.it.p)) ? (cfg.oRetalho ? ' · <b style="color:#c8102e">com veio, mas retalho: gira</b>' : (f.pos.some(pp => veioGirado(f, pp)) ? ' · <b>com veio ↕ — só as marcadas em vermelho foram giradas (não cabiam)</b>' : ' · <b>com veio ↕ (não gira 90°)</b>')) : ''} · ${f.pos.length} peças · aprov. ${TEC ? `<span class="aprov"><i style="width:${Math.min(100, Math.round(area))}%"></i></span>` : ''}${Math.round(area)}%${txtLado(f) ? `<br><b style="display:inline-block;margin-top:3px;padding:1px 6px;border-radius:4px;background:${ladoFolha(f) === 'verso' ? '#c8102e' : '#1d7a46'};color:#fff">${txtLado(f)}</b>` : ''}</span><button class="org batP" data-f="${idx}" title="Encosta as peças no batente (canto superior direito) do jeito que você arrumou — só aproxima, não troca a ordem — e trava a chapa para nada mais mudar de lugar">📌 Encostar e fixar</button><button class="org orgP" data-f="${idx}" title="Encosta as peças no canto superior direito com folga ${cfg.oFolga} mm e margem ${cfg.oMargem} mm">🧲 Organizar chapa</button>${f.naoCoube ? '' : `<button class="org travP" data-f="${idx}" title="Travada: nenhuma peça entra nem sai desta chapa (otimizar, juntar chapas e arrastar não mexem nela). Dentro dela você ainda pode pedir outra arrumação." style="${f.trava ? 'background:#1f5fbf;color:#fff;border-color:#1f5fbf' : ''}">${f.trava ? '🔒 Travada' : '🔓 Travar'}</button><button class="org outraP" data-f="${idx}" title="Troca a arrumação desta chapa pelas mesmas peças (cada clique, uma opção diferente)">🔄 Outra arrumação</button>`}</h3>
+  return `<div class="folha${TEC ? ' tec' : ''}" data-folha="${idx}"><h3><span><button class="btnCheia" data-cheia="${idx}" title="Ver esta chapa em tela cheia (Esc fecha)">⛶ Tela cheia</button>${f.retalho ? '<b style="background:#1f5fbf;color:#fff;padding:1px 8px;border-radius:4px;margin-right:6px">♻ CORTAR DE RETALHO</b>' : ''}${f.naoCoube ? `<button class="girarCaber" data-f="${idx}" style="background:#c8102e;color:#fff;border-color:#c8102e;margin:0 6px 4px 0;padding:4px 10px">↻ Girar para caber</button>` : ''}${f.naoCoube && f.pos.some(pp => ruins.has(pp)) ? '<b style="color:#c8102e">NÃO COUBE · </b>' : ''}${chapaVazia(f) ? '<b style="background:#1d7a46;color:#fff;padding:1px 8px;border-radius:4px;margin-right:6px">➕ CHAPA NOVA (vazia)</b>' : ''}${miniFoto(f.cor, 34)}${f.pos.some(pp => veioGirado(f, pp)) ? `<b style="background:#c8102e;color:#fff;padding:1px 6px;border-radius:4px;margin-right:4px" title="Peça maior que a chapa no sentido do veio: foi girada contra o veio">⚠ VEIO GIRADO: nº ${f.pos.filter(pp => veioGirado(f, pp)).map(pp => pp.it.p.n).join(', ')}</b>` : ''}Chapa ${nCh(idx)} · ${esc(f.cor)} · <b>${fmt(Math.max(W, H))} × ${fmt(Math.min(W, H))} mm</b>${f.dim ? ` · <b style="color:#8a5a00">SOBRA ${Math.max(W, H)} × ${Math.min(W, H)}</b>` : (cfg.lamina && cfg.lamina[f.cor] ? ` · lâmina natural ${Math.max(W, H)} × ${Math.min(W, H)}` : '')}${f.dim ? ' · <b>sobra: gira e espelha à vontade</b>' : f.pos.some(pp => temVeio(pp.it.p)) ? (cfg.oRetalho ? ' · <b style="color:#c8102e">com veio, mas retalho: gira</b>' : (f.pos.some(pp => veioGirado(f, pp)) ? ' · <b>com veio ↕ — só as marcadas em vermelho foram giradas (não cabiam)</b>' : ' · <b>com veio ↕ (não gira 90°)</b>')) : ''} · ${f.pos.length} peças · aprov. ${TEC ? `<span class="aprov"><i style="width:${Math.min(100, Math.round(area))}%"></i></span>` : ''}${Math.round(area)}%${txtLado(f) ? `<br><b style="display:inline-block;margin-top:3px;padding:1px 6px;border-radius:4px;background:${ladoFolha(f) === 'verso' ? '#c8102e' : '#1d7a46'};color:#fff">${txtLado(f)}</b>` : ''}</span>${chapaVazia(f) ? `<button class="org remVazia" data-f="${idx}" title="Tira esta chapa vazia do plano" style="color:#c8102e;border-color:#c8102e">✕ Remover chapa</button>` : `<button class="org batP" data-f="${idx}" title="Encosta as peças no batente (canto superior direito) do jeito que você arrumou — só aproxima, não troca a ordem — e trava a chapa para nada mais mudar de lugar">📌 Encostar e fixar</button><button class="org orgP" data-f="${idx}" title="Encosta as peças no canto superior direito com folga ${cfg.oFolga} mm e margem ${cfg.oMargem} mm">🧲 Organizar chapa</button>${f.naoCoube ? '' : `<button class="org travP" data-f="${idx}" title="Travada: nenhuma peça entra nem sai desta chapa (otimizar, juntar chapas e arrastar não mexem nela). Dentro dela você ainda pode pedir outra arrumação." style="${f.trava ? 'background:#1f5fbf;color:#fff;border-color:#1f5fbf' : ''}">${f.trava ? '🔒 Travada' : '🔓 Travar'}</button><button class="org outraP" data-f="${idx}" title="Troca a arrumação desta chapa pelas mesmas peças (cada clique, uma opção diferente)">🔄 Outra arrumação</button>`}`}</h3>
     ${TEC ? svgTecFundo(W, H, idx, defs, MONO) : `<svg viewBox="${-m} ${-m} ${W + 2*m} ${H + 2*m}">${defs}<defs>${hachDefs(idx)}</defs><g pointer-events="none"><circle cx="0" cy="${H}" r="28" fill="#c8102e"/><text x="40" y="${H + 120}" font-size="80" font-weight="700" font-family="Arial" fill="#c8102e">0,0 máquina</text></g><text x="${W / 2}" y="${-40}" font-size="120" font-weight="700" text-anchor="middle" font-family="Arial" fill="#222">${fmt(W)} mm</text><text x="${-40}" y="${H / 2}" font-size="120" font-weight="700" text-anchor="middle" font-family="Arial" fill="#222" transform="rotate(-90 ${-40} ${H / 2})">${fmt(H)} mm</text><rect x="0" y="0" width="${W}" height="${H}" fill="#fff" stroke="#888" stroke-width="5"/>`}${g}</svg>${legendaHach(usados)}</div>`;
 }
 // fundo técnico: chapa escura com grade milimetrada, cotas com setas, zero da máquina e batente
@@ -3274,8 +3281,52 @@ function ligarArraste(){
     });
   });
 }
+// ➕ Nova chapa: materiais (cor + espessura) que já estão no plano — peça só troca entre chapas do mesmo material
+function opcoesNovaChapa(){
+  const ops = [], vis = new Set();
+  if (PLANO) PLANO.folhas.forEach(f => { if (f.dim) return; const e = espChapa(f); if (typeof e !== 'number') return;
+    const k = f.cor + '|' + e; if (vis.has(k)) return; vis.add(k); ops.push({cor: f.cor, esp: e}) });
+  return ops;
+}
+function criarChapaVazia(op){
+  marcarP();
+  const f = {cor: op.cor, pos: [], nova: true, espN: op.esp};
+  PLANO.folhas.push(f);
+  salvarPlanoLocal(); PLANO.semRolar = true; renderPlano();
+  const i = PLANO.folhas.indexOf(f), el = document.querySelector(`#otimBox .folha[data-folha="${i}"]`);
+  if (el) try { el.scrollIntoView({behavior: 'smooth', block: 'center'}) } catch (e) {}
+  if ($('cncMsg')) { $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `➕ Chapa ${nCh(i)} criada (vazia) · ${op.cor}. Arraste para ela peças de outra chapa do mesmo material. Ctrl+Z desfaz · ✕ Remover chapa tira ela do plano.` }
+}
+function removerChapaVazia(fi){
+  const f = PLANO && PLANO.folhas[fi]; if (!chapaVazia(f)) return;
+  marcarP(); PLANO.folhas = PLANO.folhas.filter(g => g !== f);
+  salvarPlanoLocal(); PLANO.semRolar = true; renderPlano();
+  if ($('cncMsg')) { $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = '✕ Chapa vazia removida do plano. Ctrl+Z desfaz.' }
+}
+function novaChapaVazia(){
+  if (!PLANO) return;
+  const ops = opcoesNovaChapa();
+  if (!ops.length) { if ($('cncMsg')) { $('cncMsg').className = 'hint erro'; $('cncMsg').textContent = 'Não achei o material das chapas deste plano para criar uma chapa nova.' } return }
+  if (ops.length === 1) return criarChapaVazia(ops[0]);
+  let bx = $('novaChBox'); if (bx) bx.remove();
+  bx = document.createElement('div'); bx.id = 'novaChBox';
+  bx.style.cssText = 'position:fixed;inset:0;z-index:10003;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center';
+  const txt = o => { const d = chapaDe(o.cor); return `${esc(o.cor)}${o.esp > 0 && !/mm\s*$/i.test(o.cor) ? ' · ' + fmt(o.esp) + ' mm' : ''} <span class="hint">· ${fmt(Math.max(d[0], d[1]))} × ${fmt(Math.min(d[0], d[1]))}</span>` };
+  bx.innerHTML = `<div style="background:#fff;border-radius:12px;padding:18px 22px;width:460px;max-width:92%;max-height:86vh;overflow:auto;box-shadow:0 10px 40px rgba(0,0,0,.3)">
+    <h3 style="margin:0 0 4px;color:#1d7a46">➕ Nova chapa</h3>
+    <div class="hint" style="margin-bottom:10px">Escolha o material da chapa. Ela entra vazia no fim do plano, para você arrastar peças do mesmo material.</div>
+    ${ops.map((o, i) => `<button class="ncOp" data-i="${i}" style="display:flex;align-items:center;gap:8px;width:100%;text-align:left;margin:0 0 6px;padding:8px 10px">${miniFoto(o.cor, 26)}<span>${txt(o)}</span></button>`).join('')}
+    <div style="display:flex;justify-content:flex-end;margin-top:6px"><button id="ncChCanc">Cancelar</button></div></div>`;
+  document.body.appendChild(bx);
+  const fechar = () => { bx.remove(); document.removeEventListener('keydown', tecla, true) };
+  const tecla = e => { if (e.key === 'Escape') { e.stopPropagation(); fechar() } };
+  document.addEventListener('keydown', tecla, true);
+  bx.onclick = e => { if (e.target === bx) fechar() };
+  $('ncChCanc').onclick = fechar;
+  bx.querySelectorAll('.ncOp').forEach(b => b.onclick = () => { fechar(); criarChapaVazia(ops[+b.dataset.i]) });
+}
 function depoisDeMover(){
-  PLANO.folhas = PLANO.folhas.filter(f => f.pos.length);
+  PLANO.folhas = semVazias(PLANO.folhas);
   const cs = corrigirSobreposicoes();   // nunca deixa peça em cima de outra
   salvarPlanoLocal();   // plano mexido à mão fica salvo
   const n = conferirPlano();
@@ -3296,7 +3347,7 @@ function salvarPlanoLocal(mapa){
   // criado: data e hora em que ESTE plano nasceu (não muda nos salvamentos seguintes)
   const pa0 = D.planoArq && (D.planoArq.id || 'principal') === (D.planoId || 'principal') ? D.planoArq : null;
   const criado = (pa0 && pa0.criado) || `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)}/${agora.getFullYear()} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`;
-  const obj = {criado, data: `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`, n: PLANO.folhas.length, foto, t: Date.now(), projeto: D.projeto, conf: {proj, cfg, cores}, pf: PF, chapaBase: +D.chapaBase || 0, id: D.planoId || 'principal', nome: D.planoNome || 'Plano principal', gc: PLANO.gc || null, salvo: PLANO.salvo || null, numBase: +D.numBase || 0, numMax: (+D.numBase || 0) + PLANO.folhas.reduce((s, f) => s + f.pos.length, 0)};
+  const obj = {criado, data: `${d2(agora.getDate())}/${d2(agora.getMonth() + 1)} ${d2(agora.getHours())}:${d2(agora.getMinutes())}`, n: nChapasCheias(), foto, t: Date.now(), projeto: D.projeto, conf: {proj, cfg, cores}, pf: PF, chapaBase: +D.chapaBase || 0, id: D.planoId || 'principal', nome: D.planoNome || 'Plano principal', gc: PLANO.gc || null, salvo: PLANO.salvo || null, numBase: +D.numBase || 0, numMax: (+D.numBase || 0) + PLANO.folhas.reduce((s, f) => s + f.pos.length, 0)};
   // nada mudou (ex.: só abriu o plano): não grava, não muda a hora, não manda para a conta
   const sig = assinPlano(obj);
   if (sig === window.SIG_PLANO) return;
@@ -3332,7 +3383,7 @@ function receberVersoes(lista){
 }
 function versaoExcluida(r){ excluirResp(r) }
 // acabou de ABRIR um plano salvo: guarda como ele está (assim abrir não grava nada; só grava quando você mexer)
-function marcaAberto(){ try { if (!PLANO) return; window.SIG_PLANO = assinPlano({foto: fotoP(), conf: {proj}, pf: PF, gc: PLANO.gc || null, salvo: PLANO.salvo || null, nome: D.planoNome || 'Plano principal', n: PLANO.folhas.length}) } catch (e) {} }
+function marcaAberto(){ try { if (!PLANO) return; window.SIG_PLANO = assinPlano({foto: fotoP(), conf: {proj}, pf: PF, gc: PLANO.gc || null, salvo: PLANO.salvo || null, nome: D.planoNome || 'Plano principal', n: nChapasCheias()}) } catch (e) {} }
 // configurações das peças gravadas numa versão/plano (cor/chapa, lado, passadas, ⚙ especial, tipo, nome, fita) voltam junto
 function aplicarProjDe(o){
   const pr = o && o.conf && o.conf.proj; if (!pr || !pr.pecas) return;
@@ -3375,8 +3426,8 @@ function abrirPlanoSalvo(sx){
     const c = D.pecas.find(p => !usadas.has(p) && !(p.dentro && p.tipo !== 'peca') && assin(p) === o.sig);
     if (c) { usadas.add(c); o.id = c.id } }));
   const corNome = c => { const m = /^(\S+) (\S+mm)$/.exec(c || ''); return m && (cfg.nomeCod[m[1]] || '').trim() ? `${cfg.nomeCod[m[1]].trim()} ${m[2]}` : c };
-  const folhas = fotoObj.map(f => ({cor: corNome(f.cor), naoCoube: f.naoCoube, dim: f.dim, trava: f.trava, pos: f.pos.filter(o => porId.has(o.id) || (faltam.push(o.id), false)).map(o => { const p = porId.get(o.id);
-    return {it: {p}, x: o.x, y: o.y, rot: o.rot, esp: o.esp, fv: !!o.fv, manual: !!o.m, mexida: !!o.mx, poly: orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, o.rot, o.esp)} })})).filter(f => f.pos.length);
+  const folhas = fotoObj.map(f => ({cor: corNome(f.cor), naoCoube: f.naoCoube, dim: f.dim, trava: f.trava, nova: f.nova, espN: f.espN, pos: f.pos.filter(o => porId.has(o.id) || (faltam.push(o.id), false)).map(o => { const p = porId.get(o.id);
+    return {it: {p}, x: o.x, y: o.y, rot: o.rot, esp: o.esp, fv: !!o.fv, manual: !!o.m, mexida: !!o.mx, poly: orientar(polyPts(p), p.x + p.w / 2, p.y + p.h / 2, o.rot, o.esp)} })})).filter(f => f.pos.length || f.nova);
   const noPlano = new Set(folhas.flatMap(f => f.pos.map(pp => pp.it.p)));
   const fora = D.pecas.filter(p => !(p.dentro && p.tipo !== 'peca') && p.on && !noPlano.has(p));
   PLANO = {folhas, grandes: [], retalhos: [], filhosDe: PLANO_FILHOS, ms: 0, tent: 0, gc: s.gc || null, salvo: s.salvo || null};
@@ -3473,9 +3524,10 @@ function renderPlano(){
   if (!PLANO) { $('otimBox').innerHTML = ''; mostrarAtual(); if (renumerar()) { renderTabela(); renderPrev(); renderMat(); renderFolhas() } return }
   // numeração: só quando o plano é feito (otimizar / reiniciar). Mexer peça à mão NÃO troca os números (senão parece que não mexeu)
   if (!PLANO.numFixo) { PLANO.numFixo = true; if (renumerar()) { renderTabela(); renderPrev(); renderMat() } }
+  PLANO.folhas = PLANO.folhas.filter(f => !chapaVazia(f)).concat(PLANO.folhas.filter(chapaVazia));
   conferirPlano();
-  const n = PLANO.folhas.length, tem = folhasLista().length;
-  $('otimBox').innerHTML = `<div class="otimbar"><b>🧩 Encaixe: ${n} chapa${n > 1 ? 's' : ''}</b>
+  const nVaz = PLANO.folhas.filter(chapaVazia).length, n = PLANO.folhas.length - nVaz, tem = folhasLista().length;
+  $('otimBox').innerHTML = `<div class="otimbar"><b>🧩 Encaixe: ${n} chapa${n > 1 ? 's' : ''}${nVaz ? ` + ${nVaz} vazia${nVaz > 1 ? 's' : ''}` : ''}</b>
     <span class="hint">${PLANO.tent} tentativas em ${(PLANO.ms / 1000).toFixed(1)} s · encaixe pelo formato · folga ${cfg.oFolga} mm · margem ${cfg.oMargem} mm${cfg.oSepCor ? ' · separado por cor' : ''}${cfg.oRetalho ? ' · <b>retalho: todas giram</b>' : ''}</span>
     ${PLANO.retalhos && PLANO.retalhos.length ? `<span style="color:#1f5fbf">✂ Cortar de retalho (poucas peças, não vale abrir chapa): ${PLANO.retalhos.map(p => 'nº ' + p.n + ' ' + fmt(p.c) + '×' + fmt(p.l) + ' · ' + esc(p.cor || '')).join(' — ')}</span>` : ''}
     ${(() => { const pend = PLANO.folhas.flatMap(f => f.pos).filter(pp => PLANO.grandes.includes(pp.it.p) && PLANO.ruins && PLANO.ruins.has(pp)).map(pp => pp.it.p);
@@ -3484,6 +3536,7 @@ function renderPlano(){
     ${n > tem && D.origem !== 'sketchup' ? `<span style="color:#7a5b00">⚠ O projeto tem ${tem} folha(s). Antes de aplicar, crie mais ${n - tem} no Aspire: Folha ▾ → Adicionar nova planilha.</span>` : ''}
     <span style="flex:1"></span>
     ${D.origem === 'sketchup' ? `<button id="btnLiberarAj" title="Tira a marca ✋ de todas as peças (o otimizador pode mexer em todas)">✋ Liberar todos os ajustes</button><button id="btnAspireConf" title="Cria no Aspire um trabalho por chapa, com os mesmos percursos do G-code (rampa, passadas, profundidades, ferramenta), para conferir">📤 Abrir no Aspire (conferir)</button><button id="btnDxf">⤓ DXF por chapa</button>` : `<button class="pri" id="btnAplicar" style="background:#1d7a46;border-color:#1d7a46">✔ Aplicar no Aspire</button>`}
+    <button id="btnNovaChapa" title="Cria uma chapa nova vazia no fim do plano, do material que você escolher, para arrastar peças para ela">➕ Nova chapa</button>
     <button id="btnBuscar" title="Testa muitas outras arrumações por 40 segundos e fica com a melhor">🔍 Procurar plano melhor</button>
     <button id="btnDesfP" title="Desfazer a última ação (Ctrl+Z)" ${HISTP.length ? '' : 'disabled'}>↶ Desfazer</button>
     <button id="btnRefP" title="Refazer (Ctrl+Y)" ${REDOP.length ? '' : 'disabled'}>↷ Refazer</button>
@@ -3496,6 +3549,8 @@ function renderPlano(){
   $('btnVersoes').onclick = pedirVersoes;
   $('btnVisual').onclick = () => { cfg.visTec = cfg.visTec !== true; salvar(); renderPlano() };
   $('btnDesfP').onclick = desfazerP; $('btnRefP').onclick = refazerP;
+  if ($('btnNovaChapa')) $('btnNovaChapa').onclick = novaChapaVazia;
+  document.querySelectorAll('#otimBox .remVazia').forEach(b => b.onclick = () => removerChapaVazia(+b.dataset.f));
   $('btnBuscar').onclick = async () => {
     const b = $('btnBuscar');
     if (b.dataset.rodando) { PARAR_BUSCA = true; return }
@@ -4092,12 +4147,12 @@ async function abrirNoAspire(){
 }
 function exportarDxf(){
   if (!PLANO) return;
-  PLANO.folhas.forEach((f, i) => setTimeout(() => {
+  PLANO.folhas.forEach((f, i) => f.pos.length && setTimeout(() => {
     const nome = `${osCli()} - Chapa ${nCh(i)} - ${f.cor}.dxf`.replace(/[\\/:*?"<>|]/g, '_');
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([dxfDe(f, i)], {type:'application/dxf'})); a.download = nome;
     document.body.appendChild(a); a.click(); a.remove();
   }, i * 900));
-  $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `${PLANO.folhas.length} arquivo(s) DXF salvos em Downloads. No Aspire: Arquivo → Importar vetores.`;
+  $('cncMsg').className = 'hint ok'; $('cncMsg').textContent = `${nChapasCheias()} arquivo(s) DXF salvos em Downloads. No Aspire: Arquivo → Importar vetores.`;
 }
 async function aplicarPlano(){
   if (!PLANO) return;
@@ -4105,7 +4160,7 @@ async function aplicarPlano(){
     const fora = D.pecas.filter(p => !(p.dentro && p.tipo !== 'peca') && !noPlano.has(p) && !(PLANO.retalhos || []).includes(p));
     if (fora.length && !confirm(`${fora.length} peça(s) que estão no Aspire NÃO estão neste plano (nº ${fora.map(p => p.n).join(', ')}).\nElas vão ficar onde estão e podem ficar por cima das outras.\n\nMelhor: clique em 🧩 Otimizar corte de novo.\nAplicar mesmo assim?`)) return }
   if (conferirPlano() && !confirm('Tem peça em vermelho (encostando em outra ou fora da margem). Continuar mesmo assim?')) return;
-  const n = PLANO.folhas.length, tem = folhasLista().length;
+  const n = nChapasCheias(), tem = folhasLista().length;
   if (n > tem && !confirm(`O encaixe usa ${n} chapas e o projeto tem ${tem} folha(s).\nSe ainda não criou as folhas no Aspire (Folha ▾ → Adicionar nova planilha), o Aspire vai recusar.\n\nContinuar?`)) return;
   const linhas = [];
   PLANO.folhas.forEach((f, i) => f.pos.forEach(({it, x, y, rot, esp}) => {
@@ -4267,7 +4322,8 @@ function gcContorno(L, q, zTopo, zFim, fe){
 function gcChapas(){
   const ch = [];
   if (PLANO && PLANO.folhas.length) {
-    PLANO.folhas.forEach((f, i) => { const itens = []; const _fol = f;
+    PLANO.folhas = PLANO.folhas.filter(f => !chapaVazia(f)).concat(PLANO.folhas.filter(chapaVazia));   // vazias no fim: os nº das outras não mudam
+    PLANO.folhas.forEach((f, i) => { if (!f.pos.length) return; const itens = []; const _fol = f;
       f.pos.forEach(pp => { const tf = transfPeca(pp), p = pp.it.p; itens.push({p, q: tf(polyPts(p)), mae: true});
         (p.furos || []).forEach(h => itens.push({p: {tipo: 'furo', n: p.n, on: true, dentro: true, tipoOk: true}, q: tf(h), mae: false}));
         aberturas(p).forEach(h => itens.push({p: {tipo: 'vazado', n: p.n, on: true, dentro: true}, q: tf(h), mae: false}));
