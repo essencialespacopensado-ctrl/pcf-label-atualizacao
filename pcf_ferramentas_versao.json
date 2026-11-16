@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.45",
+  "versao": "3.6.46",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "🧩 Peça Mãe: (1) não abre mais o aviso do Dinabox de \"agrupamento de componentes\" ao gerar; (2) a usinagem sai certa no Detalhes da Peça do Dinabox — a peça mãe agora é feita sempre no tamponamento simples (com o de 45° de molde saía um triângulo); (3) apagar ou desfazer a peça mãe devolve as frentes de verdade — antes, em gavetas, as frentes podiam se perder; se alguma não puder voltar, nada é apagado.",
     "🌿 Orgânico: as usinagens (contorno, furos e rebaixos) voltam a aparecer na peça. Em projeto que tinha tamponamento de 45° (painel em pé), o Orgânico usava ele de molde e criava só o painel, sem usinagem nenhuma. Agora usa o tamponamento simples; se o projeto só tiver o de 45°, as linhas vão para a face certa.",
     "🧩 Peça Mãe: as marcações/cortes entre as frentes e o contorno agora aparecem na peça. Em projeto cujo tamponamento de molde tem o painel em pé (espessura no eixo X), as linhas ficavam esmagadas na espessura: não aparecia marcação nenhuma e o plano de corte lia a peça errada.",
     "🧩 Peça Mãe com os dados certos no Dinabox: quando o material das frentes vinha por fórmula do móvel, a peça mãe saía no relatório com medida, fita e material errados (ex.: 2668 × 320 em vez de 706 × 862). Agora ela sai com a medida real, sem fita e com o material das frentes.",
