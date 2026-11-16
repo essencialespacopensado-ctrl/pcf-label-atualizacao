@@ -1,5 +1,5 @@
 {
- "tela": "2026-11-13.3",
+ "tela": "2026-11-16.1",
  "plugin": "2026-11-13.1",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,17 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-16.1",
+   "plugin": "2026-11-13.1",
+   "data": "16/11",
+   "titulo": "➕ Nova chapa no plano de corte",
+   "itens": [
+    "Botão ➕ Nova chapa na barra do plano de corte: você escolhe o material (cor + espessura) e entra uma chapa vazia no fim do plano, para arrastar peças do mesmo material para ela.",
+    "A chapa vazia não some sozinha, fica salva no plano e continua depois de Refazer otimização. ✕ Remover chapa tira ela; Ctrl+Z desfaz.",
+    "Enquanto está vazia ela não entra no G-code, na folha de corte, na lista de materiais nem muda o número das outras chapas."
+   ]
+  },
   {
    "tela": "2026-11-13.3",
    "plugin": "2026-11-13.1",
