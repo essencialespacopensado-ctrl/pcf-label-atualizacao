@@ -1,5 +1,5 @@
 {
- "tela": "2026-11-16.1",
+ "tela": "2026-11-16.2",
  "plugin": "2026-11-16.1",
  "arquivos": [
   "etiquetas.html",
@@ -7,6 +7,16 @@
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-16.2",
+   "plugin": "2026-11-16.1",
+   "data": "16/11",
+   "titulo": "Folha de corte impressa igual ao cartão da tela",
+   "itens": [
+    "A impressão da Folha de corte sai igual ao cartão da chapa na tela: cor do material, Chapa nº · material · medida · peças · aproveitamento e o aviso do lado (FACE PARA BAIXO / PARA CIMA) em destaque, sem os botões de organizar.",
+    "Continuam na folha o cliente/OS e a data no canto, a lista das peças embaixo e uma chapa por página."
+   ]
+  },
   {
    "tela": "2026-11-16.1",
    "plugin": "2026-11-16.1",
