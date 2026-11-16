@@ -1,12 +1,24 @@
 {
  "tela": "2026-11-16.1",
- "plugin": "2026-11-13.1",
+ "plugin": "2026-11-16.1",
  "arquivos": [
   "etiquetas.html",
   "main.rb",
   "novidades.json"
  ],
  "notas": [
+  {
+   "tela": "2026-11-16.1",
+   "plugin": "2026-11-16.1",
+   "data": "16/11",
+   "titulo": "Rebaixo de borda lido certo e atualização mais rápida",
+   "itens": [
+    "Peça com rebaixo só na borda (moldura) agora é lida pela face de fora da chapa: a faixa do rebaixo e os canais aparecem no plano, do lado do rebaixo. Antes o miolo virava furo e o canal sumia. Refaça o plano para valer.",
+    "Peça copiada não fica mais com dois números: o número antigo sai antes de entrar o novo.",
+    "O PCF Label abre mesmo quando a pasta do projeto foi renomeada (antes dava erro ao abrir).",
+    "Atualização nova aparece em cerca de 1 minuto (antes podia levar de 5 a 15 minutos)."
+   ]
+  },
   {
    "tela": "2026-11-16.1",
    "plugin": "2026-11-13.1",
