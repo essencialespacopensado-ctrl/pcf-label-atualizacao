@@ -1,7 +1,8 @@
 {
-  "versao": "3.6.39",
+  "versao": "3.6.40",
   "rbz": "PCF_Ferramentas.rbz",
   "novidades": [
+    "⇕ Igualar frentes (gavetas do mesmo gaveteiro): as duas extremidades ficam onde estão — o baixo da 1ª frente e o topo da última — e só o meio é dividido por igual. Antes ele voltava para a altura padrão do Dinabox e a frente que você tinha aumentado encolhia.",
     "📏 Painel Auto — medida maior que a chapa: digitar comprimento acima de 2740 ou largura acima de 1850 fazia o Dinabox mostrar o número digitado (ex.: 3000) enquanto a chapa desenhada ficava 2740. Agora o Dinabox mostra sempre a mesma medida da chapa e aparece um aviso de que passou do máximo.",
     "📐 Peça curva: com \"Ranhurar para dobrar\" marcado, uma peça RETA selecionada também sai como chapa ranhurada (só as ranhuras, sem dobra), com o mesmo sentido, recuo, quanto ranhurar, profundidade, distância, largura e fresa. As ranhuras vão desenhadas no Dinabox e saem no PCF Label. Com a caixa desmarcada, peça reta continua saindo como recorte orgânico.",
     "⚡ Painel de medidas e cotas mais leves: trocar a seleção de móvel/peça atualiza as medidas e os afastamentos (chão, teto, esquerda, direita) em ~0,1 s em vez de ~0,9 s em projeto grande, e o painel e as cotas usam a mesma medição (antes mediam duas vezes). Digitar largura, altura, elevação ou posição também não refaz mais a medição de afastamentos. Os números continuam exatamente os mesmos.",
